@@ -1,0 +1,11 @@
+export default function PartsManagementLayout({
+    children,
+}: {
+    children: React.ReactNode
+}) {
+    return (
+        <div className="w-full">
+            {children}
+        </div>
+    )
+}

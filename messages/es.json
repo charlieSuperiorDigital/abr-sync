@@ -1,0 +1,18 @@
+{
+  "Login": {
+    "title": "Iniciar sesión",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "remember": "Recordar",
+    "forgot": "¿Olvidaste tu contraseña?",
+    "submit": "Iniciar sesión",
+    "register": "Registrarse"
+  },
+  "Validation": {
+    "errorEmail": "Por favor, introduce una dirección de correo electrónico válida",
+    "errorEmailRequired": "El correo electrónico es obligatorio",
+    "errorPasswordRequired": "La contraseña es obligatoria",
+    "errorPassword": "Por favor, introduce una contraseña válida",
+    "errorLogin": "Correo electrónico o contraseña inválidos"
+  }
+}

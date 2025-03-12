@@ -1,0 +1,18 @@
+{
+  "Login": {
+    "title": "Sign In",
+    "email": "Email",
+    "password": "Password",
+    "remember": "Remember",
+    "forgot": "Forgot your password?",
+    "submit": "Sign In",
+    "register": "Register"
+  },
+  "Validation": {
+    "errorEmail": "Please enter a valid email address",
+    "errorEmailRequired": "Email is required",
+    "errorPasswordRequired": "Password is required",
+    "errorPassword": "Please enter a valid password",
+    "errorLogin": "Invalid email or password"
+  }
+}
