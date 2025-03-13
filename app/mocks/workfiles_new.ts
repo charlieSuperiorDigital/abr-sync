@@ -1,3 +1,5 @@
+import { Workfile } from "../types/workfile";
+
 export const workfiles : Workfile[] = [
     // Upcoming Workfile
     {

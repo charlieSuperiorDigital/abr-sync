@@ -17,6 +17,7 @@ import {
   Phone,
 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { PriorityBadge } from '../priority-badge/priority-badge'
 
 interface StatusBadgeProps {
   status: string
@@ -39,6 +40,29 @@ export function StatusBadgeCell({ status, variant }: StatusBadgeProps) {
     </StatusBadge>
   )
 }
+
+interface PriorityBadgeProps {
+  priority: string
+  variant?:
+    | 'default'
+    | 'danger'
+    | 'warning'
+    | 'neutral'
+    | 'slate'
+    | 'info'
+    | 'success'
+    | 'forest'
+    | 'dark'
+}
+
+export function PriorityBadgeCell({ priority, variant }: PriorityBadgeProps) {
+  return (
+    <PriorityBadge variant={variant || 'default'} className="whitespace-nowrap">
+      {priority}
+    </PriorityBadge>
+  )
+}
+
 
 interface DateCellProps {
   date: string | Date
@@ -108,7 +132,6 @@ export function ActionsCell({ actions }: ActionsCellProps) {
     </div>
   )
 }
-
 interface ContactMethodCellProps {
   email?: string
   phone?: string
@@ -243,7 +266,6 @@ export function SummaryCell() {
     </>
   )
 }
-
 interface DocumentCellProps {
   fileName: string
   onClick?: () => void
@@ -268,7 +290,6 @@ export function DocumentCell({ fileName, onClick }: DocumentCellProps) {
     </TooltipProvider>
   )
 }
-
 interface UserAvatarCellProps {
   name: string
   avatarUrl: string
