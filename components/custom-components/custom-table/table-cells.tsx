@@ -108,6 +108,7 @@ export function ActionsCell({ actions }: ActionsCellProps) {
     </div>
   )
 }
+
 interface ContactMethodCellProps {
   email?: string
   phone?: string
@@ -242,6 +243,7 @@ export function SummaryCell() {
     </>
   )
 }
+
 interface DocumentCellProps {
   fileName: string
   onClick?: () => void
@@ -266,6 +268,7 @@ export function DocumentCell({ fileName, onClick }: DocumentCellProps) {
     </TooltipProvider>
   )
 }
+
 interface UserAvatarCellProps {
   name: string
   avatarUrl: string
