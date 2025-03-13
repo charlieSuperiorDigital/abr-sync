@@ -23,7 +23,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { PriorityBadge } from '../priority-badge/priority-badge'
 import * as Dialog from '@radix-ui/react-dialog'
-import { useState } from 'react'
+import { act, useState } from 'react'
+import TaskModal from '../task-modal/task-modal'
 
 interface TitleCellProps {
   title: string
@@ -189,7 +190,8 @@ interface ActionsCellProps {
     label: string
     onClick: () => void
     variant?: 'default' | 'secondary' | 'destructive'
-    icon?: 'edit' | 'delete'
+    icon?: 'edit' | 'delete',
+    _component: React.ReactNode
   }[]
 }
 
@@ -197,20 +199,24 @@ export function ActionsCell({ actions }: ActionsCellProps) {
   return (
     <div className="flex items-center gap-2">
       {actions.map((action, index) => (
-        <Button
-          key={index}
-          variant={action.variant || 'secondary'}
-          size="sm"
-          className="center h-8 w-8 rounded-full transition-colors hover:bg-black hover:text-white"
-          onClick={(e) => {
-            e.stopPropagation()
-            action.onClick()
-          }}
-        >
-          {action.icon === 'edit' && <Edit />}
-          {action.icon === 'delete' && <Trash />}
-          {!action.icon && action.label}
-        </Button>
+        
+        <>{action._component}</>
+        
+
+        // <Button
+        //   key={index}
+        //   variant={action.variant || 'secondary'}
+        //   size="sm"
+        //   className="center h-8 w-8 rounded-full transition-colors hover:bg-black hover:text-white"
+        //   onClick={(e) => {
+        //     e.stopPropagation()
+        //     action.onClick()
+        //   }}
+        // >
+        //   {action.icon === 'edit' && <Edit />}
+        //   {action.icon === 'delete' && <Trash />}
+        //   {!action.icon && action.label}
+        // </Button>
       ))}
     </div>
   )

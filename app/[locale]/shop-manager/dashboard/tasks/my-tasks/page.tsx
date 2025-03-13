@@ -25,6 +25,7 @@ import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { mockTasks } from '../../../../../mocks/tasks.mock'
 import { useTaskStore } from '@/app/stores/task-store'
 import { Task } from '@/app/types/task'
+import TaskModal from '@/components/custom-components/task-modal/task-modal'
 
 export default function NewOpportunities() {
   
@@ -127,16 +128,24 @@ export default function NewOpportunities() {
       cell: ({ row }) => 
       <ActionsCell
         actions={[
-          {
-            label: 'Delete',
-            onClick: () => console.log('Delete Task:', row.original.id),
-            variant: 'secondary',
-            icon: 'delete'},
+          // {
+          //   label: 'Delete',
+          //   onClick: () => console.log('Delete Task:', row.original.id),
+          //   variant: 'secondary',
+          //   icon: 'delete'},
           {
             label: 'Edit',
             onClick: () => console.log('Edit Task:', row.original.id),
             variant: 'secondary',
-            icon: 'edit'
+            icon: 'edit',
+            _component: 
+              <TaskModal 
+              title={'Edit Task'}
+              children={undefined} 
+              isOpen={false} 
+              onOpenChange={function (open: boolean): void {
+              throw new Error('Function not implemented.')
+            } }/>
           }
         ]}
       />,
