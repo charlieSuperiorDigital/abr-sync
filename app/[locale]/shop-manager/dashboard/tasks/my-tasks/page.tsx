@@ -1,6 +1,6 @@
 'use client'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
-import { mockTasks, MyTasks } from './mock/mock-data'
+
 import {
   ActionButtonCell,
   ActionsCell,
@@ -20,9 +20,19 @@ import {
 } from '@/components/custom-components/custom-table/table-cells'
 import { ColumnDef } from '@tanstack/react-table'
 import { MessageSquareMore, PanelTop } from 'lucide-react'
+import ContactInfo from '@/app/[locale]/custom-components/contact-info'
+
+import { mockTasks } from '../../../../../mocks/tasks.mock'
+import { useTaskStore } from '@/app/stores/task-store'
+import { Task } from '@/app/types/task'
+import EditTaskModal from '@/components/custom-components/task-modal/edit-task-modal'
 
 export default function NewOpportunities() {
-  const columns: ColumnDef<MyTasks>[] = [
+  
+  const { getTasksByAssignee } = useTaskStore()
+  
+  
+  const columns: ColumnDef<Task>[] = [
     {
       accessorKey: 'id',
       header: 'Task ID',
@@ -88,11 +98,16 @@ export default function NewOpportunities() {
           <WarningCell
             message={row.original.warningMessage || ''}
           />
-          <ContactMethodCell
-            email={row.original.email}
-            phone={row.original.phone}
-            messages={row.original.message}
-          />
+          <div 
+                    data-testid="contact-info" 
+                    className="cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      // handleContactClick(row.original)
+                    }}
+                  >
+                    <ContactInfo />
+                  </div>
         </div>
       ),
     },
@@ -113,27 +128,42 @@ export default function NewOpportunities() {
       cell: ({ row }) => 
       <ActionsCell
         actions={[
-          {
-            label: 'Delete',
-            onClick: () => console.log('Delete Task:', row.original.id),
-            variant: 'secondary',
-            icon: 'delete'},
+          // {
+          //   label: 'Delete',
+          //   onClick: () => console.log('Delete Task:', row.original.id),
+          //   variant: 'secondary',
+          //   icon: 'delete'},
           {
             label: 'Edit',
             onClick: () => console.log('Edit Task:', row.original.id),
             variant: 'secondary',
-            icon: 'edit'
+            icon: 'edit',
+            _component: 
+              <EditTaskModal 
+              title={'Edit Task'}
+              children={undefined} 
+              isOpen={false} 
+              onOpenChange={function (open: boolean): void {
+              throw new Error('Function not implemented.')
+            } }/>
           }
         ]}
       />,
     }
     
   ]
+
+
+
+
+  //get tasks from the store
+  const tasks = getTasksByAssignee('123456');
+
   return (
     <div className="w-full">
       <DataTable
         columns={columns}
-        data={mockTasks}
+        data={tasks}
         onRowClick={(row) => console.log('Row clicked:', row)}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
