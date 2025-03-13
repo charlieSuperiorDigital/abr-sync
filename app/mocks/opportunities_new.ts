@@ -1,10 +1,11 @@
-import { Opportunity } from "@/app/types/opportunity"
+import { Opportunity, OpportunityStatus, RepairStage } from "@/app/types/opportunity"
 
 export const opportunities: Opportunity[] = [
-    // New Opportunities - Initial contact with customer to schedule drop date
+    // New Opportunities - Initial contact with owner to schedule drop date
     {
       opportunityId: "OPP123456",
-      status: "New",
+      status: OpportunityStatus.New,
+      stage: RepairStage.Opportunity,
       createdDate: "2023-10-01T09:15:00Z",
       lastUpdatedDate: "2023-10-01T09:15:00Z",
       priority: "High",
@@ -34,11 +35,14 @@ export const opportunities: Opportunity[] = [
           }
         ]
       },
-      customer: {
+      owner: {
         name: "John Doe",
         phone: "+1-555-123-4567",
         email: "johndoe@example.com",
-        address: "123 Main St, Anytown, USA",
+        address: "123 Main St",
+        city: "Anytown",
+        state: "CA",
+        zip: "12345",
         company: "ABC Corp",
       },
       insurance: {
@@ -48,12 +52,16 @@ export const opportunities: Opportunity[] = [
         deductible: 500,
         typeOfLoss: "Collision",
         representative: "Sarah Johnson",
+        adjuster: "Mike Smith",
+        adjusterPhone: "+1-555-987-6543",
+        adjusterEmail: "mike.smith@progressive.com"
       },
-      lastCommunicationSummary: "Initial assignment received from Progressive. Need to contact customer to schedule drop-off.",
+      lastCommunicationSummary: "Initial assignment received from Progressive. Need to contact owner to schedule drop-off.",
     },
     {
       opportunityId: "OPP789012",
-      status: "New",
+      status: OpportunityStatus.New,
+      stage: RepairStage.Opportunity,
       createdDate: "2023-10-02T10:30:00Z",
       lastUpdatedDate: "2023-10-02T10:30:00Z",
       priority: "Normal",
@@ -83,11 +91,14 @@ export const opportunities: Opportunity[] = [
           }
         ]
       },
-      customer: {
+      owner: {
         name: "Jane Smith",
         phone: "+1-555-987-6543",
         email: "janesmith@example.com",
-        address: "456 Elm St, Othertown, USA",
+        address: "456 Elm St",
+        city: "Othertown",
+        state: "NY",
+        zip: "67890",
         company: "Smith Enterprises",
       },
       insurance: {
@@ -97,14 +108,18 @@ export const opportunities: Opportunity[] = [
         deductible: 1000,
         typeOfLoss: "Hail Damage",
         representative: "Mike Anderson",
+        adjuster: "Emily Davis",
+        adjusterPhone: "+1-555-111-2222",
+        adjusterEmail: "emily.davis@statefarm.com"
       },
-      lastCommunicationSummary: "Initial assignment received from State Farm. Attempting first contact with customer.",
+      lastCommunicationSummary: "Initial assignment received from State Farm. Attempting first contact with owner.",
     },
   
-    // 2nd Call Opportunities - Follow-up if customer doesn't respond
+    // 2nd Call Opportunities - Follow-up if owner doesn't respond
     {
       opportunityId: "OPP567890",
-      status: "2nd Call",
+      status: OpportunityStatus.SecondCall,
+      stage: RepairStage.Opportunity,
       createdDate: "2023-10-05T08:00:00Z",
       lastUpdatedDate: "2023-10-05T12:00:00Z",
       priority: "Normal",
@@ -134,11 +149,14 @@ export const opportunities: Opportunity[] = [
           }
         ]
       },
-      customer: {
+      owner: {
         name: "David Wilson",
         phone: "+1-555-654-3210",
         email: "davidwilson@example.com",
-        address: "654 Maple St, Newtown, USA",
+        address: "654 Maple St",
+        city: "Newtown",
+        state: "TX",
+        zip: "34567",
         company: "Wilson Enterprises",
       },
       insurance: {
@@ -148,14 +166,18 @@ export const opportunities: Opportunity[] = [
         deductible: 500,
         typeOfLoss: "Collision",
         representative: "Tom Wilson",
+        adjuster: "Sarah Taylor",
+        adjusterPhone: "+1-555-333-4444",
+        adjusterEmail: "sarah.taylor@farmers.com"
       },
-      lastCommunicationSummary: "Left voicemail for customer. Second attempt to schedule drop-off date.",
+      lastCommunicationSummary: "Left voicemail for owner. Second attempt to schedule drop-off date.",
     },
   
     // Estimate Opportunities - When estimate is created and approved
     {
       opportunityId: "OPP234567",
-      status: "Estimate",
+      status: OpportunityStatus.Estimate,
+      stage: RepairStage.EstimateCreated,
       createdDate: "2023-10-06T14:00:00Z",
       lastUpdatedDate: "2023-10-06T16:30:00Z",
       priority: "High",
@@ -185,11 +207,14 @@ export const opportunities: Opportunity[] = [
           }
         ]
       },
-      customer: {
+      owner: {
         name: "Michael Brown",
         phone: "+1-555-789-0123",
         email: "michaelbrown@example.com",
-        address: "789 Oak St, Somewhere, USA",
+        address: "789 Oak St",
+        city: "Somewhere",
+        state: "FL",
+        zip: "90123",
         company: "Brown & Associates",
       },
       insurance: {
@@ -199,6 +224,9 @@ export const opportunities: Opportunity[] = [
         deductible: 750,
         typeOfLoss: "Collision",
         representative: "Lisa Martinez",
+        adjuster: "John Lee",
+        adjusterPhone: "+1-555-222-3333",
+        adjusterEmail: "john.lee@geico.com"
       },
       lastCommunicationSummary: "Estimate completed and sent to insurance for approval.",
       isInRental: true,
@@ -209,7 +237,8 @@ export const opportunities: Opportunity[] = [
     // Total Loss Opportunities - Vehicle declared total loss
     {
       opportunityId: "OPP345678",
-      status: "Total Loss",
+      status: OpportunityStatus.TotalLoss,
+      stage: RepairStage.Opportunity,
       createdDate: "2023-10-07T09:00:00Z",
       lastUpdatedDate: "2023-10-07T11:30:00Z",
       priority: "Normal",
@@ -239,11 +268,14 @@ export const opportunities: Opportunity[] = [
           }
         ]
       },
-      customer: {
+      owner: {
         name: "Emily Davis",
         phone: "+1-555-321-0987",
         email: "emilydavis@example.com",
-        address: "321 Pine St, Elsewhere, USA",
+        address: "321 Pine St",
+        city: "Elsewhere",
+        state: "IL",
+        zip: "45678",
         company: "Davis Inc.",
       },
       insurance: {
@@ -253,15 +285,19 @@ export const opportunities: Opportunity[] = [
         deductible: 1000,
         typeOfLoss: "Flood Damage",
         representative: "Robert Lee",
+        adjuster: "Emily Chen",
+        adjusterPhone: "+1-555-444-5555",
+        adjusterEmail: "emily.chen@allstate.com"
       },
-      lastCommunicationSummary: "Vehicle declared total loss. Awaiting customer decision on salvage.",
+      lastCommunicationSummary: "Vehicle declared total loss. Awaiting owner decision on salvage.",
       isTotalLoss: true,
     },
   
     // Upcoming Opportunities - Vehicle dropped off, workfile created
     {
       opportunityId: "OPP890123",
-      status: "Upcoming",
+      status: OpportunityStatus.Upcoming,
+      stage: RepairStage.RepairOrder,
       createdDate: "2023-10-08T11:00:00Z",
       lastUpdatedDate: "2023-10-08T15:30:00Z",
       priority: "Normal",
@@ -291,11 +327,14 @@ export const opportunities: Opportunity[] = [
           }
         ]
       },
-      customer: {
+      owner: {
         name: "Sarah Johnson",
         phone: "+1-555-456-7890",
         email: "sarahjohnson@example.com",
-        address: "456 Cedar St, Anywhere, USA",
+        address: "456 Cedar St",
+        city: "Anywhere",
+        state: "MI",
+        zip: "56789",
         company: "Johnson Legal Group",
       },
       insurance: {
@@ -305,8 +344,11 @@ export const opportunities: Opportunity[] = [
         deductible: 500,
         typeOfLoss: "Vandalism",
         representative: "David Chen",
+        adjuster: "Sarah Kim",
+        adjusterPhone: "+1-555-666-7777",
+        adjusterEmail: "sarah.kim@libertymutual.com"
       },
-      lastCommunicationSummary: "Vehicle repaired and picked up by customer. All paperwork completed.",
+      lastCommunicationSummary: "Vehicle repaired and picked up by owner. All paperwork completed.",
       isVoilComplete: true,
       is4CornersComplete: true,
     },

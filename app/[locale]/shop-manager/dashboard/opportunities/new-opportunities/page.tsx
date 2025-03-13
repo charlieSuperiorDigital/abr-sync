@@ -10,7 +10,7 @@ import {
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { ColumnDef } from '@tanstack/react-table'
 import { ClipboardPlus, PanelTop } from 'lucide-react'
-import { Opportunity } from '@/app/types/opportunity'
+import { Opportunity, OpportunityStatus } from '@/app/types/opportunity'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import { useState, useCallback } from 'react'
@@ -149,8 +149,8 @@ export default function NewOpportunities() {
     },
   ]
 
-  // Get opportunities in "New" status from the store
-  const opportunities = getOpportunitiesByStatus("New")
+  // Get opportunities in New status from the store
+  const opportunities = getOpportunitiesByStatus(OpportunityStatus.New)
 
   return (
     <div className="w-full">

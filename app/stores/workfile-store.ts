@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { Workfile } from '../types/workfile'
+import { Workfile, WorkfileStatus } from '../types/workfile'
 import { workfiles } from '../mocks/workfiles_new'
 
 interface WorkfileStore {
@@ -9,35 +9,20 @@ interface WorkfileStore {
   updateWorkfile: (workfileId: string, updates: Partial<Workfile>) => void
   addWorkfile: (workfile: Workfile) => void
   removeWorkfile: (workfileId: string) => void
-  // Filter workfiles by status
-  getWorkfilesByStatus: (status: "Upcoming" | "In Progress" | "QC" | "Ready for Pickup" | "Archived") => Workfile[]
-  // Get workfile by ID
+  getWorkfilesByStatus: (status: WorkfileStatus) => Workfile[]
   getWorkfileById: (workfileId: string) => Workfile | undefined
-  // Get workfile by opportunity ID
   getWorkfileByOpportunityId: (opportunityId: string) => Workfile | undefined
-  // Get workfiles that are due soon (within next 24 hours)
   getUpcomingWorkfiles: () => Workfile[]
-  // Track cycle time (Critical Metric)
   calculateCycleTime: (workfileId: string) => number | null
-  // Get parts return rate (Critical Metric)
   getPartsReturnRate: () => number
-  // Get last minute parts orders (Critical Metric: 24-72h before ECD)
   getLastMinutePartsOrders: () => Workfile[]
-  // Get tech workload distribution (Critical Metric)
   getTechWorkloadDistribution: () => Array<{ techId: string, hoursAssigned: number }>
-  // Check if weather impacts paint work (Key Business Rule)
   checkWeatherImpact: (workfileId: string) => boolean
-  // Check upload deadline status (Key Business Rule: 24h after check-in)
   checkUploadDeadlineStatus: (workfileId: string) => { passed: boolean; remainingTime: number | null }
-  // Auto-assign tech based on workload (Key Business Rule)
   autoAssignTech: (workfileId: string) => void
-  // Start repair work (new function)
   startRepairWork: (workfileId: string) => boolean
-  // Move workfile to QC status
   moveToQC: (workfileId: string) => boolean
-  // Move workfile to Ready for Pickup status
   moveToReadyForPickup: (workfileId: string) => boolean
-  // Archive workfile (vehicle picked up)
   archiveWorkfile: (workfileId: string) => boolean
 }
 
@@ -105,13 +90,13 @@ export const useWorkfileStore = create<WorkfileStore>((set, get) => ({
     const now = new Date()
 
     // If the workfile is completed, use the completion date
-    if (workfile.status === 'Ready for Pickup' && workfile.repairCompletedDate) {
+    if (workfile.status === WorkfileStatus.ReadyForPickup && workfile.repairCompletedDate) {
       const completionDate = new Date(workfile.repairCompletedDate)
       return Math.ceil((completionDate.getTime() - inDate.getTime()) / (1000 * 60 * 60 * 24))
     }
 
     // For in-progress workfiles, calculate against current date
-    if (workfile.status === 'In Progress' || workfile.status === 'Upcoming') {
+    if (workfile.status === WorkfileStatus.InProgress || workfile.status === WorkfileStatus.Upcoming) {
       return Math.ceil((now.getTime() - inDate.getTime()) / (1000 * 60 * 60 * 24))
     }
 
@@ -144,7 +129,7 @@ export const useWorkfileStore = create<WorkfileStore>((set, get) => ({
     const techWorkload = new Map<string, number>()
 
     workfiles.forEach((wf) => {
-      if (wf.assignedTech?.id && (wf.status === 'In Progress' || wf.status === 'Upcoming')) {
+      if (wf.assignedTech?.id && (wf.status === WorkfileStatus.InProgress || wf.status === WorkfileStatus.Upcoming)) {
         const currentHours = techWorkload.get(wf.assignedTech.id) || 0
         techWorkload.set(wf.assignedTech.id, currentHours + (wf.assignedTech.hoursAssigned || 0))
       }
@@ -205,7 +190,7 @@ export const useWorkfileStore = create<WorkfileStore>((set, get) => ({
     if (!workfile) return false
 
     // Validate workfile is in Upcoming status
-    if (workfile.status !== "Upcoming") return false
+    if (workfile.status !== WorkfileStatus.Upcoming) return false
 
     // Validate all required conditions are met
     const uploadDeadline = get().checkUploadDeadlineStatus(workfileId)
@@ -224,7 +209,7 @@ export const useWorkfileStore = create<WorkfileStore>((set, get) => ({
 
     // Update workfile status to In Progress
     get().updateWorkfile(workfileId, {
-      status: "In Progress",
+      status: WorkfileStatus.InProgress,
       lastUpdatedDate: new Date().toISOString(),
       repairStartDate: new Date().toISOString()
     })
@@ -237,7 +222,7 @@ export const useWorkfileStore = create<WorkfileStore>((set, get) => ({
     if (!workfile) return false
 
     // Validate workfile is in In Progress status
-    if (workfile.status !== "In Progress") return false
+    if (workfile.status !== WorkfileStatus.InProgress) return false
 
     // Validate all tasks are completed
     const hasIncompleteTasks = workfile.tasks?.length ? workfile.tasks.some(
@@ -250,7 +235,7 @@ export const useWorkfileStore = create<WorkfileStore>((set, get) => ({
 
     // Update workfile status to QC
     get().updateWorkfile(workfileId, {
-      status: "QC",
+      status: WorkfileStatus.QC,
       lastUpdatedDate: new Date().toISOString()
     })
 
@@ -262,7 +247,7 @@ export const useWorkfileStore = create<WorkfileStore>((set, get) => ({
     if (!workfile) return false
 
     // Validate workfile is in QC status
-    if (workfile.status !== "QC") return false
+    if (workfile.status !== WorkfileStatus.QC) return false
 
     // Validate all QC checks are completed
     if (!workfile.isVoilComplete || !workfile.is4CornersComplete || !workfile.qcCompleted) {
@@ -271,7 +256,7 @@ export const useWorkfileStore = create<WorkfileStore>((set, get) => ({
 
     // Update workfile status to Ready for Pickup
     get().updateWorkfile(workfileId, {
-      status: "Ready for Pickup",
+      status: WorkfileStatus.ReadyForPickup,
       lastUpdatedDate: new Date().toISOString(),
       repairCompletedDate: new Date().toISOString()
     })
@@ -284,14 +269,14 @@ export const useWorkfileStore = create<WorkfileStore>((set, get) => ({
     if (!workfile) return false
 
     // Validate workfile is in Ready for Pickup status
-    if (workfile.status !== "Ready for Pickup") return false
+    if (workfile.status !== WorkfileStatus.ReadyForPickup) return false
 
     // Calculate final cycle time
     const cycleTime = get().calculateCycleTime(workfileId)
 
     // Update workfile status to Archived
     get().updateWorkfile(workfileId, {
-      status: "Archived",
+      status: WorkfileStatus.Archived,
       lastUpdatedDate: new Date().toISOString(),
       vehicleOutDate: new Date().toISOString(),
       cycleTime: cycleTime || undefined

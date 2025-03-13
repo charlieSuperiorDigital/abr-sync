@@ -10,7 +10,7 @@ import {
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { ColumnDef } from '@tanstack/react-table'
 import { ClipboardPlus } from 'lucide-react'
-import { Opportunity } from '@/app/types/opportunity'
+import { Opportunity, OpportunityStatus } from '@/app/types/opportunity'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import { useState, useCallback } from 'react'
@@ -54,6 +54,10 @@ export default function EstimateOpportunities() {
       ),
     },
     {
+      accessorKey: 'roNumber',
+      header: 'RO Number',
+    },
+    {
       accessorKey: 'insurance.claimNumber',
       header: 'Claim',
     },
@@ -67,8 +71,12 @@ export default function EstimateOpportunities() {
       ),
     },
     {
-      accessorKey: 'customer.name',
+      accessorKey: 'owner.name',
       header: 'Owner',
+    },
+    {
+      accessorKey: 'stage',
+      header: 'Stage',
     },
     {
       accessorKey: 'isInRental',
@@ -149,8 +157,8 @@ export default function EstimateOpportunities() {
     },
   ]
 
-  // Get opportunities in "Estimate" status from the store
-  const opportunities = getOpportunitiesByStatus("Estimate")
+  // Get opportunities in Estimate status from the store
+  const opportunities = getOpportunitiesByStatus(OpportunityStatus.Estimate)
 
   return (
     <div className="w-full">

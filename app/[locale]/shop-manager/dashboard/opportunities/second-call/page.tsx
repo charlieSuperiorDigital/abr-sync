@@ -10,7 +10,7 @@ import {
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { ColumnDef } from '@tanstack/react-table'
 import { ClipboardPlus } from 'lucide-react'
-import { Opportunity } from '@/app/types/opportunity'
+import { Opportunity, OpportunityStatus } from '@/app/types/opportunity'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import { useState, useCallback } from 'react'
@@ -149,8 +149,8 @@ export default function SecondCallOpportunities() {
     },
   ]
 
-  // Get opportunities in "2nd Call" status from the store
-  const opportunities = getOpportunitiesByStatus("2nd Call")
+  // Get opportunities in 2nd Call status from the store
+  const opportunities = getOpportunitiesByStatus(OpportunityStatus.SecondCall)
 
   return (
     <div className="w-full">

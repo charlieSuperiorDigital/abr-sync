@@ -54,6 +54,10 @@ export default function Opportunities() {
       ),
     },
     {
+      accessorKey: 'roNumber',
+      header: 'RO Number',
+    },
+    {
       accessorKey: 'insurance.claimNumber',
       header: 'Claim',
     },
@@ -67,7 +71,7 @@ export default function Opportunities() {
       ),
     },
     {
-      accessorKey: 'customer.name',
+      accessorKey: 'owner.name',
       header: 'Owner',
     },
     {
