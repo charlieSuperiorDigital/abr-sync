@@ -57,7 +57,8 @@ const OpportunityModal = ({ opportunity }: OpportunityModalProps) => {
             )}
           </div>
           <h2 className="text-xl font-bold">
-            {opportunity.vehicle.exteriorColor} {opportunity.vehicle.make} {opportunity.vehicle.year} RO #{opportunity.opportunityId}
+            {opportunity.vehicle.exteriorColor} {opportunity.vehicle.make} {opportunity.vehicle.year} 
+            {opportunity.roNumber ? ` RO #${opportunity.roNumber}` : ` OPP #${opportunity.opportunityId}`}
           </h2>
           <div className="mt-2 flex gap-4">
             {opportunity.vehicle.photos && opportunity.vehicle.photos.length > 0 ? (
@@ -93,12 +94,21 @@ const OpportunityModal = ({ opportunity }: OpportunityModalProps) => {
       <div className="grid grid-cols-3 gap-6">
         {/* Left Column */}
         <div className="col-span-2 space-y-6">
-          {/* Vehicle and Customer Info */}
+          {/* Vehicle and Owner Info */}
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
                 <h3 className="font-semibold mb-2">Estimate</h3>
                 <p className="text-lg font-bold">${formatCurrency(opportunity.estimateAmount || 0)}</p>
+                {opportunity.estimateSource && (
+                  <p className="text-sm text-gray-600">Source: {opportunity.estimateSource}</p>
+                )}
+                {opportunity.estimateVersion && (
+                  <p className="text-sm text-gray-600">Version: {opportunity.estimateVersion}</p>
+                )}
+                {opportunity.estimateHours && (
+                  <p className="text-sm text-gray-600">Hours: {opportunity.estimateHours}</p>
+                )}
               </div>
               <div>
                 <h3 className="font-semibold mb-2">Tech</h3>
@@ -111,20 +121,34 @@ const OpportunityModal = ({ opportunity }: OpportunityModalProps) => {
                 <h3 className="font-semibold mb-2">Est.</h3>
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded-full bg-gray-200"></div>
-                  <span>{opportunity.estimator?.name || 'Unassigned'}</span>
+                  <span>{opportunity.estimator?.estimatorName || 'Unassigned'}</span>
                 </div>
               </div>
             </div>
             <div>
-              <h3 className="font-semibold mb-2">{opportunity.customer.name}, Vehicle Owner</h3>
+              <h3 className="font-semibold mb-2">{opportunity.owner.name}, Vehicle Owner</h3>
               <p className="text-sm text-gray-600 mb-4">
-                {opportunity.customer.phone} {opportunity.customer.email}<br />
-                {opportunity.customer.address}
+                {opportunity.owner.phone}
+                {opportunity.owner.secondaryPhone && ` / ${opportunity.owner.secondaryPhone}`}
+                <br />
+                {opportunity.owner.email}<br />
+                {opportunity.owner.address}
+                {opportunity.owner.city && `, ${opportunity.owner.city}`}
+                {opportunity.owner.state && `, ${opportunity.owner.state}`}
+                {opportunity.owner.zip && ` ${opportunity.owner.zip}`}
+                {opportunity.owner.company && <><br />Company: {opportunity.owner.company}</>}
               </p>
               
               <h3 className="font-semibold mb-2">
-                Adjuster: {opportunity.insurance.representative}, {opportunity.insurance.company}
+                Insurance Details
               </h3>
+              <p className="text-sm text-gray-600">
+                {opportunity.insurance.company}<br />
+                Rep: {opportunity.insurance.representative}<br />
+                {opportunity.insurance.adjuster && <>Adjuster: {opportunity.insurance.adjuster}<br /></>}
+                {opportunity.insurance.adjusterPhone && <>Phone: {opportunity.insurance.adjusterPhone}<br /></>}
+                {opportunity.insurance.adjusterEmail && <>Email: {opportunity.insurance.adjusterEmail}</>}
+              </p>
             </div>
           </div>
 

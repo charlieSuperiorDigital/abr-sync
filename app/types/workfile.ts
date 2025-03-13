@@ -1,14 +1,19 @@
 import { Task } from './task'
 
+// Tracks the current state of the workfile
+export enum WorkfileStatus {
+  Upcoming = "Upcoming", // Vehicle has been dropped off, workfile created
+  InProgress = "In Progress", // Active repair work is being done
+  QC = "QC", // Vehicle undergoing quality control inspection
+  ReadyForPickup = "Ready for Pickup", // Repair complete, vehicle ready for pickup
+  Archived = "Archived" // Workfile is archived
+}
+
 export type Workfile = {
     workfileId: string; // Unique identifier for the workfile
     opportunityId: string; // Reference to the original opportunity
-    status: 
-      | "Upcoming" 
-      | "In Progress" 
-      | "QC" 
-      | "Ready for Pickup" 
-      | "Archived"; // Possible statuses
+    roNumber?: string; // RO number
+    status: WorkfileStatus; // Current status of the workfile
     createdDate: string; // Date the workfile was created (ISO format)
     lastUpdatedDate: string; // Date the workfile was last updated (ISO format)
     vehicle: {
@@ -22,11 +27,16 @@ export type Workfile = {
       mileageIn: number; // Mileage when the vehicle was checked in
       vehiclePicturesUrls: string[]; // URLs of vehicle pictures
     };
-    customer: {
-      name: string; // Customer name
-      phone: string; // Customer phone number
-      email: string; // Customer email
-      address: string; // Customer address
+    owner: { // Renamed from customer to match opportunity type
+      name: string; // Owner name
+      phone: string; // Owner phone number
+      secondaryPhone?: string; // Owner secondary phone number
+      email: string; // Owner email
+      address: string; // Owner address
+      city?: string; // Owner city
+      state?: string; // Owner state
+      zip?: string; // Owner zip code
+      company?: string; // Owner's company name (optional)
     };
     insurance: {
       company: string; // Insurance company (e.g., Progressive)
@@ -34,11 +44,19 @@ export type Workfile = {
       policyNumber: string; // Policy number
       deductible: number; // Deductible amount
       typeOfLoss: string; // Type of loss (e.g., Collision, Hail Damage)
+      adjuster?: string; // Adjuster name
+      adjusterPhone?: string; // Adjuster phone number
+      adjusterEmail?: string; // Adjuster email
     };
     inDate: string; // Date the vehicle was checked in (ISO format)
     estimatedCompletionDate?: string; // Estimated completion date (ISO format)
     estimateAmount?: number; // Total amount of the approved estimate
-    
+    estimateSource?: string; // Source of the estimate (e.g., "CCC ONE", "Ultramate EMS")
+    estimateVersion?: number; // Version of the estimate
+    estimateHours?: number; // Estimate hours
+    location?: string; // Location of the repair
+    repairPhase?: "Not Started" | "In Progress" | "Upcoming" | "QC" | "Ready for Pickup" | "Archived" | "Delivered"; // Repair phase
+
     // Parts tracking (Critical Metric)
     parts?: {
       total: number; // Total number of parts

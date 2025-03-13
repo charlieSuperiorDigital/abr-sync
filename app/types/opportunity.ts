@@ -1,14 +1,33 @@
 import { Task } from './task'
 
+// Tracks the high-level state of the opportunity or repair order
+export enum OpportunityStatus {
+  New = "New", // Initial contact with owner to schedule drop date
+  SecondCall = "2nd Call", // Follow-up if owner doesn't respond
+  Estimate = "Estimate", // When estimate is created and approved
+  TotalLoss = "Total Loss", // If vehicle is declared total loss
+  Upcoming = "Upcoming", // Vehicle dropped off, workfile created
+  Archived = "Archived" // Opportunity is archived
+}
+
+// Tracks the detailed progress of the repair process
+export enum RepairStage {
+  EstimateCreated = "Estimate Created", // The initial estimate has been created
+  EstimateApproved = "Estimate Approved", // The estimate has been approved by insurance
+  PartsOrdered = "Parts Ordered", // Parts required for repair have been ordered
+  RepairInProgress = "Repair In Progress", // The repair work has started
+  QCInspection = "QC Inspection", // Vehicle undergoing quality control inspection
+  ReadyForPickup = "Ready for Pickup", // Repair complete, vehicle ready for pickup
+  VehiclePickedUp = "Vehicle Picked Up", // Vehicle has been picked up by owner
+  RepairOrder = "Repair Order", // Legacy stage for repair orders
+  Opportunity = "Opportunity" // Legacy stage for opportunities
+}
+
 export type Opportunity = {
   opportunityId: string; // Unique identifier for the opportunity
-  status:
-  | "New" // Initial contact with customer to schedule drop date
-  | "2nd Call" // Follow-up if customer doesn't respond
-  | "Estimate" // When estimate is created and approved
-  | "Total Loss" // If vehicle is declared total loss
-  | "Upcoming" // Vehicle dropped off, workfile created
-  | "Archived"; // Opportunity is archived
+  roNumber?: string; // RO number
+  status: OpportunityStatus; // Current status of the opportunity
+  stage: RepairStage; // Current stage of the repair process
   createdDate: string; // Date the opportunity was created (ISO format)
   lastUpdatedDate: string; // Date the opportunity was last updated (ISO format)
   priority: "Normal" | "High"; // Priority level
@@ -30,11 +49,15 @@ export type Opportunity = {
       dateAdded: string;
     }>;
   };
-  customer: {
+  owner: { //this was called customer before
     name: string; // Customer name
     phone: string; // Customer phone number
+    secondaryPhone?: string; // Customer secondary phone number
     email: string; // Customer email
     address: string; // Customer address
+    city?: string; // Customer city
+    state?: string; // Customer state
+    zip?: string; // Customer zip code
     company?: string; // Customer's company name (optional)
   };
   insurance: {
@@ -45,6 +68,9 @@ export type Opportunity = {
     typeOfLoss: string; // Type of loss (e.g., Collision, Hail Damage)
     representative: string; // Insurance representative name
     approved?: boolean; // Indicates if the insurance is approved
+    adjuster?: string; // Adjuster name
+    adjusterPhone?: string; // Adjuster phone number
+    adjusterEmail?: string; // Adjuster email
   };
   dropDate?: string; // Scheduled drop date (ISO format)
   lastCommunicationSummary?: string; // Summary of the last communication
@@ -61,6 +87,8 @@ export type Opportunity = {
 
   // Additional fields for modal
   estimateAmount?: number; // Estimated amount for the repair
+  estimateSource?: string; // Source of the estimate (e.g., "CCC ONE", "Ultramate EMS").
+  estimateVersion?: number; // Version of the estimate
   assignedTech?: {
     id: string; // ID of the assigned technician
     name: string; // Name of the assigned technician
@@ -69,7 +97,7 @@ export type Opportunity = {
   };
   estimator?: {
     id: string; // ID of the estimator
-    name: string; // Name of the estimator
+    estimatorName: string; // Name of the estimator
     avatar?: string; // Avatar of the estimator
   };
   attachments?: Array<{
@@ -100,7 +128,12 @@ export type Opportunity = {
   repairStartDate?: string; // Start date of the repair
   repairInProgressDate?: string; // Date when the repair is in progress
   repairCompletedDate?: string; // Date when the repair is completed
+  location?: string; // Location of the repair
+  dateClosed?: string; // Date when the opportunity is closed
   vehicleOutDate?: string; // Date when the vehicle is out
+  vehicleInDate?: string; // Date when the vehicle is in
+  estimateHours?: number; // Estimate hours
+  repairPhase?: "In Progress" | "Upcoming" | "QC" | "Ready for Pickup" | "Archived" |"Not Started" |"Delivered"; // Repair phase
   estimatedCompletionDate?: string; // ECD tracking
   weatherImpact?: {
     affectsPaint: boolean;

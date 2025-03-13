@@ -1,7 +1,8 @@
 import { create } from 'zustand'
-import { Opportunity } from '../types/opportunity'
+import { Opportunity, OpportunityStatus, RepairStage } from '../types/opportunity'
 import { opportunities } from '../mocks/opportunities_new'
 import { useWorkfileStore } from './workfile-store'
+import { WorkfileStatus } from '../types/workfile'
 
 interface OpportunityStore {
   opportunities: Opportunity[]
@@ -11,7 +12,7 @@ interface OpportunityStore {
   addOpportunity: (opportunity: Opportunity) => void
   removeOpportunity: (opportunityId: string) => void
   // Filter opportunities by workflow state
-  getOpportunitiesByStatus: (status: "New" | "2nd Call" | "Estimate" | "Total Loss" | "Upcoming" | "Archived") => Opportunity[]
+  getOpportunitiesByStatus: (status: OpportunityStatus) => Opportunity[]
   // Get opportunity by ID
   getOpportunityById: (opportunityId: string) => Opportunity | undefined
   // Get opportunities that need follow-up (in 2nd Call status)
@@ -70,7 +71,7 @@ export const useOpportunityStore = create<OpportunityStore>((set, get) => ({
   },
 
   getFollowUpOpportunities: () => {
-    return get().opportunities.filter((opp) => opp.status === "2nd Call")
+    return get().opportunities.filter((opp) => opp.status === OpportunityStatus.SecondCall)
   },
 
   getUpcomingDrops: () => {
@@ -78,7 +79,7 @@ export const useOpportunityStore = create<OpportunityStore>((set, get) => ({
     const in24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000)
 
     return get().opportunities.filter((opp) => {
-      if (!opp.dropDate || opp.status !== "New") return false
+      if (!opp.dropDate || opp.status !== OpportunityStatus.New) return false
       const dropDate = new Date(opp.dropDate)
       return dropDate <= in24Hours && dropDate >= now
     })
@@ -87,7 +88,7 @@ export const useOpportunityStore = create<OpportunityStore>((set, get) => ({
   getReadyForWorkfile: () => {
     return get().opportunities.filter((opp) => {
       // Check if opportunity is in the right state
-      if (opp.status !== "Estimate") return false
+      if (opp.status !== OpportunityStatus.Estimate) return false
       
       // Check if insurance is approved
       if (!opp.insurance.approved) return false
@@ -104,7 +105,7 @@ export const useOpportunityStore = create<OpportunityStore>((set, get) => ({
     if (!opportunity) return
 
     // Only create workfile if opportunity is in the right state
-    if (opportunity.status !== "Estimate" || !opportunity.insurance.approved) return
+    if (opportunity.status !== OpportunityStatus.Estimate || !opportunity.insurance.approved) return
 
     const workfileStore = useWorkfileStore.getState()
     
@@ -112,25 +113,39 @@ export const useOpportunityStore = create<OpportunityStore>((set, get) => ({
     const workfile = {
       workfileId: `WF${Date.now()}`,
       opportunityId: opportunity.opportunityId,
-      status: "Upcoming" as const,
+      roNumber: opportunity.roNumber,
+      status: WorkfileStatus.Upcoming,
       createdDate: new Date().toISOString(),
       lastUpdatedDate: new Date().toISOString(),
       vehicle: opportunity.vehicle,
-      customer: opportunity.customer,
-      insurance: opportunity.insurance,
-      inDate: new Date().toISOString(),
+      owner: opportunity.owner,
+      insurance: {
+        ...opportunity.insurance,
+        adjuster: opportunity.insurance.adjuster,
+        adjusterPhone: opportunity.insurance.adjusterPhone,
+        adjusterEmail: opportunity.insurance.adjusterEmail,
+      },
+      inDate: opportunity.vehicleInDate || new Date().toISOString(),
       estimatedCompletionDate: opportunity.estimatedCompletionDate,
       estimateAmount: opportunity.estimateAmount,
+      estimateSource: opportunity.estimateSource,
+      estimateVersion: opportunity.estimateVersion,
+      estimateHours: opportunity.estimateHours,
       isVoilComplete: opportunity.isVoilComplete,
       is4CornersComplete: opportunity.is4CornersComplete,
       weatherImpact: opportunity.weatherImpact,
+      location: opportunity.location,
+      repairPhase: opportunity.repairPhase || "Not Started",
     }
 
     // Add workfile to store
     workfileStore.addWorkfile(workfile)
 
-    // Update opportunity status
-    get().updateOpportunity(opportunityId, { status: "Upcoming" })
+    // Update opportunity status and stage
+    get().updateOpportunity(opportunityId, { 
+      status: OpportunityStatus.Upcoming,
+      stage: RepairStage.RepairOrder
+    })
   },
 
   checkUploadDeadline: (opportunityId) => {
@@ -151,7 +166,7 @@ export const useOpportunityStore = create<OpportunityStore>((set, get) => ({
   getWeatherImpactedOpportunities: () => {
     return get().opportunities.filter((opp) => 
       opp.weatherImpact?.affectsPaint && 
-      (opp.status === "Estimate" || opp.status === "Upcoming")
+      (opp.status === OpportunityStatus.Estimate || opp.status === OpportunityStatus.Upcoming)
     )
   },
 }))
