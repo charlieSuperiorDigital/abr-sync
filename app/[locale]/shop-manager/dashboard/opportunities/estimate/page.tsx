@@ -11,6 +11,8 @@ import {
 } from '@/components/custom-components/custom-table/table-cells'
 import { PanelTop } from 'lucide-react'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
+import { opportunities } from '@/app/mocks/opportunities_new'
+import { Opportunity } from '@/app/types/opportunity'
 
 export default function Estimate() {
   const columns: ColumnDef<IEstimate>[] = [
@@ -125,11 +127,41 @@ export default function Estimate() {
       cell: ({ row }) => <PanelTop size={18} />,
     },
   ]
+
+  // Transform Opportunity data to match IEstimate interface
+  const estimateData: IEstimate[] = opportunities
+    .filter(opp => opp.status === "Estimate")
+    .map(opp => ({
+      roNumber: '---', // Not available in Opportunity type
+      vehicle: {
+        id: opp.vehicle.vin, // Using VIN as ID
+        make: opp.vehicle.make,
+        model: opp.vehicle.model,
+        year: opp.vehicle.year,
+        imageUrl: `https://picsum.photos/seed/${opp.opportunityId}/200/100`,
+      },
+      estimateUrl: '/estimates/pending.pdf', // Placeholder
+      owner: opp.customer.name,
+      partsCount: 0, // Not available in Opportunity type
+      partsStatus: null, // Not available in Opportunity type
+      inRental: opp.isInRental || false,
+      priority: opp.priority === 'High' ? 'HIGH' : 'NORMAL', // Convert to match IEstimate format
+      warning: {
+        message: '',
+        type: null,
+      },
+      insuranceApproval: 'PENDING APPROVAL', // Default since not available in Opportunity
+      hasPreferredContact: false, // Not available in Opportunity type
+      email: opp.customer.email,
+      phone: opp.customer.phone,
+      messages: '', // Not available in Opportunity type
+    }))
+
   return (
     <div className="flex flex-col min-h-screen">
       <DataTable
         columns={columns}
-        data={mockEstimate}
+        data={estimateData}
         onRowClick={(row) => console.log('Row clicked:', row)}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}

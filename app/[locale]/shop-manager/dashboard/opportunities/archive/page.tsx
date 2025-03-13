@@ -1,15 +1,15 @@
 'use client'
 
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
-import { archiveMock, IArchive } from './mock/mock-data'
-import { ColumnDef } from '@tanstack/react-table'
+import { IArchive } from './mock/mock-data'
 import {
-  ArchiveButtonCell,
-  DocumentCell,
-  SummaryCell,
+  StatusBadgeCell,
   UserAvatarCell,
   VehicleCell,
 } from '@/components/custom-components/custom-table/table-cells'
+import { ColumnDef } from '@tanstack/react-table'
+import { PanelTop } from 'lucide-react'
+import { opportunities } from '@/app/mocks/opportunities_new'
 
 export default function Archive() {
   const columns: ColumnDef<IArchive>[] = [
@@ -31,7 +31,7 @@ export default function Archive() {
     },
     {
       accessorKey: 'roNumber',
-      header: 'RO #',
+      header: 'Ro#',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">{row.original.roNumber}</span>
       ),
@@ -43,7 +43,6 @@ export default function Archive() {
         <span className="whitespace-nowrap">{row.original.customer}</span>
       ),
     },
-
     {
       accessorKey: 'firstCall',
       header: 'First Call',
@@ -58,14 +57,13 @@ export default function Archive() {
         <span className="whitespace-nowrap">{row.original.secondCall}</span>
       ),
     },
-
     {
       accessorKey: 'lastUpdatedBy',
       header: 'Last Updated By',
       cell: ({ row }) => (
         <UserAvatarCell
-          name={row.original.lastUpdatedBy.name}
           avatarUrl={row.original.lastUpdatedBy.avatar}
+          name={row.original.lastUpdatedBy.name}
         />
       ),
     },
@@ -77,33 +75,61 @@ export default function Archive() {
       ),
     },
     {
-      id: 'timeTracking',
-      header: 'timeTracking',
+      accessorKey: 'timeTracking',
+      header: 'Time Tracking',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.lastUpdated}</span>
+        <span className="whitespace-nowrap">{row.original.timeTracking}</span>
       ),
     },
     {
-      id: 'lastUpdated',
-      header: 'Last Updated',
-      cell: ({ row }) => <SummaryCell />,
+      accessorKey: 'priority',
+      header: 'Priority',
+      cell: ({ row }) => (
+        row.original.priority && (
+          <StatusBadgeCell
+            status="High"
+            variant="warning"
+          />
+        )
+      ),
     },
     {
-      id: 'actions',
+      id: 'task',
       header: '',
-      cell: ({ row }) => (
-        <ArchiveButtonCell
-          archive={false}
-          onClick={() => console.log('Archive clicked')}
-        />
-      ),
+      cell: ({ row }) => <PanelTop size={18} />,
     },
   ]
+
+  // Transform Opportunity data to match IArchive interface
+  const archiveData: IArchive[] = opportunities
+    .filter(opp => opp.status === "Archived")
+    .map(opp => ({
+      id: opp.opportunityId,
+      claim: opp.insurance.claimNumber,
+      vehicle: {
+        image: `https://picsum.photos/seed/${opp.opportunityId}/200/100`,
+        year: opp.vehicle.year,
+        make: opp.vehicle.make,
+        model: opp.vehicle.model,
+      },
+      roNumber: '---', // Not available in Opportunity type
+      customer: opp.customer.name,
+      firstCall: new Date(opp.createdDate).toLocaleDateString(), // Using createdDate as first call
+      secondCall: new Date(opp.lastUpdatedDate).toLocaleDateString(), // Using lastUpdatedDate as second call
+      lastUpdatedBy: {
+        name: 'System', // Not available in Opportunity type
+        avatar: '/placeholder.svg?height=24&width=24',
+      },
+      lastUpdated: new Date(opp.lastUpdatedDate).toLocaleDateString(),
+      timeTracking: '---', // Not available in Opportunity type
+      priority: opp.priority === 'High', // Convert string priority to boolean
+    }))
+
   return (
     <div className="flex flex-col min-h-screen">
       <DataTable
         columns={columns}
-        data={archiveMock}
+        data={archiveData}
         onRowClick={(row) => console.log('Row clicked:', row)}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}

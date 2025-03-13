@@ -14,13 +14,6 @@ interface DraggableNavProps {
   navItems?: NavItem[]
 }
 
-const defaultItems: NavItem[] = [
-  { id: 'new-opportunities', label: 'New Opportunities', count: 72 },
-  { id: 'estimate', label: 'Estimate', count: 30 },
-  { id: 'second-call', label: 'Second Call', count: 2 },
-  { id: 'total-loss', label: 'Total Loss', count: 3 },
-  { id: 'archive', label: 'Archive', count: 6 },
-]
 
 export default function DraggableNav({ navItems }: DraggableNavProps) {
   const [items, setItems] = useState<NavItem[]>([])
@@ -29,26 +22,41 @@ export default function DraggableNav({ navItems }: DraggableNavProps) {
   const router = useRouter()
   const pathname = usePathname()
 
-  useEffect(() => {
-    const savedOrder = document.cookie
-      .split('; ')
-      .find((row) => row.startsWith('navOrder='))
-      ?.split('=')[1]
+  // useEffect(() => {
+  //   const savedOrder = document.cookie
+  //     .split('; ')
+  //     .find((row) => row.startsWith('navOrder='))
+  //     ?.split('=')[1]
 
-    if (savedOrder) {
-      try {
-        const savedItems = JSON.parse(decodeURIComponent(savedOrder))
-        setItems(savedItems)
-        setActiveTab(savedItems[0].id)
-      } catch {
-        setItems(navItems || defaultItems)
-        setActiveTab((navItems || defaultItems)[0].id)
+  //   if (savedOrder) {
+  //     try {
+  //       const savedItems = JSON.parse(decodeURIComponent(savedOrder))
+  //       setItems(savedItems)
+  //       setActiveTab(savedItems[0].id)
+  //     } catch {
+  //       setItems(navItems || defaultItems)
+  //       setActiveTab((navItems || defaultItems)[0].id)
+  //     }
+  //   } else {
+  //     setItems(navItems || defaultItems)
+  //     setActiveTab((navItems || defaultItems)[0].id)
+  //   }
+  // }, [navItems])
+
+  useEffect(() => {
+
+    // const savedOrder = document.cookie
+    //   .split('; ')
+    //   .find((row) => row.startsWith('navOrder='))
+    //   ?.split('=')[1]
+
+      if (navItems) {
+        setItems(navItems)
+        setActiveTab(navItems[0].id)
       }
-    } else {
-      setItems(navItems || defaultItems)
-      setActiveTab((navItems || defaultItems)[0].id)
-    }
-  }, [navItems])
+
+
+  }, [])
 
   useEffect(() => {
     const currentTab = pathname.split('/').pop()
@@ -81,13 +89,16 @@ export default function DraggableNav({ navItems }: DraggableNavProps) {
   }
 
   const handleClick = (id: string) => {
+
+    const pageName = pathname.split('/')[4]
+    
     if (id === '2nd-call') id = 'second-call'
     setActiveTab(id)
-    router.push(`/en/shop-manager/dashboard/opportunities/${id}`)
+    router.push(`/en/shop-manager/dashboard/${pageName}/${id}`)
   }
 
   return (
-    <nav className="w-full max-w-3xl border-b border-gray-200">
+    <nav className="w-full  border-b border-gray-200">
       <div className="flex items-center space-x-1 overflow-x-auto">
         {items.map((item, index) => (
           <div

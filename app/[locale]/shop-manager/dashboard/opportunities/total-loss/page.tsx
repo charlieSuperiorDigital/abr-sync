@@ -1,14 +1,16 @@
 'use client'
+
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
-import { ITotalLoss, mockTotalLoss } from './mock/mock-data'
-import { ColumnDef } from '@tanstack/react-table'
+import { ITotalLoss } from './mock/mock-data'
 import {
   ContactMethodCell,
   DocumentCell,
-  SummaryCell,
+  StatusBadgeCell,
   VehicleCell,
 } from '@/components/custom-components/custom-table/table-cells'
+import { ColumnDef } from '@tanstack/react-table'
 import { PanelTop } from 'lucide-react'
+import { opportunities } from '@/app/mocks/opportunities_new'
 
 export default function TotalLoss() {
   const columns: ColumnDef<ITotalLoss>[] = [
@@ -35,22 +37,20 @@ export default function TotalLoss() {
         <span className="whitespace-nowrap">{row.original.customer}</span>
       ),
     },
-
     {
       accessorKey: 'insurance',
       header: 'Insurance',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.insurance}</span>
+        <span className={`whitespace-nowrap font-bold ${row.original.insurance === 'Progressive' ? 'text-blue-700' : ''}`}>
+          {row.original.insurance.toUpperCase()}
+        </span>
       ),
     },
-
     {
       accessorKey: 'nroCommunication',
-      header: '# Of Communications',
+      header: 'Communication',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">
-          {row.original.nroCommunication}
-        </span>
+        <span className="whitespace-nowrap">{row.original.nroCommunication}</span>
       ),
     },
     {
@@ -61,19 +61,21 @@ export default function TotalLoss() {
       ),
     },
     {
-      id: 'finalBill',
+      accessorKey: 'finalBill',
       header: 'Final Bill',
       cell: ({ row }) => (
-        <DocumentCell
-          fileName={row.original.finalBill.fileName}
-          onClick={() => console.log('click doc')}
-        />
+        <DocumentCell fileName={row.original.finalBill.fileName} />
       ),
     },
     {
-      id: 'lastUpdated',
-      header: 'Last Updated',
-      cell: ({ row }) => <SummaryCell />,
+      accessorKey: 'isPickedUp',
+      header: 'Status',
+      cell: ({ row }) => (
+        <StatusBadgeCell
+          status={row.original.isPickedUp ? 'Picked Up' : 'Pending'}
+          variant={row.original.isPickedUp ? 'forest' : 'warning'}
+        />
+      ),
     },
     {
       id: 'actions',
@@ -92,11 +94,45 @@ export default function TotalLoss() {
       cell: ({ row }) => <PanelTop size={18} />,
     },
   ]
+
+  // Transform Opportunity data to match ITotalLoss interface
+  const totalLossData: ITotalLoss[] = opportunities
+    .filter(opp => opp.status === "Total Loss")
+    .map(opp => ({
+      id: opp.opportunityId,
+      claim: opp.insurance.claimNumber,
+      vehicle: {
+        year: opp.vehicle.year,
+        make: opp.vehicle.make,
+        model: opp.vehicle.model,
+        imageUrl: `https://picsum.photos/seed/${opp.opportunityId}/200/100`,
+      },
+      customer: opp.customer.name,
+      insurance: opp.insurance.company,
+      nroCommunication: 0, // Not available in Opportunity type
+      communication: {
+        hasEmail: !!opp.customer.email,
+        hasPhone: !!opp.customer.phone,
+        hasMessages: false,
+        totalCommunications: 0,
+      },
+      timeTracking: '---', // Not available in Opportunity type
+      finalBill: {
+        fileName: 'FinalBill.pdf',
+        url: '/documents/finalbill.pdf',
+      },
+      isPickedUp: false, // Not available in Opportunity type
+      hasDocument: false, // Not available in Opportunity type
+      email: opp.customer.email,
+      phone: opp.customer.phone,
+      messages: '', // Not available in Opportunity type
+    }))
+
   return (
     <div className="flex flex-col min-h-screen">
       <DataTable
         columns={columns}
-        data={mockTotalLoss}
+        data={totalLossData}
         onRowClick={(row) => console.log('Row clicked:', row)}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}

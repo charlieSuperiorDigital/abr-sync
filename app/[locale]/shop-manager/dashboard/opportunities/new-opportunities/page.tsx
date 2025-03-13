@@ -1,6 +1,5 @@
 'use client'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
-import { mockVehicles, NewOpportunites } from './mock/mock-data'
 import {
   AutoCell,
   ContactMethodCell,
@@ -11,9 +10,11 @@ import {
 } from '@/components/custom-components/custom-table/table-cells'
 import { ColumnDef } from '@tanstack/react-table'
 import { MessageSquareMore, PanelTop } from 'lucide-react'
+import { opportunities } from '@/app/mocks/opportunities_new'
+import { Opportunity } from '@/app/types/opportunity'
 
 export default function NewOpportunities() {
-  const columns: ColumnDef<NewOpportunites>[] = [
+  const columns: ColumnDef<Opportunity>[] = [
     {
       accessorKey: 'vehicle',
       header: 'Vehicle',
@@ -22,96 +23,80 @@ export default function NewOpportunities() {
           make={row.original.vehicle.make}
           model={row.original.vehicle.model}
           year={row.original.vehicle.year}
-          imageUrl={row.original.vehicle.imageUrl}
+          imageUrl={`https://picsum.photos/seed/${row.original.opportunityId}/200/100`}
         />
       ),
     },
     {
-      accessorKey: 'claim',
+      accessorKey: 'insurance.claimNumber',
       header: 'Claim',
     },
     {
-      accessorKey: 'insurance',
+      accessorKey: 'insurance.company',
       header: 'Insurance',
       cell: ({ row }) => (
-        <span
-          className={`whitespace-nowrap font-bold ${row.original.insurance.company === 'PROGRESSIVE' ? 'text-blue-700' : ''}`}
-        >
-          {row.original.insurance.company}
+        <span className={`whitespace-nowrap font-bold ${row.original.insurance.company === 'PROGRESSIVE' ? 'text-blue-700' : ''}`}>
+          {row.original.insurance.company.toUpperCase()}
         </span>
       ),
     },
     {
-      accessorKey: 'owner',
+      accessorKey: 'customer.name',
       header: 'Owner',
     },
     {
-      accessorKey: 'inRental',
+      accessorKey: 'isInRental',
       header: 'In Rental',
-      cell: ({ row }) => (row.original.inRental ? <AutoCell /> : null),
+      cell: ({ row }) => (row.original.isInRental ? 'Yes' : 'No'),
     },
     {
       accessorKey: 'dropDate',
       header: 'Drop Date',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.dropDate}</span>
-      ),
     },
     {
-      accessorKey: 'warning',
-      header: 'Warning',
-      cell: ({ row }) =>
-        row.original.warning ? (
-          <StatusBadgeCell
-            variant="danger"
-            status={row.original.warning.type}
-          />
-        ) : null,
+      accessorKey: 'lastUpdatedDate',
+      header: 'Last Comm',
+      cell: ({ row }) => <UploadTimeCell deadline={row.original.lastUpdatedDate} />,
     },
     {
-      id: 'uploadDeadline',
-      header: 'Upload Deadline',
-      cell: ({ row }) => (
-        <UploadTimeCell deadline={row.original.uploadDeadline} />
-      ),
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <StatusBadgeCell status={row.original.status} />,
     },
     {
-      id: 'lastCommDate',
-      header: 'Last Communication',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.lastCommDate}</span>
-      ),
+      accessorKey: 'customer.email',
+      header: 'Email',
+      cell: ({ row }) => <ContactMethodCell email={row.original.customer.email} />,
     },
     {
+      accessorKey: 'customer.phone',
+      header: 'Phone',
+      cell: ({ row }) => <ContactMethodCell phone={row.original.customer.phone} />,
+    },
+    {
+      accessorKey: 'lastCommunicationSummary',
+      header: 'Message',
+      cell: ({ row }) => <MessageSquareMore size={18} />,
+    },
+    {
+      accessorKey: 'vehicle',
       header: 'Summary',
-      cell: ({ row }) => <SummaryCell />,
+      cell: () => <SummaryCell />,
     },
     {
       id: 'actions',
-      header: '',
-      cell: ({ row }) => (
-        <ContactMethodCell
-          email={row.original.email}
-          phone={row.original.phone}
-          messages={row.original.message}
-        />
-      ),
-    },
-    {
-      id: 'task',
-      header: '',
       cell: ({ row }) => <PanelTop size={18} />,
     },
   ]
+
   return (
     <div className="w-full">
       <DataTable
         columns={columns}
-        data={mockVehicles}
+        data={opportunities.filter(opp => opp.status === "New")}
         onRowClick={(row) => console.log('Row clicked:', row)}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
-        showPageSize={true}
       />
     </div>
   )
