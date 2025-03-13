@@ -1,6 +1,7 @@
 import {
   Archive,
   ClipboardList,
+  FolderOpen,
   Mail,
   Search,
   Settings,
@@ -42,7 +43,7 @@ export default function DashboardLayout({
             />
             <SideBarIconGroup
               link={'/shop-manager/dashboard/workfiles'}
-              icons={[{ newNotificationsQuantity: 2, Icon: Mail }]}
+              icons={[{ newNotificationsQuantity: 2, Icon: FolderOpen }]}
             />
             <SideBarIconGroup
               link={'/shop-manager/dashboard/parts-management'}
