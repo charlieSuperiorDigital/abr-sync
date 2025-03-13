@@ -25,7 +25,7 @@ import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { mockTasks } from '../../../../../mocks/tasks.mock'
 import { useTaskStore } from '@/app/stores/task-store'
 import { Task } from '@/app/types/task'
-import TaskModal from '@/components/custom-components/task-modal/task-modal'
+import EditTaskModal from '@/components/custom-components/task-modal/edit-task-modal'
 
 export default function NewOpportunities() {
   
@@ -139,7 +139,7 @@ export default function NewOpportunities() {
             variant: 'secondary',
             icon: 'edit',
             _component: 
-              <TaskModal 
+              <EditTaskModal 
               title={'Edit Task'}
               children={undefined} 
               isOpen={false} 
