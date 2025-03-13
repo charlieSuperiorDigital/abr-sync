@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { Task, TaskComment, TaskAttachment } from '../types/task'
-import { mockTasks } from '../[locale]/shop-manager/dashboard/tasks/my-tasks/mock/mock-data'
+import { mockTasks } from '../mocks/tasks.mock'
 
 interface TaskStore {
   tasks: Task[]

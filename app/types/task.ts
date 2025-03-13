@@ -29,6 +29,7 @@ export interface Task {
   email: string
   phone: string
   message: string
+  warningMessage?: string
   status?: 'open' | 'in_progress' | 'completed' | 'archived'
   assignedTo?: string
   lastUpdatedDate?: string

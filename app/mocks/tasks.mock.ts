@@ -1,22 +1,6 @@
-export interface MyTasks {
-    id: string
-    priority: {
-        variant: 'default' | 'danger' | 'warning' | 'neutral' | 'slate' | 'info' | 'success' | 'forest' | 'dark'
-        text: string
-    }
-    title: string
-    description: string
-    createdBy: string
-    createdDate: string
-    due: string
-    relatedTo: string
-    warningMessage?: string
-    email: string
-    phone: string
-    message: string
+import { Task } from '../types/task';
 
-  }
-  export function mapTasksData(data: any): MyTasks {
+  export function mapTasksData(data: any): Task {
 
 
     return {
@@ -36,7 +20,7 @@ export interface MyTasks {
     }
   }
   
-  export const mockTasks: MyTasks[] = [
+  export const mockTasks: Task[] = [
     {
         id: '473829',
         priority: {
@@ -51,7 +35,8 @@ export interface MyTasks {
         relatedTo: 'Insurance, Progressive',
         email: 'charliethompson@xpto.com',
         phone: '123-456-7890',
-        message: '27'
+        message: '27',
+        assignedTo: '1234567'
     },
     {
         id: '928374',
@@ -68,7 +53,8 @@ export interface MyTasks {
         warningMessage: 'Missing vehicle information',
         email: 'charliethompson@xpto.com',
         phone: '123-456-7890',
-        message: '27'
+        message: '27',
+        assignedTo: '123456'
     },
     {
         id: '184956',
@@ -84,7 +70,8 @@ export interface MyTasks {
         relatedTo: 'Workfile, RO #301904',
         email: 'charliethompson@xpto.com',
         phone: '123-456-7890',
-        message: '27'
+        message: '27',
+        assignedTo: '123456'
     },
     {
         id: '561042',
@@ -100,7 +87,8 @@ export interface MyTasks {
         relatedTo: 'Opportunity, Claim',
         email: 'charliethompson@xpto.com',
         phone: '123-456-7890',
-        message: '27'
+        message: '27',
+        assignedTo: '345678'
     },
     {
         id: '307815',
@@ -117,7 +105,8 @@ export interface MyTasks {
         warningMessage: 'Estimate updates',
         email: 'charliethompson@xpto.com',
         phone: '123-456-7890',
-        message: '27'
+        message: '27',
+        assignedTo: '123456'
     }
   ]
   
