@@ -1,3 +1,5 @@
+import { Task } from './task'
+
 export type Workfile = {
     workfileId: string; // Unique identifier for the workfile
     opportunityId: string; // Reference to the original opportunity
@@ -91,12 +93,5 @@ export type Workfile = {
     // Additional tracking
     isInRental?: boolean;
     uploadDeadline?: string; // 24-hour countdown after check-in
-    tasks?: Array<{
-      id: string;
-      name: string;
-      status: "Not Started" | "In Progress" | "Completed";
-      assignedTechId?: string;
-      estimatedHours: number;
-      completedDate?: string;
-    }>;
+    tasks?: Task[]; // Array of complete tasks linked to this workfile
 };

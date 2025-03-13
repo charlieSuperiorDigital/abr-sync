@@ -35,4 +35,5 @@ export interface Task {
   completedDate?: string
   attachments?: TaskAttachment[]
   comments?: TaskComment[]
+  estimatedHours?: number // Optional field for repair tasks
 }
