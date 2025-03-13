@@ -38,16 +38,23 @@ export const workfiles : Workfile[] = [
       inDate: "2023-10-11T08:00:00Z",
       estimatedCompletionDate: "2023-10-18T17:00:00Z",
       estimateAmount: 2500,
-      partsList: [
-        {
-          partName: "Front Bumper",
-          status: "Ordered",
-        },
-        {
-          partName: "Headlight Assembly",
-          status: "To Order",
-        },
-      ],
+      parts: {
+        total: 2,
+        returns: 0,
+        returnsAmount: 0,
+        lastOrderDate: "2023-10-11T10:00:00Z",
+        list: [
+          {
+            partName: "Front Bumper",
+            status: "Ordered",
+            orderDate: "2023-10-11T10:00:00Z"
+          },
+          {
+            partName: "Headlight Assembly",
+            status: "To Order"
+          }
+        ]
+      },
       lastCommunicationSummary: "Vehicle checked in on 2023-10-11.",
     },
   
@@ -88,16 +95,23 @@ export const workfiles : Workfile[] = [
       inDate: "2023-10-12T09:00:00Z",
       estimatedCompletionDate: "2023-10-19T17:00:00Z",
       estimateAmount: 3000,
-      partsList: [
-        {
-          partName: "Hood",
-          status: "Received",
-        },
-        {
-          partName: "Windshield",
-          status: "To Order",
-        },
-      ],
+      parts: {
+        total: 2,
+        returns: 0,
+        returnsAmount: 0,
+        lastOrderDate: "2023-10-12T10:00:00Z",
+        list: [
+          {
+            partName: "Hood",
+            status: "Received",
+            orderDate: "2023-10-12T10:00:00Z"
+          },
+          {
+            partName: "Windshield",
+            status: "To Order"
+          }
+        ]
+      },
       lastCommunicationSummary: "Vehicle repair in progress as of 2023-10-12.",
     },
   
@@ -138,16 +152,23 @@ export const workfiles : Workfile[] = [
       inDate: "2023-10-13T08:00:00Z",
       estimatedCompletionDate: "2023-10-20T17:00:00Z",
       estimateAmount: 3500,
-      partsList: [
-        {
-          partName: "Front Bumper",
-          status: "Received",
-        },
-        {
-          partName: "Headlight Assembly",
-          status: "Received",
-        },
-      ],
+      parts: {
+        total: 2,
+        returns: 0,
+        returnsAmount: 0,
+        lastOrderDate: "2023-10-13T10:00:00Z",
+        list: [
+          {
+            partName: "Front Bumper",
+            status: "Received",
+            orderDate: "2023-10-13T10:00:00Z"
+          },
+          {
+            partName: "Headlight Assembly",
+            status: "Received"
+          }
+        ]
+      },
       lastCommunicationSummary: "Vehicle in QC as of 2023-10-13.",
     },
   
@@ -188,16 +209,23 @@ export const workfiles : Workfile[] = [
       inDate: "2023-10-14T09:00:00Z",
       estimatedCompletionDate: "2023-10-21T17:00:00Z",
       estimateAmount: 4000,
-      partsList: [
-        {
-          partName: "Hood",
-          status: "Received",
-        },
-        {
-          partName: "Windshield",
-          status: "Received",
-        },
-      ],
+      parts: {
+        total: 2,
+        returns: 0,
+        returnsAmount: 0,
+        lastOrderDate: "2023-10-14T10:00:00Z",
+        list: [
+          {
+            partName: "Hood",
+            status: "Received",
+            orderDate: "2023-10-14T10:00:00Z"
+          },
+          {
+            partName: "Windshield",
+            status: "Received"
+          }
+        ]
+      },
       lastCommunicationSummary: "Vehicle ready for pickup as of 2023-10-14.",
     },
   
@@ -238,16 +266,23 @@ export const workfiles : Workfile[] = [
       inDate: "2023-10-15T08:00:00Z",
       estimatedCompletionDate: "2023-10-22T17:00:00Z",
       estimateAmount: 4500,
-      partsList: [
-        {
-          partName: "Hood",
-          status: "Received",
-        },
-        {
-          partName: "Windshield",
-          status: "Received",
-        },
-      ],
+      parts: {
+        total: 2,
+        returns: 0,
+        returnsAmount: 0,
+        lastOrderDate: "2023-10-15T10:00:00Z",
+        list: [
+          {
+            partName: "Hood",
+            status: "Received",
+            orderDate: "2023-10-15T10:00:00Z"
+          },
+          {
+            partName: "Windshield",
+            status: "Received"
+          }
+        ]
+      },
       lastCommunicationSummary: "Vehicle archived after repair completion.",
     },
   ];

@@ -1,0 +1,194 @@
+import { create } from 'zustand'
+import { Task, TaskComment, TaskAttachment } from '../types/task'
+import { mockTasks } from '../[locale]/shop-manager/dashboard/tasks/my-tasks/mock/mock-data'
+
+interface TaskStore {
+  tasks: Task[]
+  selectedTask: Task | null
+  
+  // Basic CRUD operations
+  setSelectedTask: (task: Task | null) => void
+  updateTask: (taskId: string, updates: Partial<Task>) => void
+  addTask: (task: Task) => void
+  removeTask: (taskId: string) => void
+  
+  // Task retrieval functions
+  getTaskById: (taskId: string) => Task | undefined
+  getTasksByStatus: (status?: Task['status']) => Task[]
+  getTasksByPriority: (priorityText: string) => Task[]
+  getTasksByAssignee: (assigneeId: string) => Task[]
+  getOverdueTasks: () => Task[]
+  getUpcomingTasks: (daysAhead: number) => Task[]
+  
+  // Task management functions
+  assignTask: (taskId: string, assigneeId: string) => void
+  startTask: (taskId: string) => void
+  completeTask: (taskId: string) => void
+  archiveTask: (taskId: string) => void
+  addComment: (taskId: string, comment: Omit<TaskComment, 'id' | 'createdDate'>) => void
+  addAttachment: (taskId: string, attachment: Omit<TaskAttachment, 'uploadedDate'>) => void
+}
+
+export const useTaskStore = create<TaskStore>((set, get) => ({
+  tasks: mockTasks.map(task => ({ ...task, status: 'open' as const })),
+  selectedTask: null,
+
+  setSelectedTask: (task) => set({ selectedTask: task }),
+
+  updateTask: (taskId, updates) =>
+    set((state) => ({
+      tasks: state.tasks.map((task) =>
+        task.id === taskId
+          ? {
+              ...task,
+              ...updates,
+              lastUpdatedDate: new Date().toISOString(),
+            }
+          : task
+      ),
+      selectedTask:
+        state.selectedTask?.id === taskId
+          ? {
+              ...state.selectedTask,
+              ...updates,
+              lastUpdatedDate: new Date().toISOString(),
+            }
+          : state.selectedTask,
+    })),
+
+  addTask: (task) =>
+    set((state) => ({
+      tasks: [
+        ...state.tasks,
+        {
+          ...task,
+          status: 'open',
+          createdDate: new Date().toISOString(),
+          lastUpdatedDate: new Date().toISOString(),
+        },
+      ],
+    })),
+
+  removeTask: (taskId) =>
+    set((state) => ({
+      tasks: state.tasks.filter((task) => task.id !== taskId),
+      selectedTask:
+        state.selectedTask?.id === taskId ? null : state.selectedTask,
+    })),
+
+  getTaskById: (taskId) => {
+    const state = get()
+    return state.tasks.find((task) => task.id === taskId)
+  },
+
+  getTasksByStatus: (status) => {
+    const state = get()
+    return status
+      ? state.tasks.filter((task) => task.status === status)
+      : state.tasks
+  },
+
+  getTasksByPriority: (priorityText) => {
+    const state = get()
+    return state.tasks.filter(
+      (task) => task.priority.text.toLowerCase() === priorityText.toLowerCase()
+    )
+  },
+
+  getTasksByAssignee: (assigneeId) => {
+    const state = get()
+    return state.tasks.filter((task) => task.assignedTo === assigneeId)
+  },
+
+  getOverdueTasks: () => {
+    const state = get()
+    const now = new Date()
+    return state.tasks.filter((task) => {
+      const dueDate = new Date(task.due)
+      return (
+        task.status !== 'completed' &&
+        task.status !== 'archived' &&
+        dueDate < now
+      )
+    })
+  },
+
+  getUpcomingTasks: (daysAhead) => {
+    const state = get()
+    const now = new Date()
+    const futureDate = new Date(now)
+    futureDate.setDate(now.getDate() + daysAhead)
+
+    return state.tasks.filter((task) => {
+      const dueDate = new Date(task.due)
+      return (
+        task.status !== 'completed' &&
+        task.status !== 'archived' &&
+        dueDate >= now &&
+        dueDate <= futureDate
+      )
+    })
+  },
+
+  assignTask: (taskId, assigneeId) => {
+    const state = get()
+    state.updateTask(taskId, {
+      assignedTo: assigneeId,
+    })
+  },
+
+  startTask: (taskId) => {
+    const state = get()
+    state.updateTask(taskId, {
+      status: 'in_progress',
+    })
+  },
+
+  completeTask: (taskId) => {
+    const state = get()
+    state.updateTask(taskId, {
+      status: 'completed',
+      completedDate: new Date().toISOString(),
+    })
+  },
+
+  archiveTask: (taskId) => {
+    const state = get()
+    state.updateTask(taskId, {
+      status: 'archived',
+    })
+  },
+
+  addComment: (taskId, comment) => {
+    const state = get()
+    const task = state.getTaskById(taskId)
+    if (!task) return
+
+    state.updateTask(taskId, {
+      comments: [
+        ...(task.comments || []),
+        {
+          ...comment,
+          id: crypto.randomUUID(),
+          createdDate: new Date().toISOString(),
+        },
+      ],
+    })
+  },
+
+  addAttachment: (taskId, attachment) => {
+    const state = get()
+    const task = state.getTaskById(taskId)
+    if (!task) return
+
+    state.updateTask(taskId, {
+      attachments: [
+        ...(task.attachments || []),
+        {
+          ...attachment,
+          uploadedDate: new Date().toISOString(),
+        },
+      ],
+    })
+  },
+}))

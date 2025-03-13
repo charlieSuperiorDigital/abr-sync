@@ -36,16 +36,67 @@ export type Workfile = {
     inDate: string; // Date the vehicle was checked in (ISO format)
     estimatedCompletionDate?: string; // Estimated completion date (ISO format)
     estimateAmount?: number; // Total amount of the approved estimate
-    partsList?: { // List of parts required for the repair
-      partName: string;
-      status: "To Order" | "Ordered" | "Received" | "Returned";
-    }[];
-    supplements?: { // List of supplements (additional repairs or parts)
+    
+    // Parts tracking (Critical Metric)
+    parts?: {
+      total: number; // Total number of parts
+      returns: number; // Number of returned parts
+      returnsAmount: number; // Total cost of returned parts
+      lastOrderDate?: string; // Date of last parts order
+      list: Array<{
+        partName: string;
+        status: "To Order" | "Ordered" | "Received" | "Returned";
+        orderDate?: string;
+      }>;
+    };
+
+    // Tech assignment and workload tracking (Critical Metric)
+    assignedTech?: {
+      id: string;
+      name: string;
+      hoursAssigned: number;
+      avatar?: string;
+    };
+
+    // Weather impact tracking (Key Business Rule)
+    weatherImpact?: {
+      affectsPaint: boolean;
+      forecast: string;
+      impactDescription?: string;
+    };
+
+    // Repair progress tracking
+    repairStartDate?: string;
+    repairInProgressDate?: string;
+    repairCompletedDate?: string;
+    vehicleOutDate?: string;
+    cycleTime?: number; // Days from In Progress to Complete
+
+    // Quality control tracking
+    isVoilComplete?: boolean; // VIN, Odometer, Interior, License Plate check
+    is4CornersComplete?: boolean; // Four corners inspection
+    preScanCompleted?: boolean;
+    postScanCompleted?: boolean;
+    qcCompleted?: boolean;
+
+    // Communication and documentation
+    lastCommunicationSummary?: string;
+    supplements?: Array<{
       description: string;
       status: "Pending Approval" | "Approved" | "Denied";
-    }[];
-    lastCommunicationSummary?: string; // Summary of the last communication
-    isInRental?: boolean; // Indicates if the customer is using a rental vehicle
-    isVoilComplete?: boolean; // Indicates if VOIL (VIN, Odometer, Interior, License Plate) is complete
-    is4CornersComplete?: boolean; // Indicates if the four corners of the vehicle have been inspected
-  };
+      amount: number;
+      submittedDate: string;
+    }>;
+    
+    // Additional tracking
+    isInRental?: boolean;
+    uploadDeadline?: string; // 24-hour countdown after check-in
+    tasks?: Array<{
+      id: string;
+      name: string;
+      status: "Not Started" | "In Progress" | "Completed";
+      assignedTechId?: string;
+      estimatedHours: number;
+      completedDate?: string;
+    }>;
+};

@@ -1,23 +1,46 @@
 'use client'
-
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
-import { ITotalLoss } from './mock/mock-data'
 import {
-  ContactMethodCell,
-  DocumentCell,
+  AutoCell,
   StatusBadgeCell,
+  SummaryCell,
+  UploadTimeCell,
   VehicleCell,
 } from '@/components/custom-components/custom-table/table-cells'
+import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { ColumnDef } from '@tanstack/react-table'
-import { PanelTop } from 'lucide-react'
-import { opportunities } from '@/app/mocks/opportunities_new'
+import { ClipboardPlus } from 'lucide-react'
+import { Opportunity } from '@/app/types/opportunity'
+import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
+import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
+import { useState, useCallback } from 'react'
+import { useOpportunityStore } from '@/app/stores/opportunity-store'
 
-export default function TotalLoss() {
-  const columns: ColumnDef<ITotalLoss>[] = [
-    {
-      accessorKey: 'claim',
-      header: 'Claim',
-    },
+export default function TotalLossOpportunities() {
+  const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity } = useOpportunityStore()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  const handleRowClick = useCallback((opportunity: Opportunity) => {
+    setSelectedOpportunity(opportunity)
+    setIsModalOpen(true)
+  }, [setSelectedOpportunity])
+
+  const handleContactClick = useCallback((opportunity: Opportunity) => {
+    // Handle contact info click based on opportunity state
+    console.log('Contact clicked for opportunity:', opportunity.opportunityId)
+  }, [])
+
+  const handleTaskClick = useCallback((opportunity: Opportunity) => {
+    // Handle task button click based on opportunity state
+    console.log('Task clicked for opportunity:', opportunity.opportunityId)
+  }, [])
+
+  const formatDate = (date: string | undefined) => {
+    if (!date) return '---'
+    return new Date(date).toLocaleDateString()
+  }
+
+  const columns: ColumnDef<Opportunity, any>[] = [
     {
       accessorKey: 'vehicle',
       header: 'Vehicle',
@@ -26,118 +49,126 @@ export default function TotalLoss() {
           make={row.original.vehicle.make}
           model={row.original.vehicle.model}
           year={row.original.vehicle.year}
-          imageUrl={row.original.vehicle.imageUrl}
+          imageUrl={`https://picsum.photos/seed/${row.original.opportunityId}/200/100`}
         />
       ),
     },
     {
-      accessorKey: 'customer',
-      header: 'Customer',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.customer}</span>
-      ),
+      accessorKey: 'insurance.claimNumber',
+      header: 'Claim',
     },
     {
-      accessorKey: 'insurance',
+      accessorKey: 'insurance.company',
       header: 'Insurance',
       cell: ({ row }) => (
-        <span className={`whitespace-nowrap font-bold ${row.original.insurance === 'Progressive' ? 'text-blue-700' : ''}`}>
-          {row.original.insurance.toUpperCase()}
+        <span className={`whitespace-nowrap font-bold ${row.original.insurance.company === 'PROGRESSIVE' ? 'text-blue-700' : ''}`}>
+          {row.original.insurance.company.toUpperCase()}
         </span>
       ),
     },
     {
-      accessorKey: 'nroCommunication',
-      header: 'Communication',
+      accessorKey: 'customer.name',
+      header: 'Owner',
+    },
+    {
+      accessorKey: 'isInRental',
+      header: 'In Rental',
+      cell: ({ row }) => (row.original.isInRental ? <AutoCell /> : null),
+    },
+    {
+      accessorKey: 'dropDate',
+      header: 'Drop Date',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.nroCommunication}</span>
+        <span className="whitespace-nowrap">{formatDate(row.original.dropDate)}</span>
       ),
     },
     {
-      accessorKey: 'timeTracking',
-      header: 'Time Tracking',
+      accessorKey: 'warning',
+      header: 'Warning',
+      cell: ({ row }) =>
+        row.original.warning ? (
+          <StatusBadgeCell
+            variant="danger"
+            status="danger"
+          />
+        ) : null,
+    },
+    {
+      id: 'uploadDeadline',
+      header: 'Upload Deadline',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.timeTracking}</span>
+        row.original.uploadDeadline ? (
+          <UploadTimeCell deadline={row.original.uploadDeadline} />
+        ) : (
+          <span className="text-gray-400">---</span>
+        )
       ),
     },
     {
-      accessorKey: 'finalBill',
-      header: 'Final Bill',
+      id: 'lastCommDate',
+      header: 'Last Communication',
       cell: ({ row }) => (
-        <DocumentCell fileName={row.original.finalBill.fileName} />
+        <span className="whitespace-nowrap">{formatDate(row.original.lastUpdatedDate)}</span>
       ),
     },
     {
-      accessorKey: 'isPickedUp',
-      header: 'Status',
-      cell: ({ row }) => (
-        <StatusBadgeCell
-          status={row.original.isPickedUp ? 'Picked Up' : 'Pending'}
-          variant={row.original.isPickedUp ? 'forest' : 'warning'}
-        />
-      ),
+      header: 'Summary',
+      cell: ({ row }) => <SummaryCell />,
     },
     {
-      id: 'actions',
-      header: '',
+      id: 'contact',
+      header: 'Contact',
       cell: ({ row }) => (
-        <ContactMethodCell
-          email={row.original.email}
-          phone={row.original.phone}
-          messages={row.original.messages}
-        />
+        <div 
+          data-testid="contact-info" 
+          className="cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation()
+            handleContactClick(row.original)
+          }}
+        >
+          <ContactInfo />
+        </div>
       ),
     },
     {
       id: 'task',
       header: '',
-      cell: ({ row }) => <PanelTop size={18} />,
+      cell: ({ row }) => (
+        <div 
+          data-testid="task-button" 
+          className="cursor-pointer hover:text-blue-600 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation()
+            handleTaskClick(row.original)
+          }}
+        >
+          <ClipboardPlus size={18} />
+        </div>
+      ),
     },
   ]
 
-  // Transform Opportunity data to match ITotalLoss interface
-  const totalLossData: ITotalLoss[] = opportunities
-    .filter(opp => opp.status === "Total Loss")
-    .map(opp => ({
-      id: opp.opportunityId,
-      claim: opp.insurance.claimNumber,
-      vehicle: {
-        year: opp.vehicle.year,
-        make: opp.vehicle.make,
-        model: opp.vehicle.model,
-        imageUrl: `https://picsum.photos/seed/${opp.opportunityId}/200/100`,
-      },
-      customer: opp.customer.name,
-      insurance: opp.insurance.company,
-      nroCommunication: 0, // Not available in Opportunity type
-      communication: {
-        hasEmail: !!opp.customer.email,
-        hasPhone: !!opp.customer.phone,
-        hasMessages: false,
-        totalCommunications: 0,
-      },
-      timeTracking: '---', // Not available in Opportunity type
-      finalBill: {
-        fileName: 'FinalBill.pdf',
-        url: '/documents/finalbill.pdf',
-      },
-      isPickedUp: false, // Not available in Opportunity type
-      hasDocument: false, // Not available in Opportunity type
-      email: opp.customer.email,
-      phone: opp.customer.phone,
-      messages: '', // Not available in Opportunity type
-    }))
+  // Get opportunities in "Total Loss" status from the store
+  const opportunities = getOpportunitiesByStatus("Total Loss")
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <DataTable
+    <div className="w-full">
+      <DataTable<Opportunity, any>
         columns={columns}
-        data={totalLossData}
-        onRowClick={(row) => console.log('Row clicked:', row)}
+        data={opportunities}
+        onRowClick={handleRowClick}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
-        showPageSize={true}
       />
+
+      <BottomSheetModal
+        isOpen={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        title={selectedOpportunity ? `${selectedOpportunity.vehicle.year} ${selectedOpportunity.vehicle.make} ${selectedOpportunity.vehicle.model}` : ''}
+      >
+        {selectedOpportunity && <OpportunityModal opportunity={selectedOpportunity} />}
+      </BottomSheetModal>
     </div>
   )
 }
