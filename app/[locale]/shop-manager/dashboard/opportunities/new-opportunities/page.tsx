@@ -2,19 +2,45 @@
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import {
   AutoCell,
-  ContactMethodCell,
   StatusBadgeCell,
   SummaryCell,
   UploadTimeCell,
   VehicleCell,
 } from '@/components/custom-components/custom-table/table-cells'
+import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { ColumnDef } from '@tanstack/react-table'
-import { MessageSquareMore, PanelTop } from 'lucide-react'
-import { opportunities } from '@/app/mocks/opportunities_new'
+import { ClipboardPlus, PanelTop } from 'lucide-react'
 import { Opportunity } from '@/app/types/opportunity'
+import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
+import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
+import { useState, useCallback } from 'react'
+import { useOpportunityStore } from '@/app/stores/opportunity-store'
 
 export default function NewOpportunities() {
-  const columns: ColumnDef<Opportunity>[] = [
+  const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity } = useOpportunityStore()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  const handleRowClick = useCallback((opportunity: Opportunity) => {
+    setSelectedOpportunity(opportunity)
+    setIsModalOpen(true)
+  }, [setSelectedOpportunity])
+
+  const handleContactClick = useCallback((opportunity: Opportunity) => {
+    // Handle contact info click based on opportunity state
+    console.log('Contact clicked for opportunity:', opportunity.opportunityId)
+  }, [])
+
+  const handleTaskClick = useCallback((opportunity: Opportunity) => {
+    // Handle task button click based on opportunity state
+    console.log('Task clicked for opportunity:', opportunity.opportunityId)
+  }, [])
+
+  const formatDate = (date: string | undefined) => {
+    if (!date) return '---'
+    return new Date(date).toLocaleDateString()
+  }
+
+  const columns: ColumnDef<Opportunity, any>[] = [
     {
       accessorKey: 'vehicle',
       header: 'Vehicle',
@@ -47,57 +73,102 @@ export default function NewOpportunities() {
     {
       accessorKey: 'isInRental',
       header: 'In Rental',
-      cell: ({ row }) => (row.original.isInRental ? 'Yes' : 'No'),
+      cell: ({ row }) => (row.original.isInRental ? <AutoCell /> : null),
     },
     {
       accessorKey: 'dropDate',
       header: 'Drop Date',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">{formatDate(row.original.dropDate)}</span>
+      ),
     },
     {
-      accessorKey: 'lastUpdatedDate',
-      header: 'Last Comm',
-      cell: ({ row }) => <UploadTimeCell deadline={row.original.lastUpdatedDate} />,
+      accessorKey: 'warning',
+      header: 'Warning',
+      cell: ({ row }) =>
+        row.original.warning ? (
+          <StatusBadgeCell
+            variant="danger"
+            status="danger"
+          />
+        ) : null,
     },
     {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => <StatusBadgeCell status={row.original.status} />,
+      id: 'uploadDeadline',
+      header: 'Upload Deadline',
+      cell: ({ row }) => (
+        row.original.uploadDeadline ? (
+          <UploadTimeCell deadline={row.original.uploadDeadline} />
+        ) : (
+          <span className="text-gray-400">---</span>
+        )
+      ),
     },
     {
-      accessorKey: 'customer.email',
-      header: 'Email',
-      cell: ({ row }) => <ContactMethodCell email={row.original.customer.email} />,
+      id: 'lastCommDate',
+      header: 'Last Communication',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">{formatDate(row.original.lastUpdatedDate)}</span>
+      ),
     },
     {
-      accessorKey: 'customer.phone',
-      header: 'Phone',
-      cell: ({ row }) => <ContactMethodCell phone={row.original.customer.phone} />,
-    },
-    {
-      accessorKey: 'lastCommunicationSummary',
-      header: 'Message',
-      cell: ({ row }) => <MessageSquareMore size={18} />,
-    },
-    {
-      accessorKey: 'vehicle',
       header: 'Summary',
-      cell: () => <SummaryCell />,
+      cell: ({ row }) => <SummaryCell />,
     },
     {
-      id: 'actions',
-      cell: ({ row }) => <PanelTop size={18} />,
+      id: 'contact',
+      header: 'Contact',
+      cell: ({ row }) => (
+        <div 
+          data-testid="contact-info" 
+          className="cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation()
+            handleContactClick(row.original)
+          }}
+        >
+          <ContactInfo />
+        </div>
+      ),
+    },
+    {
+      id: 'task',
+      header: '',
+      cell: ({ row }) => (
+        <div 
+          data-testid="task-button" 
+          className="cursor-pointer hover:text-blue-600 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation()
+            handleTaskClick(row.original)
+          }}
+        >
+          <ClipboardPlus size={18} />
+        </div>
+      ),
     },
   ]
 
+  // Get opportunities in "New" status from the store
+  const opportunities = getOpportunitiesByStatus("New")
+
   return (
     <div className="w-full">
-      <DataTable
+      <DataTable<Opportunity, any>
         columns={columns}
-        data={opportunities.filter(opp => opp.status === "New")}
-        onRowClick={(row) => console.log('Row clicked:', row)}
+        data={opportunities}
+        onRowClick={handleRowClick}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
       />
+
+      <BottomSheetModal
+        isOpen={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        title={selectedOpportunity ? `${selectedOpportunity.vehicle.year} ${selectedOpportunity.vehicle.make} ${selectedOpportunity.vehicle.model}` : ''}
+      >
+        {selectedOpportunity && <OpportunityModal opportunity={selectedOpportunity} />}
+      </BottomSheetModal>
     </div>
   )
 }
