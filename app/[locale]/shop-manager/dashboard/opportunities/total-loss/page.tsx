@@ -67,8 +67,13 @@ export default function TotalLossOpportunities() {
       ),
     },
     {
-      accessorKey: 'customer.name',
+      accessorKey: 'owner.name',
       header: 'Owner',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">
+          {row.original.owner.name}
+        </span>
+      ),
     },
     {
       accessorKey: 'isInRental',

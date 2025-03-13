@@ -141,7 +141,7 @@ export default function EstimateOpportunities() {
     },
     {
       id: 'task',
-      header: '',
+      header: 'Create Task',
       cell: ({ row }) => (
         <div 
           data-testid="task-button" 

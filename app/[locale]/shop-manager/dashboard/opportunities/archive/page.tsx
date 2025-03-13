@@ -10,14 +10,14 @@ import {
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { ColumnDef } from '@tanstack/react-table'
 import { ClipboardPlus } from 'lucide-react'
-import { Opportunity, OpportunityStatus } from '@/app/types/opportunity'
+import { Opportunity, OpportunityStatus, RepairStage } from '@/app/types/opportunity'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import { useState, useCallback } from 'react'
 import { useOpportunityStore } from '@/app/stores/opportunity-store'
 
 export default function ArchivedOpportunities() {
-  const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity } = useOpportunityStore()
+  const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity, updateOpportunity } = useOpportunityStore()
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const handleRowClick = useCallback((opportunity: Opportunity) => {
@@ -34,6 +34,24 @@ export default function ArchivedOpportunities() {
     // Handle task button click based on opportunity state
     console.log('Task clicked for opportunity:', opportunity.opportunityId)
   }, [])
+
+  const handleUnarchive = useCallback((opportunity: Opportunity) => {
+    // Return to previous status based on repair stage
+    if (opportunity.stage === RepairStage.RepairOrder) {
+      updateOpportunity(opportunity.opportunityId, {
+        status: OpportunityStatus.Upcoming
+      })
+    } else if (opportunity.estimateAmount) {
+      updateOpportunity(opportunity.opportunityId, {
+        status: OpportunityStatus.Estimate
+      })
+    } else {
+      updateOpportunity(opportunity.opportunityId, {
+        status: OpportunityStatus.New
+      })
+    }
+    console.log('Unarchiving opportunity:', opportunity.opportunityId)
+  }, [updateOpportunity])
 
   const formatDate = (date: string | undefined) => {
     if (!date) return '---'
@@ -67,8 +85,13 @@ export default function ArchivedOpportunities() {
       ),
     },
     {
-      accessorKey: 'customer.name',
+      accessorKey: 'owner.name',
       header: 'Owner',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">
+          {row.original.owner.name}
+        </span>
+      ),
     },
     {
       accessorKey: 'isInRental',
@@ -133,18 +156,17 @@ export default function ArchivedOpportunities() {
     },
     {
       id: 'task',
-      header: '',
+      header: 'Unarchive',
       cell: ({ row }) => (
-        <div 
-          data-testid="task-button" 
-          className="cursor-pointer hover:text-blue-600 transition-colors"
+        <button 
+          className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
           onClick={(e) => {
             e.stopPropagation()
-            handleTaskClick(row.original)
+            handleUnarchive(row.original)
           }}
         >
-          <ClipboardPlus size={18} />
-        </div>
+          Unarchive
+        </button>
       ),
     },
   ]

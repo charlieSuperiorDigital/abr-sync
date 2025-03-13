@@ -5,7 +5,7 @@ import { ContactData, ContactInfoProps, ContactMethod } from "@/app/types/contac
 import { Mail, MessagesSquare, Phone, Plus, Trash, X } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 
-export default function ContactInfo({ preferredContactMethod = ContactMethod.message }: ContactInfoProps) {
+export default function ContactInfo({ preferredContactMethod }: ContactInfoProps) {
     const [shouldShowModal, setShouldShowModal] = useState(false);
     const [selectedTab, setSelectedTab] = useState<'message' | 'email'>('message');
     const [contactData, setContactData] = useState<ContactData>(mockContactData);
