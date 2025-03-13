@@ -1,4 +1,4 @@
 'use client'
 export default function Opportunities() {
-  return <div className="w-full min-h-screen">Dashboard</div>
+  return <div className="w-full min-h-screen">Opportunities</div>
 }

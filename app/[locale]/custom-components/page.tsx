@@ -23,6 +23,14 @@ import {
   StatusBadgeCell,
   VehicleCell,
 } from '@/components/custom-components/custom-table/table-cells'
+import ContactInfo from './contact-info'
+import { ReactNode } from 'react'
+import UserImageAndName from './user-image-and-name'
+import CarImageAndName from './car-image-and-name'
+import DarkButton from './dark-button'
+import { Apple, Archive } from 'lucide-react'
+import RoundButtonWithTooltip from './round-button-with-tooltip'
+import Section from './section'
 
 const technicians: Option[] = [
   { value: 'alexander', label: 'Alexander Walker', avatar: '/placeholder.svg' },
@@ -239,6 +247,39 @@ export default function Home() {
       <StatusBadge variant="warning" size="lg">
         Status
       </StatusBadge>
+
+      <Section title="Contact Info" description="You can set any of those icons as the preferred contact method using the prop">
+        <ContactInfo />
+      </Section>
+
+      <Section title="User picture + text">
+        <UserImageAndName image="https://picsum.photos/200" name="John Doe" />
+      </Section>
+
+      <Section title="Car Info" description="You can set the prop as true if the car is in rental to show the small green car icon">
+        <CarImageAndName image="https://picsum.photos/200" name="Palio Fire 2013" isInRental={true} />
+      </Section>
+
+      <Section title="Dark Button" description='Pass the onClick function as a prop. The icon is an option prop.'>
+        <DarkButton
+        buttonText='Click me!'
+        onClick={() => console.log('Clicked!')}
+        buttonIcon={<Archive className=" text-purple-600" />}
+        />
+        <DarkButton
+        buttonText='Click me!'
+        onClick={() => console.log('Clicked!')}
+        />
+      </Section>
+
+      <Section title="Round Button With Tooltip">
+        <RoundButtonWithTooltip
+            onClick={() => console.log('Clicked!')}
+            buttonIcon={<Archive className=" text-purple-600" />}
+            tooltipText="This is a tooltip"
+        />
+      </Section>
+
       <div className="p-8 max-w-4xl mx-auto ">
         <div className="grid gap-8 md:grid-cols-2">
           {/* Single Select with Avatars */}
