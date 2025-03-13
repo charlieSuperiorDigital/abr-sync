@@ -15,9 +15,40 @@ import {
   MessageSquareMore,
   MessagesSquare,
   Phone,
+  CircleAlert,
+  Trash2 as Trash,
+  Pencil as Edit,
+  Check,
 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { PriorityBadge } from '../priority-badge/priority-badge'
+import * as Dialog from '@radix-ui/react-dialog'
+import { useState } from 'react'
+
+interface TitleCellProps {
+  title: string
+}
+
+export function TitleCell({ title }: TitleCellProps) {
+  return <span className="font-bold">{title}</span>
+}
+
+interface DescriptionCellProps {
+  description: string
+}
+
+export function DescriptionCell({ description }: DescriptionCellProps) {
+  return <span className=" max-w-96 line-clamp-2">{description}</span>
+}
+
+interface CreatedByCellProps {
+  createdBy: string
+  currentUser: string
+}
+
+export function CreatedByCell({ createdBy, currentUser }: CreatedByCellProps) {
+  return <span>{createdBy === currentUser ? 'Me' : createdBy}</span>
+}
 
 interface StatusBadgeProps {
   status: string
@@ -63,7 +94,6 @@ export function PriorityBadgeCell({ priority, variant }: PriorityBadgeProps) {
   )
 }
 
-
 interface DateCellProps {
   date: string | Date
   format?: Intl.DateTimeFormatOptions
@@ -79,6 +109,55 @@ export function DateCell({
 }: DateCellProps) {
   const formattedDate = new Date(date).toLocaleDateString('en-US', format)
   return <span className="whitespace-nowrap">{formattedDate}</span>
+}
+
+interface FriendlyDateCellProps {
+  date: string | Date
+  variant?: 'due' | 'created'
+}
+
+export function FriendlyDateCell({ date, variant }: FriendlyDateCellProps) {
+  const dateObj = new Date(date + 'T00:00:00')
+  const today = new Date()
+  const differenceInDays = Math.floor(
+    (today.getTime() - dateObj.getTime()) / (1000 * 60 * 60 * 24)
+  )
+
+  let formattedDate
+  if (differenceInDays === 0) {
+    formattedDate = 'Today'
+  } else if (differenceInDays === 1) {
+    formattedDate = 'Yesterday'
+  } else if (differenceInDays === -1) {
+    formattedDate = 'Tomorrow'
+  } else if (differenceInDays > 1 && differenceInDays <= 5) {
+    formattedDate = `${differenceInDays} days ago`
+  } else if (differenceInDays < -1 && differenceInDays >= -5) {
+    formattedDate = `${Math.abs(differenceInDays)} days`
+  } else {
+    formattedDate = format(dateObj, 'MMM d')
+  }
+
+  const textVariant =
+    variant === 'due' &&
+    (formattedDate === 'Today' ||
+      formattedDate === 'Tomorrow' ||
+      formattedDate === '2 days')
+      ? 'text-red-500 font-semibold'
+      : ''
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className={`whitespace-nowrap ${textVariant}`}>
+            {formattedDate}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>{format(dateObj, 'MMM dd yyyy')}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
 }
 
 interface VehicleCellProps {
@@ -110,6 +189,7 @@ interface ActionsCellProps {
     label: string
     onClick: () => void
     variant?: 'default' | 'secondary' | 'destructive'
+    icon?: 'edit' | 'delete'
   }[]
 }
 
@@ -121,21 +201,40 @@ export function ActionsCell({ actions }: ActionsCellProps) {
           key={index}
           variant={action.variant || 'secondary'}
           size="sm"
+          className="center h-8 w-8 rounded-full transition-colors hover:bg-black hover:text-white"
           onClick={(e) => {
             e.stopPropagation()
             action.onClick()
           }}
         >
-          {action.label}
+          {action.icon === 'edit' && <Edit />}
+          {action.icon === 'delete' && <Trash />}
+          {!action.icon && action.label}
         </Button>
       ))}
     </div>
   )
 }
-interface ContactMethodCellProps {
-  email?: string
-  phone?: string
-  messages?: string
+
+interface WarningCellProps {
+  message: string
+}
+
+export function WarningCell({ message }: WarningCellProps) {
+  return (
+    message && (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <CircleAlert className="bg-red-600 text-white rounded-full border-0" />
+          </TooltipTrigger>
+          <TooltipContent align="start" className="bg-red-600 text-white">
+            {message}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    )
+  )
 }
 
 interface ContactMethodCellProps {
@@ -166,11 +265,11 @@ export function ContactMethodCell({
               }}
             >
               <MessagesSquare className="h-4 w-4" />
-              {messages && (
+              {/* {messages && (
                 <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-purple-500 text-[10px] text-white">
                   27
                 </span>
-              )}
+              )} */}
             </Button>
           </TooltipTrigger>
           <TooltipContent>Messages</TooltipContent>
@@ -290,6 +389,40 @@ export function DocumentCell({ fileName, onClick }: DocumentCellProps) {
     </TooltipProvider>
   )
 }
+
+interface ActionButtonCellProps {
+  label: string
+  onClick: () => void
+}
+
+export function ActionButtonCell({ label, onClick }: ActionButtonCellProps) {
+  return (
+    
+    <Dialog.Root>
+      <Dialog.Trigger>
+        <span className='bg-black text-white rounded-2xl flex items-center gap-2 w-20 h-8 justify-center hover:opacity-90 '>
+          <Check className="h-4 w-4" />
+          {label}
+        </span>
+      </Dialog.Trigger>
+        <Dialog.Portal>
+          <Dialog.Content className='fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-4 rounded-lg shadow-lg'>
+            <div className="dialog">
+              <Dialog.Title>
+                Dialog
+              </Dialog.Title>
+              <div>
+                <p>Dialog content</p>
+                <p>Dialog content</p>
+              </div>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      
+    </Dialog.Root>
+  )
+}
+
 interface UserAvatarCellProps {
   name: string
   avatarUrl: string
