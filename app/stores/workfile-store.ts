@@ -240,9 +240,9 @@ export const useWorkfileStore = create<WorkfileStore>((set, get) => ({
     if (workfile.status !== "In Progress") return false
 
     // Validate all tasks are completed
-    const hasIncompleteTasks = workfile.tasks?.some(
-      (task: { status: string }) => task.status !== "Completed"
-    )
+    const hasIncompleteTasks = workfile.tasks?.length ? workfile.tasks.some(
+      (task) => !task.status || task.status !== "completed"
+    ) : false
     if (hasIncompleteTasks) return false
 
     // Validate pre and post scans are completed

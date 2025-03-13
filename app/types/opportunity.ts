@@ -1,3 +1,5 @@
+import { Task } from './task'
+
 export type Opportunity = {
   opportunityId: string; // Unique identifier for the opportunity
   status:
@@ -106,4 +108,6 @@ export type Opportunity = {
     impactDescription?: string;
   }; // Weather integration for paint work
   cycleTime?: number; // Days from In Progress to Complete
+  tasks?: Task[]; // Array of complete tasks
+  notes?: string[];
 };

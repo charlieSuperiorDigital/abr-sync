@@ -20,6 +20,16 @@ interface TaskStore {
   getOverdueTasks: () => Task[]
   getUpcomingTasks: (daysAhead: number) => Task[]
   
+  // Entity-specific task functions
+  getTasksByOpportunityId: (opportunityId: string) => Task[]
+  getTasksByWorkfileId: (workfileId: string) => Task[]
+  addTaskToOpportunity: (opportunityId: string, task: Omit<Task, 'id' | 'createdDate'>) => void
+  addTaskToWorkfile: (workfileId: string, task: Omit<Task, 'id' | 'createdDate'>) => void
+  
+  // Workflow transition functions
+  convertOpportunityTaskToWorkfile: (taskId: string, workfileId: string) => void
+  getRelatedWorkfileTasks: (opportunityId: string) => { originalTask: Task; workfileTasks: Task[] }[]
+  
   // Task management functions
   assignTask: (taskId: string, assigneeId: string) => void
   startTask: (taskId: string) => void
@@ -27,6 +37,9 @@ interface TaskStore {
   archiveTask: (taskId: string) => void
   addComment: (taskId: string, comment: Omit<TaskComment, 'id' | 'createdDate'>) => void
   addAttachment: (taskId: string, attachment: Omit<TaskAttachment, 'uploadedDate'>) => void
+  
+  // Handle total loss transition
+  handleTotalLoss: (opportunityId: string) => void
 }
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
@@ -130,6 +143,60 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     })
   },
 
+  // Entity-specific task functions
+  getTasksByOpportunityId: (opportunityId) => {
+    const state = get()
+    return state.tasks.filter((task) => task.relatedTo === `opportunity:${opportunityId}`)
+  },
+
+  getTasksByWorkfileId: (workfileId) => {
+    const state = get()
+    return state.tasks.filter((task) => task.relatedTo === `workfile:${workfileId}`)
+  },
+
+  addTaskToOpportunity: (opportunityId, task) => {
+    const state = get()
+    state.addTask({
+      ...task,
+      id: crypto.randomUUID(),
+      relatedTo: `opportunity:${opportunityId}`,
+      createdDate: new Date().toISOString(),
+      lastUpdatedDate: new Date().toISOString(),
+    })
+  },
+
+  addTaskToWorkfile: (workfileId, task) => {
+    const state = get()
+    state.addTask({
+      ...task,
+      id: crypto.randomUUID(),
+      relatedTo: `workfile:${workfileId}`,
+      createdDate: new Date().toISOString(),
+      lastUpdatedDate: new Date().toISOString(),
+    })
+  },
+
+  convertOpportunityTaskToWorkfile: (taskId, workfileId) => {
+    const state = get()
+    const task = state.getTaskById(taskId)
+    if (!task || !task.relatedTo.startsWith('opportunity:')) return
+
+    state.updateTask(taskId, {
+      relatedTo: `workfile:${workfileId}`,
+      lastUpdatedDate: new Date().toISOString(),
+    })
+  },
+
+  getRelatedWorkfileTasks: (opportunityId) => {
+    const state = get()
+    const opportunityTasks = state.getTasksByOpportunityId(opportunityId)
+    return opportunityTasks.map(task => {
+      const workfileId = task.relatedTo.replace('workfile:', '')
+      const workfileTasks = state.getTasksByWorkfileId(workfileId)
+      return { originalTask: task, workfileTasks }
+    })
+  },
+
   assignTask: (taskId, assigneeId) => {
     const state = get()
     state.updateTask(taskId, {
@@ -189,6 +256,47 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
           uploadedDate: new Date().toISOString(),
         },
       ],
+    })
+  },
+
+  handleTotalLoss: (opportunityId) => {
+    const state = get()
+    const tasks = state.getTasksByOpportunityId(opportunityId)
+    
+    // Auto-complete or archive existing tasks
+    tasks.forEach(task => {
+      if (task.status === 'completed') {
+        state.archiveTask(task.id)
+      } else {
+        state.updateTask(task.id, {
+          status: 'completed',
+          completedDate: new Date().toISOString(),
+          lastUpdatedDate: new Date().toISOString(),
+          comments: [
+            ...(task.comments || []),
+            {
+              id: crypto.randomUUID(),
+              text: 'Task auto-completed due to Total Loss status',
+              createdBy: 'system',
+              createdDate: new Date().toISOString(),
+            }
+          ]
+        })
+      }
+    })
+
+    // Create a new task for total loss documentation
+    state.addTaskToOpportunity(opportunityId, {
+      title: 'Process Total Loss Documentation',
+      description: 'Complete and submit all required documentation for total loss claim',
+      priority: { variant: 'danger', text: 'High' },
+      due: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
+      relatedTo: `opportunity:${opportunityId}`,
+      email: '',
+      phone: '',
+      message: 'Vehicle declared total loss - documentation required',
+      status: 'open',
+      createdBy: 'system'
     })
   },
 }))
