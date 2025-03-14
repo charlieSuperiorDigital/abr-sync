@@ -25,7 +25,7 @@ import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { mockTasks } from '../../../../../mocks/tasks.mock'
 import { useTaskStore } from '@/app/stores/task-store'
 import { Task } from '@/app/types/task'
-import EditTaskModal from '@/components/custom-components/task-modal/edit-task-modal'
+import {EditTaskModal} from '@/components/custom-components/task-modal/edit-task-modal'
 import DeleteTaskModal from '@/components/custom-components/task-modal/delete-task-modal'
 
 export default function NewOpportunities() {

@@ -4,7 +4,7 @@ import DraggableNav, {
 } from '@/components/custom-components/draggable-nav/draggable-nav'
 import type React from 'react'
 import { Plus } from 'lucide-react'
-import NewTaskModal from '@/components/custom-components/task-modal/new-task-modal'
+import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
 
 export default function TasksLayout({
   children,
@@ -28,10 +28,6 @@ export default function TasksLayout({
               <Plus className="w-5 h-5 m-auto" />
             </button>
           }
-          isOpen={false}
-          onOpenChange={(open: boolean): void => {
-            throw new Error('Function not implemented.')
-          }}
         />
       </div>
 
