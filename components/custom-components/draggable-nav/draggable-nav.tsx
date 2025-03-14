@@ -22,41 +22,21 @@ export default function DraggableNav({ navItems }: DraggableNavProps) {
   const router = useRouter()
   const pathname = usePathname()
 
-  // useEffect(() => {
-  //   const savedOrder = document.cookie
-  //     .split('; ')
-  //     .find((row) => row.startsWith('navOrder='))
-  //     ?.split('=')[1]
-
-  //   if (savedOrder) {
-  //     try {
-  //       const savedItems = JSON.parse(decodeURIComponent(savedOrder))
-  //       setItems(savedItems)
-  //       setActiveTab(savedItems[0].id)
-  //     } catch {
-  //       setItems(navItems || defaultItems)
-  //       setActiveTab((navItems || defaultItems)[0].id)
-  //     }
-  //   } else {
-  //     setItems(navItems || defaultItems)
-  //     setActiveTab((navItems || defaultItems)[0].id)
-  //   }
-  // }, [navItems])
-
   useEffect(() => {
-
-    // const savedOrder = document.cookie
-    //   .split('; ')
-    //   .find((row) => row.startsWith('navOrder='))
-    //   ?.split('=')[1]
-
-      if (navItems) {
-        setItems(navItems)
-        setActiveTab(navItems[0].id)
+    if (navItems) {
+      // Preserve the current order when updating counts
+      if (items.length > 0) {
+        const updatedItems = items.map(item => {
+          const updatedItem = navItems.find(navItem => navItem.id === item.id);
+          return updatedItem ? { ...item, count: updatedItem.count } : item;
+        });
+        setItems(updatedItems);
+      } else {
+        setItems(navItems);
+        setActiveTab(navItems[0].id);
       }
-
-
-  }, [])
+    }
+  }, [navItems])
 
   useEffect(() => {
     const currentTab = pathname.split('/').pop()

@@ -3,7 +3,7 @@ import { Task } from './task'
 // Tracks the high-level state of the opportunity or repair order
 export enum OpportunityStatus {
   New = "New", // Initial contact with owner to schedule drop date
-  SecondCall = "2nd Call", // Follow-up if owner doesn't respond
+  SecondCall = "2nd Call", // When CSR couldn't make contact with vehicle owner
   Estimate = "Estimate", // When estimate is created and approved
   TotalLoss = "Total Loss", // If vehicle is declared total loss
   Upcoming = "Upcoming", // Vehicle dropped off, workfile created
@@ -20,8 +20,12 @@ export enum RepairStage {
   ReadyForPickup = "Ready for Pickup", // Repair complete, vehicle ready for pickup
   VehiclePickedUp = "Vehicle Picked Up", // Vehicle has been picked up by owner
   RepairOrder = "Repair Order", // Legacy stage for repair orders
-  Opportunity = "Opportunity" // Legacy stage for opportunities
+  Opportunity = "Opportunity", // Legacy stage for opportunities
+  NotStarted = "Not Started", // Repair has not yet started
+  Upcoming = "Upcoming" // Vehicle is scheduled for drop-off
 }
+
+export type PartsWarningStatus = "ORDERED" | "UPDATED" | undefined;
 
 export type Opportunity = {
   opportunityId: string; // Unique identifier for the opportunity
@@ -31,6 +35,13 @@ export type Opportunity = {
   createdDate: string; // Date the opportunity was created (ISO format)
   lastUpdatedDate: string; // Date the opportunity was last updated (ISO format)
   priority: "Normal" | "High"; // Priority level
+  firstCallDate?: string; // Date of first contact attempt
+  secondCallDate?: string; // Date of second contact attempt
+  pickedUpDate?: string; // Date when vehicle was picked up (ISO format)
+  lastUpdatedBy?: { // Person who last updated the opportunity
+    name: string;
+    avatar?: string;
+  };
   vehicle: {
     vin: string; // Vehicle Identification Number
     make: string; // Vehicle make (e.g., Toyota)
@@ -76,6 +87,12 @@ export type Opportunity = {
   lastCommunicationSummary?: string; // Summary of the last communication
   isInRental?: boolean; // Indicates if the customer is using a rental vehicle
   isTotalLoss?: boolean; // Indicates if the vehicle is declared a total loss
+  finalBill?: { // Final bill information for total loss cases
+    amount: number; // Final bill amount
+    date: string; // Date when the final bill was issued
+    status: 'pending' | 'approved' | 'paid'; // Status of the final bill
+    notes?: string; // Any additional notes about the final bill
+  };
   isVoilComplete?: boolean; // Indicates if VOIL (VIN, Odometer, Interior, License Plate) is complete
   is4CornersComplete?: boolean; // Indicates if the four corners of the vehicle have been inspected
   warning?: {
@@ -84,6 +101,7 @@ export type Opportunity = {
   }; // Warning information
   uploadDeadline?: string; // Deadline for uploading documents (ISO format)
   preferredContactMethod?: 'message' | 'email' | 'phone'; // Preferred method of contact
+  isArchived?: boolean; // Indicates if the opportunity is archived, preserving its previous status
 
   // Additional fields for modal
   estimateAmount?: number; // Estimated amount for the repair
@@ -113,12 +131,13 @@ export type Opportunity = {
     description?: string; // Description of the log
   }>;
   parts?: {
-    total: number; // Total number of parts
-    cores: number; // Number of cores
-    coresAmount: number; // Amount of cores
-    returns: number; // Number of returns
-    returnsAmount: number; // Amount of returns
-    lastOrderDate?: string; // For tracking last-minute parts orders
+    count: number;
+    warning?: PartsWarningStatus;
+    total?: number; // Total number of parts on the estimate
+    cores?: number; // Number of core parts
+    coresAmount?: number; // Total cost of core parts
+    returns?: number; // Number of returned parts
+    returnsAmount?: number; // Total cost of returned parts
   };
   // QC and repair tracking
   preScanCompleted?: boolean; // Indicates if the pre-scan is completed

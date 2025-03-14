@@ -12,6 +12,7 @@ interface StatusBadgeProps extends React.HTMLAttributes<HTMLDivElement> {
     | 'success'
     | 'forest'
     | 'dark'
+    | 'pending'
   size?: 'sm' | 'md' | 'lg'
   width?: string
   height?: string
@@ -49,6 +50,7 @@ export function StatusBadge({
           'bg-[#0F6C40] text-white': variant === 'success',
           'bg-[#C4E8D4] text-[#0F6C40]': variant === 'forest',
           'bg-black text-white': variant === 'dark',
+          'bg-[#F5F5F5] text-[#4B5563] font-semibold': variant === 'pending',
         },
         className
       )}

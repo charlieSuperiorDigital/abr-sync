@@ -7,6 +7,13 @@ const nextConfig: NextConfig = {
   images: {
     domains: ['picsum.photos'],
   },
+  experimental: {
+    turbo: {
+      resolveAlias: {
+        canvas: './empty-module.ts',
+      },
+    },
+  },
 }
 
 export default withNextIntl(nextConfig)

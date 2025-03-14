@@ -5,6 +5,8 @@ import { notFound } from 'next/navigation'
 import { type Locale, routing } from '@/i18n/routing'
 import type { NextLayoutProps } from 'next'
 import type { Metadata } from 'next'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -56,6 +58,18 @@ export default async function RootLayout({
       <body className={`${inter.variable} font-sans antialiased bg-[#F0FOFO]`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
+          <ToastContainer
+            position="bottom-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light"
+          />
         </NextIntlClientProvider>
       </body>
     </html>

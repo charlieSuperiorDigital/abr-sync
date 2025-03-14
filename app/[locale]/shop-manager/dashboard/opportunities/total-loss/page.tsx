@@ -9,30 +9,47 @@ import {
 } from '@/components/custom-components/custom-table/table-cells'
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { ColumnDef } from '@tanstack/react-table'
-import { ClipboardPlus } from 'lucide-react'
+import { ClipboardPlus, Car } from 'lucide-react'
 import { Opportunity, OpportunityStatus } from '@/app/types/opportunity'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import { useState, useCallback } from 'react'
 import { useOpportunityStore } from '@/app/stores/opportunity-store'
+import DarkButton from '@/app/[locale]/custom-components/dark-button'
+import ConfirmationModal from '@/components/custom-components/confirmation-modal/confirmation-modal'
+import { showPickupToast } from '@/app/utils/toast-utils'
 
 export default function TotalLossOpportunities() {
-  const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity } = useOpportunityStore()
+  const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity, archiveOpportunity, updateOpportunity } = useOpportunityStore()
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [pickupConfirmation, setPickupConfirmation] = useState<{ isOpen: boolean; opportunity: Opportunity | null }>({
+    isOpen: false,
+    opportunity: null
+  })
 
   const handleRowClick = useCallback((opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity)
     setIsModalOpen(true)
   }, [setSelectedOpportunity])
 
-  const handleContactClick = useCallback((opportunity: Opportunity) => {
-    // Handle contact info click based on opportunity state
-    console.log('Contact clicked for opportunity:', opportunity.opportunityId)
-  }, [])
+  const handlePickupConfirm = useCallback(() => {
+    if (pickupConfirmation.opportunity) {
+      // First update the pickup date
+      updateOpportunity(pickupConfirmation.opportunity.opportunityId, {
+        pickedUpDate: new Date().toISOString()
+      })
+      // Then archive the opportunity
+      archiveOpportunity(pickupConfirmation.opportunity.opportunityId)
+      showPickupToast(pickupConfirmation.opportunity)
+      console.log('Marking opportunity as picked up:', pickupConfirmation.opportunity.opportunityId)
+    }
+  }, [pickupConfirmation.opportunity, updateOpportunity, archiveOpportunity])
 
-  const handleTaskClick = useCallback((opportunity: Opportunity) => {
-    // Handle task button click based on opportunity state
-    console.log('Task clicked for opportunity:', opportunity.opportunityId)
+  const handlePickupClick = useCallback((opportunity: Opportunity) => {
+    setPickupConfirmation({
+      isOpen: true,
+      opportunity
+    })
   }, [])
 
   const formatDate = (date: string | undefined) => {
@@ -41,6 +58,10 @@ export default function TotalLossOpportunities() {
   }
 
   const columns: ColumnDef<Opportunity, any>[] = [
+    {
+      accessorKey: 'insurance.claimNumber',
+      header: 'Claim',
+    },
     {
       accessorKey: 'vehicle',
       header: 'Vehicle',
@@ -54,8 +75,13 @@ export default function TotalLossOpportunities() {
       ),
     },
     {
-      accessorKey: 'insurance.claimNumber',
-      header: 'Claim',
+      accessorKey: 'owner.name',
+      header: 'Owner',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">
+          {row.original.owner.name}
+        </span>
+      ),
     },
     {
       accessorKey: 'insurance.company',
@@ -67,53 +93,57 @@ export default function TotalLossOpportunities() {
       ),
     },
     {
-      accessorKey: 'customer.name',
-      header: 'Owner',
-    },
-    {
-      accessorKey: 'isInRental',
-      header: 'In Rental',
-      cell: ({ row }) => (row.original.isInRental ? <AutoCell /> : null),
-    },
-    {
-      accessorKey: 'dropDate',
-      header: 'Drop Date',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">{formatDate(row.original.dropDate)}</span>
-      ),
-    },
-    {
-      accessorKey: 'warning',
-      header: 'Warning',
-      cell: ({ row }) =>
-        row.original.warning ? (
-          <StatusBadgeCell
-            variant="danger"
-            status="danger"
-          />
-        ) : null,
-    },
-    {
-      id: 'uploadDeadline',
-      header: 'Upload Deadline',
-      cell: ({ row }) => (
-        row.original.uploadDeadline ? (
-          <UploadTimeCell deadline={row.original.uploadDeadline} />
-        ) : (
-          <span className="text-gray-400">---</span>
+      accessorKey: 'numberOfCommunications',
+      header: '# OF COMMUNICATIONS',
+      cell: ({ row }) => {
+        const communicationLogs = row.original.logs?.filter(log => 
+          log.type.toLowerCase().includes('call') || 
+          log.type.toLowerCase().includes('email') || 
+          log.type.toLowerCase().includes('message')
+        ) || []
+        
+        return (
+          <span className="whitespace-nowrap">
+            {communicationLogs.length}
+          </span>
         )
-      ),
+      }
     },
     {
-      id: 'lastCommDate',
-      header: 'Last Communication',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">{formatDate(row.original.lastUpdatedDate)}</span>
-      ),
+      accessorKey: 'timeTracking',
+      header: 'Time Tracking',
     },
     {
-      header: 'Summary',
+      accessorKey: 'finalBill',
+      header: 'Final Bill',
+      cell: ({ row }) => {
+        const amount = row.original.finalBill?.amount
+        return (
+          <span className="whitespace-nowrap">
+            {amount ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount) : '---'}
+          </span>
+        )
+      }
+    },
+    {
+      header: 'LAST UPDATE',
       cell: ({ row }) => <SummaryCell />,
+    },
+    {
+      id: 'pickup',
+      header: '',
+      cell: ({ row }) => (
+        <div className="flex justify-center">
+          <DarkButton
+            buttonText="Mark as Picked Up"
+            buttonIcon={<Car className="w-4 h-4 mr-2" />}
+            onClick={(e) => {
+              e.stopPropagation()
+              handlePickupClick(row.original)
+            }}
+          />
+        </div>
+      ),
     },
     {
       id: 'contact',
@@ -124,7 +154,7 @@ export default function TotalLossOpportunities() {
           className="cursor-pointer"
           onClick={(e) => {
             e.stopPropagation()
-            handleContactClick(row.original)
+            console.log('Contact clicked for opportunity:', row.original.opportunityId)
           }}
         >
           <ContactInfo />
@@ -133,23 +163,15 @@ export default function TotalLossOpportunities() {
     },
     {
       id: 'task',
-      header: '',
+      header: 'TASK',
       cell: ({ row }) => (
-        <div 
-          data-testid="task-button" 
-          className="cursor-pointer hover:text-blue-600 transition-colors"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleTaskClick(row.original)
-          }}
-        >
+        <div className="cursor-pointer hover:text-blue-600 transition-colors">
           <ClipboardPlus size={18} />
         </div>
       ),
     },
   ]
 
-  // Get opportunities in Total Loss status from the store
   const opportunities = getOpportunitiesByStatus(OpportunityStatus.TotalLoss)
 
   return (
@@ -161,14 +183,22 @@ export default function TotalLossOpportunities() {
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
       />
-
-      <BottomSheetModal
+      <BottomSheetModal 
         isOpen={isModalOpen}
         onOpenChange={setIsModalOpen}
         title={selectedOpportunity ? `${selectedOpportunity.vehicle.year} ${selectedOpportunity.vehicle.make} ${selectedOpportunity.vehicle.model}` : ''}
       >
         {selectedOpportunity && <OpportunityModal opportunity={selectedOpportunity} />}
       </BottomSheetModal>
+      <ConfirmationModal
+        isOpen={pickupConfirmation.isOpen}
+        onClose={() => setPickupConfirmation({ isOpen: false, opportunity: null })}
+        onConfirm={handlePickupConfirm}
+        title="Mark Vehicle as Picked Up"
+        description="Are you sure you want to mark this vehicle as picked up? This will archive the opportunity and record the pickup date."
+        confirmText="Mark as Picked Up"
+        confirmIcon={Car}
+      />
     </div>
   )
 }

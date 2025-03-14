@@ -4,15 +4,19 @@ import { opportunities } from '../mocks/opportunities_new'
 import { useWorkfileStore } from './workfile-store'
 import { WorkfileStatus } from '../types/workfile'
 
-interface OpportunityStore {
+export interface OpportunityStore {
   opportunities: Opportunity[]
   selectedOpportunity: Opportunity | null
   setSelectedOpportunity: (opportunity: Opportunity | null) => void
   updateOpportunity: (opportunityId: string, updates: Partial<Opportunity>) => void
   addOpportunity: (opportunity: Opportunity) => void
   removeOpportunity: (opportunityId: string) => void
+  archiveOpportunity: (opportunityId: string) => void
+  unarchiveOpportunity: (opportunityId: string) => void
   // Filter opportunities by workflow state
   getOpportunitiesByStatus: (status: OpportunityStatus) => Opportunity[]
+  // Get counts for all opportunity statuses
+  getOpportunityStatusCounts: () => Record<OpportunityStatus, number>
   // Get opportunity by ID
   getOpportunityById: (opportunityId: string) => Opportunity | undefined
   // Get opportunities that need follow-up (in 2nd Call status)
@@ -27,6 +31,8 @@ interface OpportunityStore {
   checkUploadDeadline: (opportunityId: string) => { passed: boolean; remainingTime: number | null }
   // Get opportunities with weather impact on paint work
   getWeatherImpactedOpportunities: () => Opportunity[]
+  // Get archived opportunities
+  getArchivedOpportunities: () => Opportunity[]
 }
 
 export const useOpportunityStore = create<OpportunityStore>((set, get) => ({
@@ -62,8 +68,54 @@ export const useOpportunityStore = create<OpportunityStore>((set, get) => ({
           : state.selectedOpportunity,
     })),
 
+  archiveOpportunity: (opportunityId) =>
+    set((state) => ({
+      opportunities: state.opportunities.map((opp) =>
+        opp.opportunityId === opportunityId
+          ? { ...opp, isArchived: true }
+          : opp
+      ),
+      selectedOpportunity:
+        state.selectedOpportunity?.opportunityId === opportunityId
+          ? { ...state.selectedOpportunity, isArchived: true }
+          : state.selectedOpportunity,
+    })),
+
+  unarchiveOpportunity: (opportunityId) =>
+    set((state) => ({
+      opportunities: state.opportunities.map((opp) =>
+        opp.opportunityId === opportunityId
+          ? { ...opp, isArchived: false }
+          : opp
+      ),
+      selectedOpportunity:
+        state.selectedOpportunity?.opportunityId === opportunityId
+          ? { ...state.selectedOpportunity, isArchived: false }
+          : state.selectedOpportunity,
+    })),
+
   getOpportunitiesByStatus: (status) => {
-    return get().opportunities.filter((opp) => opp.status === status)
+    // For Archived status, return all archived opportunities
+    if (status === OpportunityStatus.Archived) {
+      return get().opportunities.filter((opp) => opp.isArchived)
+    }
+    // For other statuses, return non-archived opportunities with matching status
+    return get().opportunities.filter((opp) => !opp.isArchived && opp.status === status)
+  },
+
+  getOpportunityStatusCounts: () => {
+    const opportunities = get().opportunities
+    const counts = Object.values(OpportunityStatus).reduce((acc, status) => {
+      // For Archived status, count all archived opportunities
+      if (status === OpportunityStatus.Archived) {
+        acc[status] = opportunities.filter(opp => opp.isArchived).length
+      } else {
+        // For other statuses, count non-archived opportunities with matching status
+        acc[status] = opportunities.filter(opp => !opp.isArchived && opp.status === status).length
+      }
+      return acc
+    }, {} as Record<OpportunityStatus, number>)
+    return counts
   },
 
   getOpportunityById: (opportunityId) => {
@@ -71,7 +123,7 @@ export const useOpportunityStore = create<OpportunityStore>((set, get) => ({
   },
 
   getFollowUpOpportunities: () => {
-    return get().opportunities.filter((opp) => opp.status === OpportunityStatus.SecondCall)
+    return get().opportunities.filter((opp) => !opp.isArchived && opp.status === OpportunityStatus.SecondCall)
   },
 
   getUpcomingDrops: () => {
@@ -79,7 +131,7 @@ export const useOpportunityStore = create<OpportunityStore>((set, get) => ({
     const in24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000)
 
     return get().opportunities.filter((opp) => {
-      if (!opp.dropDate || opp.status !== OpportunityStatus.New) return false
+      if (!opp.dropDate || opp.status !== OpportunityStatus.New || opp.isArchived) return false
       const dropDate = new Date(opp.dropDate)
       return dropDate <= in24Hours && dropDate >= now
     })
@@ -88,7 +140,7 @@ export const useOpportunityStore = create<OpportunityStore>((set, get) => ({
   getReadyForWorkfile: () => {
     return get().opportunities.filter((opp) => {
       // Check if opportunity is in the right state
-      if (opp.status !== OpportunityStatus.Estimate) return false
+      if (opp.status !== OpportunityStatus.Estimate || opp.isArchived) return false
       
       // Check if insurance is approved
       if (!opp.insurance.approved) return false
@@ -102,7 +154,7 @@ export const useOpportunityStore = create<OpportunityStore>((set, get) => ({
 
   createWorkfileFromOpportunity: (opportunityId) => {
     const opportunity = get().getOpportunityById(opportunityId)
-    if (!opportunity) return
+    if (!opportunity || opportunity.isArchived) return
 
     // Only create workfile if opportunity is in the right state
     if (opportunity.status !== OpportunityStatus.Estimate || !opportunity.insurance.approved) return
@@ -150,7 +202,7 @@ export const useOpportunityStore = create<OpportunityStore>((set, get) => ({
 
   checkUploadDeadline: (opportunityId) => {
     const opportunity = get().getOpportunityById(opportunityId)
-    if (!opportunity?.dropDate) return { passed: false, remainingTime: null }
+    if (!opportunity?.dropDate || opportunity.isArchived) return { passed: false, remainingTime: null }
 
     const now = new Date()
     const dropDate = new Date(opportunity.dropDate)
@@ -165,8 +217,13 @@ export const useOpportunityStore = create<OpportunityStore>((set, get) => ({
 
   getWeatherImpactedOpportunities: () => {
     return get().opportunities.filter((opp) => 
+      !opp.isArchived &&
       opp.weatherImpact?.affectsPaint && 
       (opp.status === OpportunityStatus.Estimate || opp.status === OpportunityStatus.Upcoming)
     )
+  },
+
+  getArchivedOpportunities: () => {
+    return get().opportunities.filter((opp) => opp.isArchived)
   },
 }))

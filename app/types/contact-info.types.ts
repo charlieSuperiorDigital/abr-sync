@@ -18,6 +18,7 @@ export interface CommunicationLog {
     type: string;
     date: string;
     user: string;
+    description?: string;
     isAutomatic: boolean;
 }
 
@@ -48,4 +49,5 @@ export enum ContactMethod {
 
 export interface ContactInfoProps {
     preferredContactMethod?: ContactMethod;
+    contactData?: ContactData;
 }

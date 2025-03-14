@@ -10,14 +10,15 @@ import {
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { ColumnDef } from '@tanstack/react-table'
 import { ClipboardPlus } from 'lucide-react'
-import { Opportunity, OpportunityStatus } from '@/app/types/opportunity'
+import { Opportunity, OpportunityStatus, RepairStage } from '@/app/types/opportunity'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import { useState, useCallback } from 'react'
 import { useOpportunityStore } from '@/app/stores/opportunity-store'
+import { showUnarchiveToast } from '@/app/utils/toast-utils'
 
 export default function ArchivedOpportunities() {
-  const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity } = useOpportunityStore()
+  const { getArchivedOpportunities, setSelectedOpportunity, selectedOpportunity, unarchiveOpportunity } = useOpportunityStore()
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const handleRowClick = useCallback((opportunity: Opportunity) => {
@@ -35,12 +36,22 @@ export default function ArchivedOpportunities() {
     console.log('Task clicked for opportunity:', opportunity.opportunityId)
   }, [])
 
+  const handleUnarchive = useCallback((opportunity: Opportunity) => {
+    unarchiveOpportunity(opportunity.opportunityId)
+    showUnarchiveToast(opportunity)
+    console.log('Unarchiving opportunity:', opportunity.opportunityId)
+  }, [unarchiveOpportunity])
+
   const formatDate = (date: string | undefined) => {
     if (!date) return '---'
     return new Date(date).toLocaleDateString()
   }
 
   const columns: ColumnDef<Opportunity, any>[] = [
+    {
+      accessorKey: 'insurance.claimNumber',
+      header: 'Claim',
+    },
     {
       accessorKey: 'vehicle',
       header: 'Vehicle',
@@ -54,103 +65,98 @@ export default function ArchivedOpportunities() {
       ),
     },
     {
-      accessorKey: 'insurance.claimNumber',
-      header: 'Claim',
+      accessorKey: 'status',
+      header: 'Previous Status',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">{row.original.status}</span>
+      ),
     },
     {
-      accessorKey: 'insurance.company',
-      header: 'Insurance',
+      accessorKey: 'roNumber',
+      header: 'RO',
       cell: ({ row }) => (
-        <span className={`whitespace-nowrap font-bold ${row.original.insurance.company === 'PROGRESSIVE' ? 'text-blue-700' : ''}`}>
-          {row.original.insurance.company.toUpperCase()}
+        <span className="whitespace-nowrap">{row.original.roNumber || '---'}</span>
+      ),
+    },
+    {
+      accessorKey: 'owner.name',
+      header: 'Owner',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">
+          {row.original.owner.name}
+        </span>
+      ),
+    }, {
+      accessorKey: 'firstCallDate',
+      header: '1ST CALL',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap text-gray-600">
+          {formatDate(row.original.firstCallDate)}
         </span>
       ),
     },
     {
-      accessorKey: 'customer.name',
-      header: 'Owner',
-    },
-    {
-      accessorKey: 'isInRental',
-      header: 'In Rental',
-      cell: ({ row }) => (row.original.isInRental ? <AutoCell /> : null),
-    },
-    {
-      accessorKey: 'dropDate',
-      header: 'Drop Date',
+      accessorKey: 'secondCallDate',
+      header: '2ND CALL',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{formatDate(row.original.dropDate)}</span>
+        <span className="whitespace-nowrap text-gray-600">
+          {formatDate(row.original.secondCallDate)}
+        </span>
       ),
     },
     {
-      accessorKey: 'warning',
-      header: 'Warning',
-      cell: ({ row }) =>
-        row.original.warning ? (
-          <StatusBadgeCell
-            variant="danger"
-            status="danger"
-          />
-        ) : null,
-    },
-    {
-      id: 'uploadDeadline',
-      header: 'Upload Deadline',
+      accessorKey: 'lastUpdatedBy',
+      header: 'LAST UPDATED BY',
       cell: ({ row }) => (
-        row.original.uploadDeadline ? (
-          <UploadTimeCell deadline={row.original.uploadDeadline} />
-        ) : (
-          <span className="text-gray-400">---</span>
-        )
+        <div className="flex items-center gap-2">
+          {row.original.lastUpdatedBy?.avatar && (
+            <img
+              src={row.original.lastUpdatedBy.avatar}
+              alt=""
+              className="w-6 h-6 rounded-full"
+            />
+          )}
+          <span className="whitespace-nowrap">
+            {row.original.lastUpdatedBy?.name || '---'}
+          </span>
+        </div>
       ),
     },
     {
-      id: 'lastCommDate',
-      header: 'Last Communication',
+      accessorKey: 'lastUpdatedDate',
+      header: 'LAST UPDATED',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">{formatDate(row.original.lastUpdatedDate)}</span>
       ),
     },
     {
-      header: 'Summary',
+      header: 'TIME TRACKING',
+      cell: ({ row }) => '2h',
+    },
+    {
+      header: 'SUMMARY',
       cell: ({ row }) => <SummaryCell />,
     },
+   
     {
-      id: 'contact',
-      header: 'Contact',
+      id: 'unarchive',
+      header: 'Unarchive',
       cell: ({ row }) => (
-        <div 
-          data-testid="contact-info" 
-          className="cursor-pointer"
+        <button
+          className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
           onClick={(e) => {
             e.stopPropagation()
-            handleContactClick(row.original)
+            handleUnarchive(row.original)
           }}
         >
-          <ContactInfo />
-        </div>
-      ),
-    },
-    {
-      id: 'task',
-      header: '',
-      cell: ({ row }) => (
-        <div 
-          data-testid="task-button" 
-          className="cursor-pointer hover:text-blue-600 transition-colors"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleTaskClick(row.original)
-          }}
-        >
-          <ClipboardPlus size={18} />
-        </div>
+          Unarchive
+        </button>
       ),
     },
   ]
 
-  // Get opportunities in "Archived" status from the store
-  const opportunities = getOpportunitiesByStatus(OpportunityStatus.Archived)
+  // Get archived opportunities from the store
+  const opportunities = getArchivedOpportunities()
 
   return (
     <div className="w-full">

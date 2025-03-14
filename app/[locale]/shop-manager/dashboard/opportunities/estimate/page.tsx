@@ -8,13 +8,20 @@ import {
   VehicleCell,
 } from '@/components/custom-components/custom-table/table-cells'
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
+import { ContactData, ContactMethod } from '@/app/types/contact-info.types'
 import { ColumnDef } from '@tanstack/react-table'
-import { ClipboardPlus } from 'lucide-react'
-import { Opportunity, OpportunityStatus } from '@/app/types/opportunity'
+import { ClipboardPlus, Paperclip } from 'lucide-react'
+import { Opportunity, OpportunityStatus, PartsWarningStatus } from '@/app/types/opportunity'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import { useState, useCallback } from 'react'
 import { useOpportunityStore } from '@/app/stores/opportunity-store'
+import dynamic from "next/dynamic";
+import { StatusBadge } from '@/components/custom-components/status-badge/status-badge';
+
+const PdfPreview = dynamic(() => import("@/app/[locale]/custom-components/pdf-preview"), {
+  ssr: false,
+});
 
 export default function EstimateOpportunities() {
   const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity } = useOpportunityStore()
@@ -42,6 +49,13 @@ export default function EstimateOpportunities() {
 
   const columns: ColumnDef<Opportunity, any>[] = [
     {
+      accessorKey: 'roNumber',
+      header: 'RO Number',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">{row.original.roNumber || '---'}</span>
+      ),
+    },
+    {
       accessorKey: 'vehicle',
       header: 'Vehicle',
       cell: ({ row }) => (
@@ -54,29 +68,34 @@ export default function EstimateOpportunities() {
       ),
     },
     {
-      accessorKey: 'roNumber',
-      header: 'RO Number',
-    },
-    {
-      accessorKey: 'insurance.claimNumber',
-      header: 'Claim',
-    },
-    {
-      accessorKey: 'insurance.company',
-      header: 'Insurance',
+      accessorKey: 'file',
+      header: 'FILE',
       cell: ({ row }) => (
-        <span className={`whitespace-nowrap font-bold ${row.original.insurance.company === 'PROGRESSIVE' ? 'text-blue-700' : ''}`}>
-          {row.original.insurance.company.toUpperCase()}
-        </span>
-      ),
+        <PdfPreview  />
+      )
+    
     },
     {
-      accessorKey: 'owner.name',
-      header: 'Owner',
-    },
-    {
-      accessorKey: 'stage',
-      header: 'Stage',
+      accessorKey: 'parts',
+      header: 'PARTS',
+      cell: ({ row }) => {
+        const parts = row.original.parts
+        if (!parts) return '---'
+        
+        return (
+          <div className="flex items-center gap-2">
+            <span>{parts.count}</span>
+            {parts.warning && (
+              <StatusBadge
+                variant={parts.warning === 'ORDERED' ? 'success' : 'danger'}
+                size="sm"
+              >
+                {parts.warning}
+              </StatusBadge>
+            )}
+          </div>
+        )
+      }
     },
     {
       accessorKey: 'isInRental',
@@ -84,12 +103,11 @@ export default function EstimateOpportunities() {
       cell: ({ row }) => (row.original.isInRental ? <AutoCell /> : null),
     },
     {
-      accessorKey: 'dropDate',
-      header: 'Drop Date',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">{formatDate(row.original.dropDate)}</span>
-      ),
+      accessorKey: 'priority',
+      header: 'PRIORITY'
+    
     },
+    
     {
       accessorKey: 'warning',
       header: 'Warning',
@@ -102,46 +120,106 @@ export default function EstimateOpportunities() {
         ) : null,
     },
     {
-      id: 'uploadDeadline',
-      header: 'Upload Deadline',
-      cell: ({ row }) => (
-        row.original.uploadDeadline ? (
-          <UploadTimeCell deadline={row.original.uploadDeadline} />
-        ) : (
-          <span className="text-gray-400">---</span>
-        )
-      ),
+      accessorKey: 'insuranceApproval',
+      header: 'INSURANCE APPROVAL',
+      cell: ({ row }) => {
+        const insurance = row.original.insurance;
+        if (insurance.approved === undefined) {
+          return (
+            <StatusBadge variant="pending" size="sm">
+              PENDING APPROVAL
+            </StatusBadge>
+          );
+        }
+        return (
+          <StatusBadge
+            variant={insurance.approved ? 'success' : 'danger'}
+            size="sm"
+          >
+            {insurance.approved ? 'APPROVED' : 'REJECTED'}
+          </StatusBadge>
+        );
+      }
     },
-    {
-      id: 'lastCommDate',
-      header: 'Last Communication',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">{formatDate(row.original.lastUpdatedDate)}</span>
-      ),
-    },
-    {
-      header: 'Summary',
-      cell: ({ row }) => <SummaryCell />,
-    },
+   
     {
       id: 'contact',
       header: 'Contact',
-      cell: ({ row }) => (
-        <div 
-          data-testid="contact-info" 
-          className="cursor-pointer"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleContactClick(row.original)
-          }}
-        >
-          <ContactInfo />
-        </div>
-      ),
+      cell: ({ row }) => {
+        const opportunity = row.original;
+        const owner = opportunity.owner;
+        const insurance = opportunity.insurance;
+        
+        // Determine preferred contact method based on opportunity data
+        let preferredContactMethod;
+        if (owner.email) preferredContactMethod = ContactMethod.email;
+        else if (owner.phone) preferredContactMethod = ContactMethod.phone;
+        else preferredContactMethod = ContactMethod.message;
+
+        const contactData: ContactData = {
+          person: {
+            name: owner.name,
+            role: owner.company ? `${owner.company} Representative` : 'Vehicle Owner',
+            address: `${owner.address}, ${owner.city}, ${owner.state} ${owner.zip}`,
+            company: owner.company || 'N/A',
+            preferredContactType: preferredContactMethod
+          },
+          insurance: {
+            company: insurance.company,
+            representative: insurance.representative || 'Not Assigned',
+            pendingEstimates: 1, // Default to 1 since this is an active opportunity
+            pendingReimbursements: 0, // Could be updated based on actual data
+            updates: insurance.approved === undefined ? 'Pending Approval' :
+                    insurance.approved ? 'Estimate Approved' : 'Estimate Rejected'
+          },
+          communicationLogs: (opportunity.logs || []).map(log => ({
+            ...log,
+            isAutomatic: log.type === 'email' // Assume emails are automatic, other types are manual
+          })),
+          emailContacts: [
+            {
+              email: owner.email || 'No email provided',
+              isPrimary: true
+            },
+            {
+              email: insurance.adjusterEmail || 'No adjuster email',
+              isPrimary: false
+            }
+          ].filter(contact => contact.email !== 'No email provided' && contact.email !== 'No adjuster email'),
+          attachmentOptions: [
+            {
+              name: 'Estimate',
+              category: 'Documents',
+              checked: false
+            },
+            {
+              name: 'Vehicle Photos',
+              category: 'Images',
+              checked: false
+            }
+          ]
+        };
+
+        return (
+          <div 
+            data-testid="contact-info" 
+            className="cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleContactClick(opportunity)
+            }}
+          >
+            <ContactInfo 
+              preferredContactMethod={preferredContactMethod}
+              contactData={contactData}
+            />
+          </div>
+        );
+      },
     },
     {
       id: 'task',
-      header: '',
+      header: 'Create Task',
       cell: ({ row }) => (
         <div 
           data-testid="task-button" 
