@@ -17,6 +17,18 @@ export const routing = defineRouting({
       en: '/shop-manager/dashboard/tasks',
       es: '/shop-manager/dashboard/tareas',
     },
+    '/shop-manager/dashboard/tasks/my-tasks': {
+      en: '/shop-manager/dashboard/tasks/my-tasks',
+      es: '/shop-manager/dashboard/tareas/mis-tareas',
+    },
+    '/shop-manager/dashboard/tasks/created-by-me': {
+      en: '/shop-manager/dashboard/tasks/created-by-me',
+      es: '/shop-manager/dashboard/tareas/creado-por-mi',
+    },
+    '/shop-manager/dashboard/tasks/completed-tasks': {
+      en: '/shop-manager/dashboard/tasks/completed-tasks',
+      es: '/shop-manager/dashboard/tareas/completed-tasks',
+    },
     '/shop-manager/dashboard/workfiles': {
       en: '/shop-manager/dashboard/workfiles',
       es: '/shop-manager/dashboard/archivos-de-trabajo',
