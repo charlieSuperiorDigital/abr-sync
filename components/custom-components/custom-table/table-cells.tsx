@@ -24,7 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { PriorityBadge } from '../priority-badge/priority-badge'
 import * as Dialog from '@radix-ui/react-dialog'
 import { act, useState } from 'react'
-import TaskModal from '../task-modal/edit-task-modal'
+import { EditTaskModal } from '../task-modal/edit-task-modal'
 
 interface TitleCellProps {
   title: string
