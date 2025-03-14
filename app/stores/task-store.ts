@@ -76,7 +76,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         {
           ...task,
           status: 'open',
-          createdDate: new Date().toISOString(),
+          createdDate: new Date().toISOString().slice(0, 10),
           lastUpdatedDate: new Date().toISOString(),
         },
       ],

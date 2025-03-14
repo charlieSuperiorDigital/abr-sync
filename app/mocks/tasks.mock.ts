@@ -21,6 +21,23 @@ import { Task } from '../types/task';
   }
   
   export const mockTasks: Task[] = [
+    // {
+    //     id: '473829',
+    //     priority: {
+    //         variant: 'danger',
+    //         text: 'URGENT'
+    //     },
+    //     title: 'Insurance Documentation Validation',
+    //     description: 'Verify all paperwork required by the insurance provider',
+    //     createdBy: 'Charlie Thompson',
+    //     createdDate: '2021-09-01',
+    //     due: '2025-03-12',
+    //     relatedTo: 'Insurance, Progressive',
+    //     email: 'charliethompson@xpto.com',
+    //     phone: '123-456-7890',
+    //     message: '27',
+    //     assignedTo: '123456'
+    // },
     {
         id: '473829',
         priority: {

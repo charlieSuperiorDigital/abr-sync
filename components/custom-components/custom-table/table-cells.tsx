@@ -119,6 +119,12 @@ interface FriendlyDateCellProps {
 
 export function FriendlyDateCell({ date, variant }: FriendlyDateCellProps) {
   const dateObj = new Date(date + 'T00:00:00')
+
+  // Check if date is valid
+  if (isNaN(dateObj.getTime())) {
+    return <span className="whitespace-nowrap">Invalid date</span>
+  }
+
   const today = new Date()
   const differenceInDays = Math.floor(
     (today.getTime() - dateObj.getTime()) / (1000 * 60 * 60 * 24)

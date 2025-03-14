@@ -23,7 +23,7 @@ export interface Task {
   title: string
   description: string
   createdBy: string
-  createdDate: string
+  createdDate?: string
   due: string
   relatedTo: string
   email: string

@@ -22,6 +22,8 @@ import {
 import { CustomInput } from '../inputs/custom-input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
+import { useTaskStore } from '@/app/stores/task-store'
+import { Task } from '@/app/types/task'
 
 interface NewTaskModalProps {
   children: React.ReactNode
@@ -36,6 +38,7 @@ export function NewTaskModal({
   const [isLoading, setIsLoading] = useState(false)
   const t = useTranslations('Task')
   const validationMessage = useTranslations('Validation')
+  const addTask = useTaskStore((state) => state.addTask)
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -78,8 +81,28 @@ export function NewTaskModal({
   const onSubmit = async (data: TaskFormData) => {
     try {
       setIsLoading(true)
-      console.log(data)
-      // Handle form submission
+      
+      // Create task from form data
+      const mockTask: Task = {
+        id: '473829',
+        priority: {
+            variant: 'danger',
+            text: 'URGENT'
+        },
+        title: 'Insurance Documentation Validation',
+        description: 'Verify all paperwork required by the insurance provider',
+        createdBy: 'Charlie Thompson',
+        due: '2025-03-12',
+        relatedTo: 'Insurance, Progressive',
+        email: 'charliethompson@xpto.com',
+        phone: '123-456-7890',
+        message: '27',
+        assignedTo: '123456'
+      }
+      
+      console.log('Adding task:', mockTask)
+      addTask(mockTask)
+      console.log('Task added successfully')
       setShouldShowModal(false)
     } catch (error) {
       console.error('Error submitting form:', error)
@@ -133,7 +156,20 @@ export function NewTaskModal({
             </div>
 
             <div className="overflow-y-auto flex-1 p-6">
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  console.log('Form submit event triggered');
+                  const result = handleSubmit((data) => {
+                    console.log('Form validation passed, data:', data);
+                    return onSubmit(data);
+                  }, (errors) => {
+                    console.error('Form validation failed:', errors);
+                  })(e);
+                  console.log('Form submission result:', result);
+                }} 
+                className="space-y-6"
+              >
                 <div>
                   <label className="block mb-2 font-semibold">Template</label>
                   <Controller
@@ -151,6 +187,9 @@ export function NewTaskModal({
                       />
                     )}
                   />
+                  {errors.template && (
+                    <p className="text-sm text-red-500 mt-1">{errors.template.message}</p>
+                  )}
                 </div>
 
                 <div>
@@ -168,6 +207,9 @@ export function NewTaskModal({
                         />
                       )}
                     />
+                    {errors.priority && (
+                      <p className="text-sm text-red-500 mt-1">{errors.priority.message}</p>
+                    )}
                   </div>
 
                   <div className="space-y-4">
@@ -203,14 +245,19 @@ export function NewTaskModal({
                         control={control}
                         name="location"
                         render={({ field }) => (
-                          <CustomSelect
-                            options={[
-                              { value: 'location a', label: 'Location A' },
-                              { value: 'location b', label: 'Location B' },
-                            ]}
-                            value={[field.value]}
-                            onChange={(value) => field.onChange(value[0])}
-                          />
+                          <div>
+                            <CustomSelect
+                              options={[
+                                { value: 'location a', label: 'Location A' },
+                                { value: 'location b', label: 'Location B' },
+                              ]}
+                              value={[field.value]}
+                              onChange={(value) => field.onChange(value[0])}
+                            />
+                            {errors.location && (
+                              <p className="text-sm text-red-500 mt-1">{errors.location.message}</p>
+                            )}
+                          </div>
                         )}
                       />
                     </div>
@@ -227,6 +274,9 @@ export function NewTaskModal({
                           />
                         )}
                       />
+                      {errors.type && (
+                        <p className="text-sm text-red-500 mt-1">{errors.type.message}</p>
+                      )}
                     </div>
 
                     {watchType === 'Recurring' && (
@@ -242,6 +292,9 @@ export function NewTaskModal({
                               />
                             )}
                           />
+                          {errors.recurringFrequency && (
+                            <p className="text-sm text-red-500 mt-1">{errors.recurringFrequency.message}</p>
+                          )}
                           <Controller
                             control={control}
                             name="recurringDays"
@@ -253,6 +306,9 @@ export function NewTaskModal({
                               />
                             )}
                           />
+                          {errors.recurringDays && (
+                            <p className="text-sm text-red-500 mt-1">{errors.recurringDays.message}</p>
+                          )}
                         </div>
                       </>
                     )}
@@ -267,6 +323,7 @@ export function NewTaskModal({
                             <CustomInput
                               label={t('due-date')}
                               type="date"
+                              error={errors.dueDate?.message}
                               {...field}
                             />
                           )}
@@ -281,6 +338,7 @@ export function NewTaskModal({
                             <CustomInput
                               label={t('time')}
                               type="time"
+                              error={errors.time?.message}
                               {...field}
                             />
                           )}
@@ -322,6 +380,9 @@ export function NewTaskModal({
                           </div>
                         )}
                       />
+                      {errors.assignToRoles && (
+                        <p className="text-sm text-red-500 mt-1">{errors.assignToRoles.message}</p>
+                      )}
                     </div>
                     <div>
                       <h4 className="font-semibold mb-2">{t('assign-to-user')}</h4>
@@ -353,6 +414,9 @@ export function NewTaskModal({
                           />
                         )}
                       />
+                      {errors.assignToUser && (
+                        <p className="text-sm text-red-500 mt-1">{errors.assignToUser.message}</p>
+                      )}
                       <div className="mt-2">
                         <Controller
                           control={control}
@@ -376,21 +440,21 @@ export function NewTaskModal({
                 </div>
 
                 <div className="flex justify-end gap-4 mt-8">
-                  <button
+                  <Button
                     type="button"
                     onClick={() => setShouldShowModal(false)}
                     className="p-2 rounded-full transition-colors duration-200 hover:bg-black hover:text-white w-32"
                     disabled={isSubmitting}
                   >
                     {t('cancel')}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
                     className="p-2 rounded-full transition-colors duration-200 bg-black text-white hover:bg-gray-800 w-32"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? t('saving') : t('save')}
-                  </button>
+                  </Button>
                 </div>
               </form>
             </div>
