@@ -199,7 +199,9 @@ export function ActionsCell({ actions }: ActionsCellProps) {
   return (
     <div className="flex items-center gap-2">
       {actions.map((action, index) => (
-        <>{action._component}</>
+        <div key={index}>
+          <>{action._component}</>
+        </div>
 
         // <Button
         //   key={index}
