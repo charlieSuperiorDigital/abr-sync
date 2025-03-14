@@ -5,58 +5,37 @@ import { useEffect, useState } from 'react'
 import { Plus } from 'lucide-react'
 import { Controller, useForm } from 'react-hook-form'
 import { CustomSelect } from '../selects/custom-select'
+import { CustomButtonSelect, CustomButtonSelectField } from '../selects/custom-button-select'
 import { useTranslations } from 'next-intl'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { 
-  getTaskFormSchema, 
-  TaskFormData, 
-  TaskRoles,
+  getTaskFormSchema,
+  TaskFormData,
   TaskPriorities,
   TaskTypes,
-  TaskRole,
+  TaskRoles,
   TaskPriority,
-  TaskType
+  TaskType,
+  RecurringFrequencies,
+  DaysOfWeek
 } from './schema'
 import { CustomInput } from '../inputs/custom-input'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Button } from '@/components/ui/button'
 
 interface NewTaskModalProps {
   children: React.ReactNode
-  isOpen: boolean
-  onOpenChange: (open: boolean) => void
   title: string
 }
 
-export default function NewTaskModal({
+export function NewTaskModal({
   children,
-  isOpen,
-  onOpenChange,
   title,
 }: NewTaskModalProps) {
   const [shouldShowModal, setShouldShowModal] = useState(false)
-  const validationMessage = useTranslations('Validation')
   const [isLoading, setIsLoading] = useState(false)
-
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<TaskFormData>({
-    resolver: zodResolver(getTaskFormSchema(validationMessage)),
-    defaultValues: {
-      template: '',
-      priority: 'Low',
-      taskTitle: '',
-      description: '',
-      location: '',
-      type: 'One-time',
-      dueDate: '',
-      time: '',
-      assignToUser: '',
-      assignToRoles: [],
-      assignToMe: false
-    },
-  })
+  const t = useTranslations('Task')
+  const validationMessage = useTranslations('Validation')
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -68,10 +47,45 @@ export default function NewTaskModal({
     setShouldShowModal(true)
   }
 
-  const onSubmit = (data: TaskFormData) => {
-    console.log('Form data:', data)
-    // Handle form submission
-    setShouldShowModal(false)
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<TaskFormData>({
+    resolver: zodResolver(getTaskFormSchema(validationMessage)),
+    defaultValues: {
+      template: '',
+      priority: 'Normal' as TaskPriority,
+      taskTitle: '',
+      description: '',
+      location: '',
+      type: 'One-time' as TaskType,
+      dueDate: '',
+      time: '',
+      assignToUser: '',
+      assignToRoles: [],
+      assignToMe: false,
+      recurringFrequency: 'Every Day',
+      recurringDays: []
+    },
+  })
+
+  const watchType = watch('type')
+
+  const onSubmit = async (data: TaskFormData) => {
+    try {
+      setIsLoading(true)
+      console.log(data)
+      // Handle form submission
+      setShouldShowModal(false)
+    } catch (error) {
+      console.error('Error submitting form:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -85,16 +99,20 @@ export default function NewTaskModal({
     return () => window.removeEventListener('keydown', handleEscapeKey)
   }, [])
 
-  const buttonStyles = {
-    base: "px-4 py-2 rounded-full transition-colors duration-200",
-    selected: "bg-black text-white",
-    unselected: "bg-gray-100 hover:bg-black hover:text-white"
-  }
-
   return (
     <>
-      <div onClick={() => handleShowModal()}>
-        {children}
+      <div className="flex items-center h-full">
+        <div className="flex items-center">
+          <button
+            onClick={() => handleShowModal()}
+            className="flex items-center rounded-full transition-colors duration-200 hover:bg-black group"
+            aria-label="New Task"
+          >
+            <span className="p-2 group-hover:text-white">
+              {children}
+            </span>
+          </button>
+        </div>
       </div>
 
       {shouldShowModal && (
@@ -105,17 +123,16 @@ export default function NewTaskModal({
           <div className="bg-white rounded-3xl w-full max-w-3xl max-h-[90vh] flex flex-col">
             <div className="flex justify-between items-center p-6 border-b">
               <h2 className="text-xl font-bold">{title}</h2>
-              <button onClick={() => setShouldShowModal(false)} className="p-1">
+              <button
+                type="button"
+                onClick={() => setShouldShowModal(false)}
+                className="p-2 rounded-full transition-colors duration-200 hover:bg-black hover:text-white"
+              >
                 <Plus className="w-6 h-6 rotate-45" />
               </button>
             </div>
 
             <div className="overflow-y-auto flex-1 p-6">
-              <div className="text-sm text-gray-600 mb-6">
-                To link this task to a specific subject, make sure to start from the relevant screen, such as
-                Vehicle Owner, Opportunity, Workfiles, or Vendor.
-              </div>
-
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <div>
                   <label className="block mb-2 font-semibold">Template</label>
@@ -137,30 +154,18 @@ export default function NewTaskModal({
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-bold mb-4">Task Information</h3>
+                  <h3 className="text-lg font-bold mb-4">{t('task-information')}</h3>
                   
                   <div className="mb-4">
-                    <label className="block mb-2 font-semibold">Priority</label>
+                    <label className="block mb-2 font-semibold">{t('priority')}</label>
                     <Controller
                       control={control}
                       name="priority"
                       render={({ field }) => (
-                        <div className="flex w-full gap-2">
-                          {TaskPriorities.map((priority) => (
-                            <button
-                              key={priority}
-                              type="button"
-                              onClick={() => field.onChange(priority)}
-                              className={`${buttonStyles.base} flex-1 ${
-                                field.value === priority 
-                                  ? buttonStyles.selected 
-                                  : buttonStyles.unselected
-                              }`}
-                            >
-                              {priority}
-                            </button>
-                          ))}
-                        </div>
+                        <CustomButtonSelectField
+                          field={field}
+                          options={TaskPriorities}
+                        />
                       )}
                     />
                   </div>
@@ -171,7 +176,7 @@ export default function NewTaskModal({
                       name="taskTitle"
                       render={({ field }) => (
                         <CustomInput
-                          label="Task title"
+                          label={t('task-title')}
                           type="text"
                           error={errors.taskTitle?.message}
                           {...field}
@@ -184,7 +189,7 @@ export default function NewTaskModal({
                       name="description"
                       render={({ field }) => (
                         <CustomInput
-                          label="Task description"
+                          label={t('description')}
                           type="text"
                           error={errors.description?.message}
                           {...field}
@@ -193,88 +198,103 @@ export default function NewTaskModal({
                     />
 
                     <div>
-                      <label className="block mb-2 font-semibold">Location</label>
+                      <label className="block mb-2 font-semibold">{t('location')}</label>
                       <Controller
                         control={control}
                         name="location"
                         render={({ field }) => (
                           <CustomSelect
-                            placeholder="Select"
                             options={[
-                              { value: 'location1', label: 'Location 1' },
-                              { value: 'location2', label: 'Location 2' },
+                              { value: 'location a', label: 'Location A' },
+                              { value: 'location b', label: 'Location B' },
                             ]}
-                            value={field.value ? [field.value] : []}
-                            onChange={(values) => field.onChange(values[0] || '')}
+                            value={[field.value]}
+                            onChange={(value) => field.onChange(value[0])}
                           />
                         )}
                       />
                     </div>
-                  </div>
-                </div>
 
-                <div>
-                  <h3 className="text-lg font-bold mb-4">Task type</h3>
-                  <Controller
-                    control={control}
-                    name="type"
-                    render={({ field }) => (
-                      <div className="flex w-full gap-2">
-                        {TaskTypes.map((type) => (
-                          <button
-                            key={type}
-                            type="button"
-                            onClick={() => field.onChange(type)}
-                            className={`${buttonStyles.base} flex-1 ${
-                              field.value === type 
-                                ? buttonStyles.selected 
-                                : buttonStyles.unselected
-                            }`}
-                          >
-                            {type}
-                          </button>
-                        ))}
-                      </div>
+                    <div>
+                      <label className="block mb-2 font-semibold">{t('task-type')}</label>
+                      <Controller
+                        control={control}
+                        name="type"
+                        render={({ field }) => (
+                          <CustomButtonSelectField
+                            field={field}
+                            options={TaskTypes}
+                          />
+                        )}
+                      />
+                    </div>
+
+                    {watchType === 'Recurring' && (
+                      <>
+                        <div className="flex flex-col gap-4 w-full mt-4">
+                          <Controller
+                            control={control}
+                            name="recurringFrequency"
+                            render={({ field }) => (
+                              <CustomButtonSelectField
+                                field={field}
+                                options={RecurringFrequencies}
+                              />
+                            )}
+                          />
+                          <Controller
+                            control={control}
+                            name="recurringDays"
+                            render={({ field }) => (
+                              <CustomButtonSelectField
+                                field={field}
+                                options={DaysOfWeek}
+                                multiple
+                              />
+                            )}
+                          />
+                        </div>
+                      </>
                     )}
-                  />
 
-                  <div className="grid grid-cols-2 gap-4 mt-4">
-                    <div>
-                      <Controller
-                        control={control}
-                        name="dueDate"
-                        render={({ field }) => (
-                          <CustomInput
-                            label="Due Date"
-                            type="date"
-                            {...field}
-                            placeholder="Due Date"
-                          />
-                        )}
-                      />
-                    </div>
-                    <div>
-                      <Controller
-                        control={control}
-                        name="time"
-                        render={({ field }) => (
-                          <CustomInput
-                            label="Time"
-                            type="time"
-                            {...field}
-                            placeholder="Time"
-                          />
-                        )}
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block mb-2 font-semibold">{t('due-date')}</label>
+                        <Controller
+                          control={control}
+                          name="dueDate"
+                          render={({ field }) => (
+                            <CustomInput
+                              label={t('due-date')}
+                              type="date"
+                              {...field}
+                            />
+                          )}
+                        />
+                      </div>
+                      <div>
+                        <label className="block mb-2 font-semibold">{t('time')}</label>
+                        <Controller
+                          control={control}
+                          name="time"
+                          render={({ field }) => (
+                            <CustomInput
+                              label={t('time')}
+                              type="time"
+                              {...field}
+                            />
+                          )}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-bold mb-4">Assign to</h3>
+                  <h3 className="text-lg font-bold mb-4">{t('assign-to')}</h3>
                   <div className="grid grid-cols-2 gap-6">
                     <div>
-                      <h4 className="font-semibold mb-2">Assign to roles</h4>
+                      <h4 className="font-semibold mb-2">{t('assign-to-roles')}</h4>
                       <Controller
                         control={control}
                         name="assignToRoles"
@@ -283,6 +303,7 @@ export default function NewTaskModal({
                             {TaskRoles.map((role) => (
                               <div key={role} className="flex items-center space-x-2">
                                 <Checkbox
+                                  id={`role-${role}`}
                                   checked={field.value?.includes(role)}
                                   onCheckedChange={(checked) => {
                                     const currentRoles = field.value || []
@@ -293,7 +314,9 @@ export default function NewTaskModal({
                                     }
                                   }}
                                 />
-                                <label>{role}</label>
+                                <label htmlFor={`role-${role}`} className="text-sm font-medium">
+                                  {role}
+                                </label>
                               </div>
                             ))}
                           </div>
@@ -301,16 +324,29 @@ export default function NewTaskModal({
                       />
                     </div>
                     <div>
-                      <h4 className="font-semibold mb-2">Assign to user</h4>
+                      <h4 className="font-semibold mb-2">{t('assign-to-user')}</h4>
                       <Controller
                         control={control}
                         name="assignToUser"
                         render={({ field }) => (
                           <CustomSelect
-                            placeholder="Select"
+                            placeholder={t('select-user')}
                             options={[
-                              { value: 'user1', label: 'User 1' },
-                              { value: 'user2', label: 'User 2' },
+                              {
+                                value: 'Alexander Walker',
+                                label: 'Alexander Walker',
+                                avatar: '/placeholder.svg',
+                              },
+                              {
+                                value: 'Aiden Moore',
+                                label: 'Aiden Moore',
+                                avatar: '/placeholder.svg',
+                              },
+                              {
+                                value: 'James Davis',
+                                label: 'James Davis',
+                                avatar: '/placeholder.svg',
+                              },
                             ]}
                             value={field.value ? [field.value] : []}
                             onChange={(values) => field.onChange(values[0] || '')}
@@ -324,10 +360,13 @@ export default function NewTaskModal({
                           render={({ field }) => (
                             <div className="flex items-center space-x-2">
                               <Checkbox
+                                id="assignToMe"
                                 checked={field.value}
                                 onCheckedChange={field.onChange}
                               />
-                              <label>Assign to me</label>
+                              <label htmlFor="assignToMe" className="text-sm font-medium">
+                                {t('assign-to-me')}
+                              </label>
                             </div>
                           )}
                         />
@@ -336,20 +375,21 @@ export default function NewTaskModal({
                   </div>
                 </div>
 
-                <div className="flex justify-between pt-4 border-t">
+                <div className="flex justify-end gap-4 mt-8">
                   <button
                     type="button"
                     onClick={() => setShouldShowModal(false)}
-                    className="px-8 py-2 rounded-full border border-gray-300 hover:bg-black hover:text-white transition-colors duration-200 w-64"
+                    className="p-2 rounded-full transition-colors duration-200 hover:bg-black hover:text-white w-32"
+                    disabled={isSubmitting}
                   >
-                    Cancel
+                    {t('cancel')}
                   </button>
                   <button
                     type="submit"
-                    className="px-8 py-2 rounded-full bg-black text-white hover:bg-gray-800 transition-colors duration-200 w-64"
+                    className="p-2 rounded-full transition-colors duration-200 bg-black text-white hover:bg-gray-800 w-32"
                     disabled={isSubmitting}
                   >
-                    Save
+                    {isSubmitting ? t('saving') : t('save')}
                   </button>
                 </div>
               </form>

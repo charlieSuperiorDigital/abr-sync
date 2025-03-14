@@ -2,55 +2,42 @@
 
 import * as React from 'react'
 import { useEffect, useState } from 'react'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
-import { Controller, useForm } from 'react-hook-form'
-import { CustomSelect } from '../selects/custom-select'
+import { Trash2, Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { getTaskFormSchema, TaskFormData } from './schema'
-import { CustomInput } from '../inputs/custom-input'
-import Link from 'next/link'
 
 interface DeleteTaskModalProps {
   children: React.ReactNode
-  isOpen: boolean
-  onOpenChange: (open: boolean) => void
   title: string
 }
 
 export default function DeleteTaskModal({
   children,
-  isOpen,
-  onOpenChange,
   title,
 }: DeleteTaskModalProps) {
   const [shouldShowModal, setShouldShowModal] = useState(false)
-
-  const t = useTranslations('Login')
-  const validationMessage = useTranslations('Validation')
   const [isLoading, setIsLoading] = useState(false)
-
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<TaskFormData>({
-    resolver: zodResolver(getTaskFormSchema(validationMessage)),
-    defaultValues: {
-      priority: 'Low',
-    },
-  })
+  const t = useTranslations('Task')
 
   const handleOverlayClick = (e: React.MouseEvent) => {
-    console.log('overlay click')
     if (e.target === e.currentTarget) {
       setShouldShowModal(false)
     }
   }
 
   const handleShowModal = () => {
-    console.log('show modal')
     setShouldShowModal(true)
+  }
+
+  const handleDelete = async () => {
+    try {
+      setIsLoading(true)
+      // Handle delete logic here
+      setShouldShowModal(false)
+    } catch (error) {
+      console.error('Error deleting task:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -70,16 +57,14 @@ export default function DeleteTaskModal({
         <div className="flex items-center">
           <button
             onClick={() => handleShowModal()}
-            className={`flex items-center rounded-full transition-colors duration-100 group
-                       hover:bg-black`}
-            aria-label="Contact Information"
+            className="flex items-center rounded-full transition-colors duration-200 hover:bg-black group"
+            aria-label="Delete Task"
           >
-            <span className="p-2 hover:text-white">
-              <Trash2 className={`w-4 h-4 `} />
+            <span className="p-2 group-hover:text-white">
+              <Trash2 className="w-4 h-4" />
             </span>
           </button>
         </div>
-        <div className="flex items-center"></div>
       </div>
 
       {shouldShowModal && (
@@ -90,41 +75,41 @@ export default function DeleteTaskModal({
           <div className="bg-white rounded-3xl w-full max-w-3xl max-h-[90vh] flex flex-col">
             <div className="flex justify-between items-center p-6 border-b">
               <h2 className="text-xl font-bold">{title}</h2>
-              <button onClick={() => setShouldShowModal(false)} className="p-1">
-                <Plus className="w-6 h-6 rotate-45 " />
+              <button
+                type="button"
+                onClick={() => setShouldShowModal(false)}
+                className="p-2 rounded-full transition-colors duration-200 hover:bg-black hover:text-white"
+              >
+                <Plus className="w-6 h-6 rotate-45" />
               </button>
             </div>
 
             <div className="overflow-y-auto flex-1 p-6">
               <h3 className="text-lg mb-2 font-bold">
-                ID 307815 • Parts Vendor Confirmation
+                {t('confirm-delete-title')}
               </h3>
               <p className="text-sm mb-4">
-                Confirm the parts vendor for the 2018 Toyota Camry
+                {t('confirm-delete-description')}
               </p>
 
-              <form
-                onSubmit={() => {
-                  console.log('submit')
-                }}
-              >
-                <div className="mt-8">
-                  <div className="flex justify-between">
-                    <button
-                      onClick={() => setShouldShowModal(false)}
-                      className="px-8 py-2 border rounded-3xl w-64"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      className="px-8 py-2 bg-black text-white rounded-3xl w-64 "
-                      type="submit"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </form>
+              <div className="flex justify-end gap-4 mt-8">
+                <button
+                  type="button"
+                  onClick={() => setShouldShowModal(false)}
+                  className="p-2 rounded-full transition-colors duration-200 hover:bg-black hover:text-white w-32"
+                  disabled={isLoading}
+                >
+                  {t('cancel')}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="p-2 rounded-full transition-colors duration-200 bg-black text-white hover:bg-gray-800 w-32"
+                  disabled={isLoading}
+                >
+                  {isLoading ? t('deleting') : t('delete')}
+                </button>
+              </div>
             </div>
           </div>
         </div>

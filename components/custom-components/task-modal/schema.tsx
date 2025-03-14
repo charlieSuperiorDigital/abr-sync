@@ -23,9 +23,29 @@ export const TaskTypes = [
   'Automated'
 ] as const
 
+export const RecurringFrequencies = [
+  'Every Day',
+  'Every Week',
+  'Every Month',
+  'Every Year',
+  'Custom'
+] as const
+
+export const DaysOfWeek = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday'
+] as const
+
 export type TaskRole = typeof TaskRoles[number]
 export type TaskPriority = typeof TaskPriorities[number]
 export type TaskType = typeof TaskTypes[number]
+export type RecurringFrequency = typeof RecurringFrequencies[number]
+export type DayOfWeek = typeof DaysOfWeek[number]
 
 export function getTaskFormSchema(t?: (key: string) => string) {
   return z.object({
@@ -39,7 +59,9 @@ export function getTaskFormSchema(t?: (key: string) => string) {
     time: z.string().optional(),
     assignToUser: z.string().optional(),
     assignToRoles: z.array(z.enum(TaskRoles)).optional(),
-    assignToMe: z.boolean().optional()
+    assignToMe: z.boolean().optional(),
+    recurringFrequency: z.enum(RecurringFrequencies).optional(),
+    recurringDays: z.array(z.enum(DaysOfWeek)).optional()
   })
 }
 

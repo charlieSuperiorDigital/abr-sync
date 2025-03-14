@@ -5,52 +5,86 @@ import { useEffect, useState } from 'react'
 import { Pencil, Plus } from 'lucide-react'
 import { Controller, useForm } from 'react-hook-form'
 import { CustomSelect } from '../selects/custom-select'
+import { CustomButtonSelect, CustomButtonSelectField } from '../selects/custom-button-select'
 import { useTranslations } from 'next-intl'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { getTaskFormSchema, TaskFormData } from './schema'
+import { 
+  getTaskFormSchema,
+  TaskFormData,
+  TaskPriorities,
+  TaskTypes,
+  TaskRoles,
+  TaskPriority,
+  TaskType,
+  RecurringFrequencies,
+  DaysOfWeek
+} from './schema'
 import { CustomInput } from '../inputs/custom-input'
-import Link from 'next/link'
+import { Checkbox } from '@/components/ui/checkbox'
 
 interface EditTaskModalProps {
   children: React.ReactNode
-  isOpen: boolean
-  onOpenChange: (open: boolean) => void
   title: string
 }
 
-export default function EditTaskModal({
+export function EditTaskModal({
   children,
-  isOpen,
-  onOpenChange,
   title,
 }: EditTaskModalProps) {
   const [shouldShowModal, setShouldShowModal] = useState(false)
-
-  const t = useTranslations('Login')
-  const validationMessage = useTranslations('Validation')
   const [isLoading, setIsLoading] = useState(false)
-
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<TaskFormData>({
-    resolver: zodResolver(getTaskFormSchema(validationMessage)),
-    defaultValues: {
-      priority: 'Low',
-    },
-  })
+  const t = useTranslations('Task')
+  const validationMessage = useTranslations('Validation')
 
   const handleOverlayClick = (e: React.MouseEvent) => {
-    console.log('overlay click')
     if (e.target === e.currentTarget) {
       setShouldShowModal(false)
     }
   }
 
   const handleShowModal = () => {
-    console.log('show modal')
     setShouldShowModal(true)
+  }
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<TaskFormData>({
+    resolver: zodResolver(getTaskFormSchema(validationMessage)),
+    defaultValues: {
+      template: '',
+      priority: 'Normal' as TaskPriority,
+      taskTitle: '',
+      description: '',
+      location: '',
+      type: 'One-time' as TaskType,
+      dueDate: '',
+      time: '',
+      assignToUser: '',
+      assignToRoles: [],
+      assignToMe: false,
+      recurringFrequency: 'Every Day',
+      recurringDays: []
+    },
+  })
+
+  const watchType = watch('type')
+
+  const onSubmit = async (data: TaskFormData) => {
+    try {
+      setIsLoading(true)
+      console.log(data)
+      // Handle form submission
+      setShouldShowModal(false)
+    } catch (error) {
+      console.error('Error submitting form:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -70,16 +104,14 @@ export default function EditTaskModal({
         <div className="flex items-center">
           <button
             onClick={() => handleShowModal()}
-            className={`flex items-center rounded-full transition-colors duration-100 group
-                       hover:bg-black`}
-            aria-label="Contact Information"
+            className="flex items-center rounded-full transition-colors duration-200 hover:bg-black group"
+            aria-label="Edit Task"
           >
-            <span className="p-2 hover:text-white">
-              <Pencil className={`w-4 h-4 `} />
+            <span className="p-2 group-hover:text-white">
+              <Pencil className="w-4 h-4" />
             </span>
           </button>
         </div>
-        <div className="flex items-center"></div>
       </div>
 
       {shouldShowModal && (
@@ -90,319 +122,274 @@ export default function EditTaskModal({
           <div className="bg-white rounded-3xl w-full max-w-3xl max-h-[90vh] flex flex-col">
             <div className="flex justify-between items-center p-6 border-b">
               <h2 className="text-xl font-bold">{title}</h2>
-              <button onClick={() => setShouldShowModal(false)} className="p-1">
-                <Plus className="w-6 h-6 rotate-45 " />
+              <button
+                type="button"
+                onClick={() => setShouldShowModal(false)}
+                className="p-2 rounded-full transition-colors duration-200 hover:bg-black hover:text-white"
+              >
+                <Plus className="w-6 h-6 rotate-45" />
               </button>
             </div>
 
             <div className="overflow-y-auto flex-1 p-6">
-              {/* 
-
-					Fields
-					
-					Task Information
-					Priority
-						Urgent
-						High
-						Normal
-						Low
-					Task Title
-					Task Description
-					Location
-
-					Task Type
-						One-Time
-						Recurring
-						Automated
-					Due Date
-					Time
-					Assign to user
-					Assign to roles
-						All
-						Estimators
-						Parts Managers
-						CSR
-						Shop Managers
-						Tecnicians
-						Painters
-
-				 */}
-
-              <h3 className="text-lg mb-2 font-bold">Task Information</h3>
-
-              <form
-                onSubmit={() => {
-                  console.log('submit')
-                }}
-              >
-                <div className="mt-8">
-                  <label htmlFor="priority" className="mb-2 font-semibold">
-                    Priority
-                  </label>
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                <div>
+                  <label className="block mb-2 font-semibold">Template</label>
                   <Controller
                     control={control}
-                    name="priority"
+                    name="template"
                     render={({ field }) => (
                       <CustomSelect
+                        placeholder="Select"
                         options={[
-                          { value: 'urgent', label: 'Urgent' },
-                          { value: 'high', label: 'High' },
-                          { value: 'normal', label: 'Normal' },
-                          { value: 'low', label: 'Low' },
+                          { value: 'template1', label: 'Template 1' },
+                          { value: 'template2', label: 'Template 2' },
                         ]}
+                        value={field.value ? [field.value] : []}
+                        onChange={(values) => field.onChange(values[0] || '')}
                       />
                     )}
                   />
                 </div>
 
-                <div className="mt-8">
-                  <Controller
-                    control={control}
-                    name="taskTitle"
-                    render={({ field }) => (
-                      <CustomInput
-                        label="Task Title"
-                        type="text"
-                        {...field}
-                        placeholder="Task Title"
-                      />
-                    )}
-                  />
-                </div>
-
-                <div className="mt-8">
-                  <Controller
-                    control={control}
-                    name="description"
-                    render={({ field }) => (
-                      <CustomInput
-                        label="Description"
-                        type="text"
-                        {...field}
-                        placeholder="Description"
-                      />
-                    )}
-                  />
-                </div>
-
-                <div className="mt-8">
-                  <label htmlFor="location" className="mb-2 font-semibold">
-                    Location
-                  </label>
-                  <Controller
-                    control={control}
-                    name="location"
-                    render={({ field }) => (
-                      <CustomSelect
-                        //multiSelect={true} //Having trouble with multiselect (error on depth)
-                        options={[
-                          {
-                            value: 'location a',
-                            label:
-                              'Birch, Birch1521 W Birch St, Chicago, IL 60607',
-                          },
-                          {
-                            value: 'location b',
-                            label: 'Clark, 2034 N Clark St, Chicago, IL 60614',
-                          },
-                        ]}
-                      />
-                    )}
-                  />
-                </div>
-
-                <h3 className="text-lg mb-2 font-bold mt-8">Task Type</h3>
-
-                <div className="mt-8">
-                  <label className="mb-2 font-semibold" htmlFor="type">
-                    Task Type
-                  </label>
-                  <Controller
-                    control={control}
-                    name="type"
-                    render={({ field }) => (
-                      <CustomSelect
-                        options={[
-                          { value: 'One-Time', label: 'One-time' },
-                          { value: 'Recurring', label: 'Recurring' },
-                          { value: 'Automated', label: 'Automated' },
-                        ]}
-                      />
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="mt-8">
+                <div>
+                  <h3 className="text-lg font-bold mb-4">{t('task-information')}</h3>
+                  
+                  <div className="mb-4">
+                    <label className="block mb-2 font-semibold">{t('priority')}</label>
                     <Controller
                       control={control}
-                      name="dueDate"
+                      name="priority"
+                      render={({ field }) => (
+                        <CustomButtonSelectField
+                          field={field}
+                          options={TaskPriorities}
+                        />
+                      )}
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <Controller
+                      control={control}
+                      name="taskTitle"
                       render={({ field }) => (
                         <CustomInput
-                          label="Due Date"
-                          type="date"
+                          label={t('task-title')}
+                          type="text"
+                          error={errors.taskTitle?.message}
                           {...field}
-                          placeholder="Due Date"
                         />
                       )}
                     />
-                  </div>
-                  <div className="mt-8">
+
                     <Controller
                       control={control}
-                      name="time"
+                      name="description"
                       render={({ field }) => (
                         <CustomInput
-                          label="Time"
-                          type="time"
+                          label={t('description')}
+                          type="text"
+                          error={errors.description?.message}
                           {...field}
-                          placeholder="Time"
                         />
                       )}
                     />
-                  </div>
-                </div>
 
-                <h3 className="text-lg mb-2 font-bold mt-8">Assign to</h3>
+                    <div>
+                      <label className="block mb-2 font-semibold">{t('location')}</label>
+                      <Controller
+                        control={control}
+                        name="location"
+                        render={({ field }) => (
+                          <CustomSelect
+                            options={[
+                              { value: 'location a', label: 'Location A' },
+                              { value: 'location b', label: 'Location B' },
+                            ]}
+                            value={[field.value]}
+                            onChange={(value) => field.onChange(value[0])}
+                          />
+                        )}
+                      />
+                    </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="mt-8">
-                    <label htmlFor="assignToUser">Assign to User</label>
-                    <Controller
-                      control={control}
-                      name="assignToUser"
-                      
-                      render={({ field }) => (
-                        <CustomSelect
-                        placeholder='Select'
-                          //multiSelect={true} //Having trouble with multiselect (error on depth)
-                          options={[
-                            {
-                              value: 'Alexander Walker',
-                              label: 'Alexander Walker',
-                              avatar: '/placeholder.svg',
-                            },
-                            {
-                              value: 'Aiden Moore',
-                              label: 'Aiden Moore',
-                              avatar: '/placeholder.svg',
-                            },
-                            {
-                              value: 'James Davis',
-                              label: 'James Davis',
-                              avatar: '/placeholder.svg',
-                            },
-                          ]}
+                    <div>
+                      <label className="block mb-2 font-semibold">{t('task-type')}</label>
+                      <Controller
+                        control={control}
+                        name="type"
+                        render={({ field }) => (
+                          <CustomButtonSelectField
+                            field={field}
+                            options={TaskTypes}
+                          />
+                        )}
+                      />
+                    </div>
+
+                    {watchType === 'Recurring' && (
+                      <>
+                        <div className="flex flex-col gap-4 w-full mt-4">
+                          <Controller
+                            control={control}
+                            name="recurringFrequency"
+                            render={({ field }) => (
+                              <CustomButtonSelectField
+                                field={field}
+                                options={RecurringFrequencies}
+                              />
+                            )}
+                          />
+                          <Controller
+                            control={control}
+                            name="recurringDays"
+                            render={({ field }) => (
+                              <CustomButtonSelectField
+                                field={field}
+                                options={DaysOfWeek}
+                                multiple
+                              />
+                            )}
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block mb-2 font-semibold">{t('due-date')}</label>
+                        <Controller
+                          control={control}
+                          name="dueDate"
+                          render={({ field }) => (
+                            <CustomInput
+                              label={t('due-date')}
+                              type="date"
+                              {...field}
+                            />
+                          )}
                         />
-                      )}
-                    />
-                    <Link href="#" className='mt-3 font-semibold underline' >
-                      Assign to me
-                    </Link>
-                  </div>
-
-                  <div className="mt-8">
-                    <label htmlFor="assignToRoles">Assign to Roles</label>
-                    <div className="grid grid-cols-2 gap-10">
-                      <div className="space-y-3">
-                        <div className="flex items-center">
-                          <label >
-                            <input
-                              
-                              type="checkbox"
-                              className="mr-2 accent-black"
-                            />
-                            <span className="ml-2">All</span>
-                          </label>
-                        </div>
-
-                        <div className="flex items-center">
-                          <label >
-                            <input
-                              type="checkbox"
-                              className="mr-2 accent-black"
-                            />
-                            <span className="ml-2">Estimators</span>
-                          </label>
-                        </div>
-
-                        <div className="flex items-center">
-                          <label>
-                            <input
-                              
-                              type="checkbox"
-                              className="mr-2 accent-black"
-                            />
-                            <span className="ml-2">Parts Managers</span>
-                          </label>
-                        </div>
-
-                        <div className="flex items-center">
-                          <label >
-                            <input
-                              type="checkbox"
-                              className="mr-2 accent-black"
-                            />
-                            <span className="ml-2">CSR</span>
-                          </label>
-                        </div>
                       </div>
-                      <div className="space-y-3">
-                        <div className="flex items-center">
-                          <label >
-
-                          <input
-                            
-                            type="checkbox"
-                            className="mr-2 accent-black"
+                      <div>
+                        <label className="block mb-2 font-semibold">{t('time')}</label>
+                        <Controller
+                          control={control}
+                          name="time"
+                          render={({ field }) => (
+                            <CustomInput
+                              label={t('time')}
+                              type="time"
+                              {...field}
                             />
-                          <span className="ml-2">Shop Managers</span>
-                            </label>
-                        </div>
-
-                        <div className="flex items-center">
-                          <label >
-
-                          <input
-                            
-                            type="checkbox"
-                            className="mr-2 accent-black"
-                            />
-                          <span className="ml-2">Technicians</span>
-                            </label>
-                        </div>
-
-                        <div className="flex items-center">
-                          <label >
-
-                          <input
-                          
-                            type="checkbox"
-                            className="mr-2 accent-black"
-                            />
-                          <span className="ml-2 ">Painters</span>
-                            </label>
-                        </div>
+                          )}
+                        />
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-8">
-                  <div className="flex justify-between">
-                    <button
-                      onClick={() => setShouldShowModal(false)}
-                      className="px-8 py-2 border rounded-3xl w-64"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      className="px-8 py-2 bg-black text-white rounded-3xl w-64 "
-                      type="submit"
-                    >
-                      Save
-                    </button>
+                <div>
+                  <h3 className="text-lg font-bold mb-4">{t('assign-to')}</h3>
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="font-semibold mb-2">{t('assign-to-roles')}</h4>
+                      <Controller
+                        control={control}
+                        name="assignToRoles"
+                        render={({ field }) => (
+                          <div className="space-y-2">
+                            {TaskRoles.map((role) => (
+                              <div key={role} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`role-${role}`}
+                                  checked={field.value?.includes(role)}
+                                  onCheckedChange={(checked) => {
+                                    const currentRoles = field.value || []
+                                    if (checked) {
+                                      field.onChange([...currentRoles, role])
+                                    } else {
+                                      field.onChange(currentRoles.filter(r => r !== role))
+                                    }
+                                  }}
+                                />
+                                <label htmlFor={`role-${role}`} className="text-sm font-medium">
+                                  {role}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-2">{t('assign-to-user')}</h4>
+                      <Controller
+                        control={control}
+                        name="assignToUser"
+                        render={({ field }) => (
+                          <CustomSelect
+                            placeholder={t('select-user')}
+                            options={[
+                              {
+                                value: 'Alexander Walker',
+                                label: 'Alexander Walker',
+                                avatar: '/placeholder.svg',
+                              },
+                              {
+                                value: 'Aiden Moore',
+                                label: 'Aiden Moore',
+                                avatar: '/placeholder.svg',
+                              },
+                              {
+                                value: 'James Davis',
+                                label: 'James Davis',
+                                avatar: '/placeholder.svg',
+                              },
+                            ]}
+                            value={field.value ? [field.value] : []}
+                            onChange={(values) => field.onChange(values[0] || '')}
+                          />
+                        )}
+                      />
+                      <div className="mt-2">
+                        <Controller
+                          control={control}
+                          name="assignToMe"
+                          render={({ field }) => (
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="assignToMe"
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                              <label htmlFor="assignToMe" className="text-sm font-medium">
+                                {t('assign-to-me')}
+                              </label>
+                            </div>
+                          )}
+                        />
+                      </div>
+                    </div>
                   </div>
+                </div>
+
+                <div className="flex justify-end gap-4 mt-8">
+                  <button
+                    type="button"
+                    onClick={() => setShouldShowModal(false)}
+                    className="p-2 rounded-full transition-colors duration-200 hover:bg-black hover:text-white w-32"
+                    disabled={isSubmitting}
+                  >
+                    {t('cancel')}
+                  </button>
+                  <button
+                    type="submit"
+                    className="p-2 rounded-full transition-colors duration-200 bg-black text-white hover:bg-gray-800 w-32"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? t('saving') : t('save')}
+                  </button>
                 </div>
               </form>
             </div>

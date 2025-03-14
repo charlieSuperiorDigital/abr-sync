@@ -49,13 +49,13 @@ export function CustomSelect({
   }
 
   return (
-    <div className="relative">
+    <div className="relative w-full">
       <button
-        type='button'
-        onClick={() => {setIsOpen(!isOpen) }}
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'flex h-10 w-full items-center justify-between rounded-[20px] border border-input bg-gray-100 px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-          selectedValues.length > 0 && !multiSelect && 'bg-black text-white'
+          'w-full px-4 py-2 text-left rounded-full bg-[#E3E3E3] flex items-center justify-between',
+          'focus:outline-none'
         )}
       >
         <span className="flex items-center gap-2">
@@ -100,7 +100,7 @@ export function CustomSelect({
         />
       </button>
       {isOpen && (
-        <div className="absolute z-50 w-full mt-2 rounded-[20px] border bg-gray-100 py-1 shadow-lg">
+        <div className="absolute z-10 w-full mt-1 bg-[#E3E3E3] rounded-2xl shadow-lg">
           <div className="max-h-[280px] overflow-y-auto">
             {options.map((option) => (
               <div
