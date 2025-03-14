@@ -26,6 +26,7 @@ import { mockTasks } from '../../../../../mocks/tasks.mock'
 import { useTaskStore } from '@/app/stores/task-store'
 import { Task } from '@/app/types/task'
 import EditTaskModal from '@/components/custom-components/task-modal/edit-task-modal'
+import DeleteTaskModal from '@/components/custom-components/task-modal/delete-task-modal'
 
 export default function NewOpportunities() {
   
@@ -134,6 +135,20 @@ export default function NewOpportunities() {
           //   variant: 'secondary',
           //   icon: 'delete'},
           {
+            label: 'Delete',
+            onClick: () => console.log('Delete Task:', row.original.id),
+            variant: 'secondary',
+            icon: 'delete',
+            _component: 
+              <DeleteTaskModal 
+              title={'Are you sure you want to delete this task?'}
+              children={undefined} 
+              isOpen={false} 
+              onOpenChange={function (open: boolean): void {
+              throw new Error('Function not implemented.')
+            } }/>
+          },
+          {
             label: 'Edit',
             onClick: () => console.log('Edit Task:', row.original.id),
             variant: 'secondary',
@@ -147,6 +162,7 @@ export default function NewOpportunities() {
               throw new Error('Function not implemented.')
             } }/>
           }
+
         ]}
       />,
     }

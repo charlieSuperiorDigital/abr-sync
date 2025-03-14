@@ -66,7 +66,7 @@ export function CustomSelect({
               <>
                 {options.find((opt) => opt.value === selectedValues[0])
                   ?.avatar && (
-                  <Avatar className="h-6 w-6">
+                  <Avatar className="h-6 w-6  text-black">
                     <AvatarImage
                       src={
                         options.find((opt) => opt.value === selectedValues[0])
@@ -111,7 +111,7 @@ export function CustomSelect({
                   selectedValues.includes(option.value) &&
                     !multiSelect &&
                     'bg-black text-white',
-                  'hover:bg-gray-200'
+                  'hover:opacity-80'
                 )}
               >
                 {multiSelect && (
@@ -121,7 +121,7 @@ export function CustomSelect({
                   />
                 )}
                 {option.avatar && (
-                  <Avatar className="h-6 w-6">
+                  <Avatar className="h-6 w-6 text-black">
                     <AvatarImage src={option.avatar} alt={option.label} />
                     <AvatarFallback>
                       <User className="h-4 w-4" />
