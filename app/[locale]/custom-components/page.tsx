@@ -28,7 +28,7 @@ import { ReactNode } from 'react'
 import UserImageAndName from './user-image-and-name'
 import CarImageAndName from './car-image-and-name'
 import DarkButton from './dark-button'
-import { Apple, Archive } from 'lucide-react'
+import { Apple, Archive, Mail, Phone } from 'lucide-react'
 import RoundButtonWithTooltip from './round-button-with-tooltip'
 import Section from './section'
 
@@ -171,8 +171,8 @@ const data: Vehicle[] = Array.from({ length: 50 }, (_, i) => ({
 // Column definitions
 const columns: ColumnDef<Vehicle>[] = [
   {
-    accessorKey: 'claim.number',
-    header: 'Claim',
+    accessorKey: 'vin',
+    header: 'VIN',
   },
   {
     accessorKey: 'vehicle',
@@ -185,15 +185,6 @@ const columns: ColumnDef<Vehicle>[] = [
         imageUrl={row.original.imageUrl}
       />
     ),
-  },
-  {
-    accessorKey: 'owner.name',
-    header: 'Owner',
-  },
-  {
-    accessorKey: 'incomingDate',
-    header: 'Incoming Date',
-    cell: ({ row }) => <DateCell date={row.original.incomingDate} />,
   },
   {
     accessorKey: 'status',
@@ -213,16 +204,21 @@ const columns: ColumnDef<Vehicle>[] = [
   },
   {
     id: 'actions',
+    header: 'Actions',
     cell: ({ row }) => (
       <ActionsCell
         actions={[
           {
             label: 'Call',
             onClick: () => console.log('Call', row.original.owner.phone),
+            _component: <Phone className="w-4 h-4" />,
+            variant: 'default'
           },
           {
             label: 'Email',
             onClick: () => console.log('Email', row.original.owner.email),
+            _component: <Mail className="w-4 h-4" />,
+            variant: 'default'
           },
         ]}
       />
