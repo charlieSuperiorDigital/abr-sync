@@ -1,22 +1,59 @@
 'use client'
-
-import { ColumnDef } from '@tanstack/react-table'
-import { IEstimate, mockEstimate } from './mock/mock-data'
+import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import {
   AutoCell,
-  ContactMethodCell,
-  DocumentCell,
   StatusBadgeCell,
+  SummaryCell,
+  UploadTimeCell,
   VehicleCell,
 } from '@/components/custom-components/custom-table/table-cells'
-import { PanelTop } from 'lucide-react'
-import { DataTable } from '@/components/custom-components/custom-table/data-table'
+import ContactInfo from '@/app/[locale]/custom-components/contact-info'
+import { ContactData, ContactMethod } from '@/app/types/contact-info.types'
+import { ColumnDef } from '@tanstack/react-table'
+import { ClipboardPlus, Paperclip } from 'lucide-react'
+import { Opportunity, OpportunityStatus, PartsWarningStatus } from '@/app/types/opportunity'
+import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
+import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
+import { useState, useCallback } from 'react'
+import { useOpportunityStore } from '@/app/stores/opportunity-store'
+import dynamic from "next/dynamic";
+import { StatusBadge } from '@/components/custom-components/status-badge/status-badge';
 
-export default function Estimate() {
-  const columns: ColumnDef<IEstimate>[] = [
+const PdfPreview = dynamic(() => import("@/app/[locale]/custom-components/pdf-preview"), {
+  ssr: false,
+});
+
+export default function EstimateOpportunities() {
+  const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity } = useOpportunityStore()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  const handleRowClick = useCallback((opportunity: Opportunity) => {
+    setSelectedOpportunity(opportunity)
+    setIsModalOpen(true)
+  }, [setSelectedOpportunity])
+
+  const handleContactClick = useCallback((opportunity: Opportunity) => {
+    // Handle contact info click based on opportunity state
+    console.log('Contact clicked for opportunity:', opportunity.opportunityId)
+  }, [])
+
+  const handleTaskClick = useCallback((opportunity: Opportunity) => {
+    // Handle task button click based on opportunity state
+    console.log('Task clicked for opportunity:', opportunity.opportunityId)
+  }, [])
+
+  const formatDate = (date: string | undefined) => {
+    if (!date) return '---'
+    return new Date(date).toLocaleDateString()
+  }
+
+  const columns: ColumnDef<Opportunity, any>[] = [
     {
       accessorKey: 'roNumber',
-      header: 'RO#',
+      header: 'RO Number',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">{row.original.roNumber || '---'}</span>
+      ),
     },
     {
       accessorKey: 'vehicle',
@@ -26,115 +63,198 @@ export default function Estimate() {
           make={row.original.vehicle.make}
           model={row.original.vehicle.model}
           year={row.original.vehicle.year}
-          imageUrl={row.original.vehicle.imageUrl}
+          imageUrl={`https://picsum.photos/seed/${row.original.opportunityId}/200/100`}
         />
       ),
     },
     {
-      accessorKey: 'estimateUrl',
-      header: 'File',
-      cell: ({ row }) => <DocumentCell fileName={row.original.estimateUrl} />,
-    },
-    {
-      accessorKey: 'owner',
-      header: 'Owner',
+      accessorKey: 'file',
+      header: 'FILE',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.owner}</span>
-      ),
-    },
-
-    {
-      accessorKey: 'partsCount',
-      header: 'Parts',
-      cell: ({ row }) => (
-        <>
-          <span className="whitespace-nowrap">{row.original.partsCount}</span>
-          {row.original.partsStatus && (
-            <StatusBadgeCell status={row.original.partsStatus} />
-          )}
-        </>
-      ),
+        <PdfPreview  />
+      )
+    
     },
     {
-      accessorKey: 'inRental',
-      header: 'In Rental',
-      cell: ({ row }) => (row.original.inRental ? <AutoCell /> : null),
-    },
-    {
-      id: 'priority',
-      header: 'Priority',
+      accessorKey: 'parts',
+      header: 'PARTS',
       cell: ({ row }) => {
-        const priority = row.original.priority
-        const variantMap: {
-          [key: string]: 'forest' | 'danger' | 'warning' | undefined
-        } = {
-          NORMAL: 'forest',
-          HIGH: 'warning',
-        }
-        const variant = variantMap[priority] || undefined
-
+        const parts = row.original.parts
+        if (!parts) return '---'
+        
         return (
-          priority && <StatusBadgeCell status={priority} variant={variant} />
+          <div className="flex items-center gap-2">
+            <span>{parts.count}</span>
+            {parts.warning && (
+              <StatusBadge
+                variant={parts.warning === 'ORDERED' ? 'success' : 'danger'}
+                size="sm"
+              >
+                {parts.warning}
+              </StatusBadge>
+            )}
+          </div>
         )
-      },
+      }
     },
     {
-      id: 'warning',
-      header: 'warning',
+      accessorKey: 'isInRental',
+      header: 'In Rental',
+      cell: ({ row }) => (row.original.isInRental ? <AutoCell /> : null),
+    },
+    {
+      accessorKey: 'priority',
+      header: 'PRIORITY'
+    
+    },
+    
+    {
+      accessorKey: 'warning',
+      header: 'Warning',
       cell: ({ row }) =>
-        row.original.warning.message ? (
+        row.original.warning ? (
           <StatusBadgeCell
-            status={row.original.warning.message}
-            variant="warning"
+            variant="danger"
+            status="danger"
           />
         ) : null,
     },
     {
-      id: 'insuranceApproval',
-      header: 'Insurance Approval',
+      accessorKey: 'insuranceApproval',
+      header: 'INSURANCE APPROVAL',
       cell: ({ row }) => {
-        const variantMap: {
-          [key: string]: 'forest' | 'danger' | 'warning' | undefined
-        } = {
-          'PENDING APPROVAL': 'warning',
-          APPROVED: 'forest',
+        const insurance = row.original.insurance;
+        if (insurance.approved === undefined) {
+          return (
+            <StatusBadge variant="pending" size="sm">
+              PENDING APPROVAL
+            </StatusBadge>
+          );
         }
-        const variant = variantMap[row.original.insuranceApproval] || undefined
-        return row.original.insuranceApproval ? (
-          <StatusBadgeCell
-            status={row.original.insuranceApproval}
-            variant={variant}
-          />
-        ) : null
+        return (
+          <StatusBadge
+            variant={insurance.approved ? 'success' : 'danger'}
+            size="sm"
+          >
+            {insurance.approved ? 'APPROVED' : 'REJECTED'}
+          </StatusBadge>
+        );
+      }
+    },
+   
+    {
+      id: 'contact',
+      header: 'Contact',
+      cell: ({ row }) => {
+        const opportunity = row.original;
+        const owner = opportunity.owner;
+        const insurance = opportunity.insurance;
+        
+        // Determine preferred contact method based on opportunity data
+        let preferredContactMethod;
+        if (owner.email) preferredContactMethod = ContactMethod.email;
+        else if (owner.phone) preferredContactMethod = ContactMethod.phone;
+        else preferredContactMethod = ContactMethod.message;
+
+        const contactData: ContactData = {
+          person: {
+            name: owner.name,
+            role: owner.company ? `${owner.company} Representative` : 'Vehicle Owner',
+            address: `${owner.address}, ${owner.city}, ${owner.state} ${owner.zip}`,
+            company: owner.company || 'N/A',
+            preferredContactType: preferredContactMethod
+          },
+          insurance: {
+            company: insurance.company,
+            representative: insurance.representative || 'Not Assigned',
+            pendingEstimates: 1, // Default to 1 since this is an active opportunity
+            pendingReimbursements: 0, // Could be updated based on actual data
+            updates: insurance.approved === undefined ? 'Pending Approval' :
+                    insurance.approved ? 'Estimate Approved' : 'Estimate Rejected'
+          },
+          communicationLogs: (opportunity.logs || []).map(log => ({
+            ...log,
+            isAutomatic: log.type === 'email' // Assume emails are automatic, other types are manual
+          })),
+          emailContacts: [
+            {
+              email: owner.email || 'No email provided',
+              isPrimary: true
+            },
+            {
+              email: insurance.adjusterEmail || 'No adjuster email',
+              isPrimary: false
+            }
+          ].filter(contact => contact.email !== 'No email provided' && contact.email !== 'No adjuster email'),
+          attachmentOptions: [
+            {
+              name: 'Estimate',
+              category: 'Documents',
+              checked: false
+            },
+            {
+              name: 'Vehicle Photos',
+              category: 'Images',
+              checked: false
+            }
+          ]
+        };
+
+        return (
+          <div 
+            data-testid="contact-info" 
+            className="cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleContactClick(opportunity)
+            }}
+          >
+            <ContactInfo 
+              preferredContactMethod={preferredContactMethod}
+              contactData={contactData}
+            />
+          </div>
+        );
       },
     },
     {
-      id: 'actions',
-      header: '',
+      id: 'task',
+      header: 'Create Task',
       cell: ({ row }) => (
-        <ContactMethodCell
-          email={row.original.email}
-          phone={row.original.phone}
-          messages={row.original.messages}
-        />
+        <div 
+          data-testid="task-button" 
+          className="cursor-pointer hover:text-blue-600 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation()
+            handleTaskClick(row.original)
+          }}
+        >
+          <ClipboardPlus size={18} />
+        </div>
       ),
     },
-    {
-      id: 'task',
-      header: '',
-      cell: ({ row }) => <PanelTop size={18} />,
-    },
   ]
+
+  // Get opportunities in Estimate status from the store
+  const opportunities = getOpportunitiesByStatus(OpportunityStatus.Estimate)
+
   return (
-    <div className="flex flex-col min-h-screen">
-      <DataTable
+    <div className="w-full">
+      <DataTable<Opportunity, any>
         columns={columns}
-        data={mockEstimate}
-        onRowClick={(row) => console.log('Row clicked:', row)}
+        data={opportunities}
+        onRowClick={handleRowClick}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
-        showPageSize={true}
       />
+
+      <BottomSheetModal
+        isOpen={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        title={selectedOpportunity ? `${selectedOpportunity.vehicle.year} ${selectedOpportunity.vehicle.make} ${selectedOpportunity.vehicle.model}` : ''}
+      >
+        {selectedOpportunity && <OpportunityModal opportunity={selectedOpportunity} />}
+      </BottomSheetModal>
     </div>
   )
 }

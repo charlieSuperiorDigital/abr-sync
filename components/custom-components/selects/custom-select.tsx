@@ -51,7 +51,8 @@ export function CustomSelect({
   return (
     <div className="relative">
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        type='button'
+        onClick={() => {setIsOpen(!isOpen) }}
         className={cn(
           'flex h-10 w-full items-center justify-between rounded-[20px] border border-input bg-gray-100 px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
           selectedValues.length > 0 && !multiSelect && 'bg-black text-white'
@@ -65,7 +66,7 @@ export function CustomSelect({
               <>
                 {options.find((opt) => opt.value === selectedValues[0])
                   ?.avatar && (
-                  <Avatar className="h-6 w-6">
+                  <Avatar className="h-6 w-6  text-black">
                     <AvatarImage
                       src={
                         options.find((opt) => opt.value === selectedValues[0])
@@ -110,7 +111,7 @@ export function CustomSelect({
                   selectedValues.includes(option.value) &&
                     !multiSelect &&
                     'bg-black text-white',
-                  'hover:bg-gray-200'
+                  'hover:opacity-80'
                 )}
               >
                 {multiSelect && (
@@ -120,7 +121,7 @@ export function CustomSelect({
                   />
                 )}
                 {option.avatar && (
-                  <Avatar className="h-6 w-6">
+                  <Avatar className="h-6 w-6 text-black">
                     <AvatarImage src={option.avatar} alt={option.label} />
                     <AvatarFallback>
                       <User className="h-4 w-4" />
