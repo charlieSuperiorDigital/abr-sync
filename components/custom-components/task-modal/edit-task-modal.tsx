@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { getTaskFormSchema, TaskFormData } from './schema'
 import { CustomInput } from '../inputs/custom-input'
+import Link from 'next/link'
 
 interface EditTaskModalProps {
   children: React.ReactNode
@@ -86,7 +87,7 @@ export default function EditTaskModal({
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
           onClick={handleOverlayClick}
         >
-          <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+          <div className="bg-white rounded-3xl w-full max-w-3xl max-h-[90vh] flex flex-col">
             <div className="flex justify-between items-center p-6 border-b">
               <h2 className="text-xl font-bold">{title}</h2>
               <button onClick={() => setShouldShowModal(false)} className="p-1">
@@ -135,7 +136,9 @@ export default function EditTaskModal({
                 }}
               >
                 <div className="mt-8">
-                  <label htmlFor="priority">Priority</label>
+                  <label htmlFor="priority" className="mb-2 font-semibold">
+                    Priority
+                  </label>
                   <Controller
                     control={control}
                     name="priority"
@@ -183,13 +186,15 @@ export default function EditTaskModal({
                 </div>
 
                 <div className="mt-8">
-                  <label htmlFor="location">Location</label>
+                  <label htmlFor="location" className="mb-2 font-semibold">
+                    Location
+                  </label>
                   <Controller
                     control={control}
                     name="location"
                     render={({ field }) => (
                       <CustomSelect
-                        // multiSelect={true} //Having trouble with multiselect (error on depth)
+                        //multiSelect={true} //Having trouble with multiselect (error on depth)
                         options={[
                           {
                             value: 'location a',
@@ -206,12 +211,10 @@ export default function EditTaskModal({
                   />
                 </div>
 
-                <hr />
-
                 <h3 className="text-lg mb-2 font-bold mt-8">Task Type</h3>
 
                 <div className="mt-8">
-                  <label className="mb-8" htmlFor="type">
+                  <label className="mb-2 font-semibold" htmlFor="type">
                     Task Type
                   </label>
                   <Controller
@@ -260,8 +263,6 @@ export default function EditTaskModal({
                   </div>
                 </div>
 
-                <hr />
-
                 <h3 className="text-lg mb-2 font-bold mt-8">Assign to</h3>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -270,20 +271,34 @@ export default function EditTaskModal({
                     <Controller
                       control={control}
                       name="assignToUser"
+                      
                       render={({ field }) => (
                         <CustomSelect
+                        placeholder='Select'
                           //multiSelect={true} //Having trouble with multiselect (error on depth)
                           options={[
                             {
                               value: 'Alexander Walker',
                               label: 'Alexander Walker',
+                              avatar: '/placeholder.svg',
                             },
-                            { value: 'Aiden Moore', label: 'Aiden Moore' },
-                            { value: 'James Davis', label: 'James Davis' },
+                            {
+                              value: 'Aiden Moore',
+                              label: 'Aiden Moore',
+                              avatar: '/placeholder.svg',
+                            },
+                            {
+                              value: 'James Davis',
+                              label: 'James Davis',
+                              avatar: '/placeholder.svg',
+                            },
                           ]}
                         />
                       )}
                     />
+                    <Link href="#" className='mt-3 font-semibold underline' >
+                      Assign to me
+                    </Link>
                   </div>
 
                   <div className="mt-8">
@@ -291,60 +306,82 @@ export default function EditTaskModal({
                     <div className="grid grid-cols-2 gap-10">
                       <div className="space-y-3">
                         <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            className="mr-2 accent-black"
-                          />
-                          <span className="ml-2">All</span>
+                          <label >
+                            <input
+                              
+                              type="checkbox"
+                              className="mr-2 accent-black"
+                            />
+                            <span className="ml-2">All</span>
+                          </label>
                         </div>
 
                         <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            className="mr-2 accent-black"
-                          />
-                          <span className="ml-2">Estimators</span>
+                          <label >
+                            <input
+                              type="checkbox"
+                              className="mr-2 accent-black"
+                            />
+                            <span className="ml-2">Estimators</span>
+                          </label>
                         </div>
 
                         <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            className="mr-2 accent-black"
-                          />
-                          <span className="ml-2">Parts Managers</span>
+                          <label>
+                            <input
+                              
+                              type="checkbox"
+                              className="mr-2 accent-black"
+                            />
+                            <span className="ml-2">Parts Managers</span>
+                          </label>
                         </div>
 
                         <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            className="mr-2 accent-black"
-                          />
-                          <span className="ml-2">CSR</span>
+                          <label >
+                            <input
+                              type="checkbox"
+                              className="mr-2 accent-black"
+                            />
+                            <span className="ml-2">CSR</span>
+                          </label>
                         </div>
                       </div>
                       <div className="space-y-3">
                         <div className="flex items-center">
+                          <label >
+
                           <input
+                            
                             type="checkbox"
                             className="mr-2 accent-black"
-                          />
+                            />
                           <span className="ml-2">Shop Managers</span>
+                            </label>
                         </div>
 
                         <div className="flex items-center">
+                          <label >
+
                           <input
+                            
                             type="checkbox"
                             className="mr-2 accent-black"
-                          />
+                            />
                           <span className="ml-2">Technicians</span>
+                            </label>
                         </div>
 
                         <div className="flex items-center">
+                          <label >
+
                           <input
+                          
                             type="checkbox"
                             className="mr-2 accent-black"
-                          />
-                          <span className="ml-2">Painters</span>
+                            />
+                          <span className="ml-2 ">Painters</span>
+                            </label>
                         </div>
                       </div>
                     </div>
