@@ -86,10 +86,10 @@ export function DeleteTaskModal({
 
             <div className="overflow-y-auto flex-1 p-6">
               <h3 className="text-lg mb-2 font-bold">
-                {t('confirm-delete-title')}
+              ID 307815 • Parts Vendor Confirmation
               </h3>
               <p className="text-sm mb-4">
-                {t('confirm-delete-description')}
+                Confirm parts availability with vendors.
               </p>
 
               <div className="flex justify-end gap-4 mt-8">
@@ -107,7 +107,7 @@ export function DeleteTaskModal({
                   className="p-2 rounded-full transition-colors duration-200 bg-black text-white hover:bg-gray-800 w-32"
                   disabled={isLoading}
                 >
-                  {isLoading ? t('deleting') : t('delete')}
+                  {isLoading ? 'Deleting' : 'Delete'}
                 </button>
               </div>
             </div>
