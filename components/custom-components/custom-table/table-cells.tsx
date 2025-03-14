@@ -190,8 +190,8 @@ interface ActionsCellProps {
     label: string
     onClick: () => void
     variant?: 'default' | 'secondary' | 'destructive'
-    icon?: 'edit' | 'delete',
-    _component: React.ReactNode
+    icon?: 'edit' | 'delete'
+    _component?: React.ReactNode
   }[]
 }
 
@@ -199,9 +199,7 @@ export function ActionsCell({ actions }: ActionsCellProps) {
   return (
     <div className="flex items-center gap-2">
       {actions.map((action, index) => (
-        
         <>{action._component}</>
-        
 
         // <Button
         //   key={index}
@@ -403,28 +401,24 @@ interface ActionButtonCellProps {
 
 export function ActionButtonCell({ label, onClick }: ActionButtonCellProps) {
   return (
-    
     <Dialog.Root>
       <Dialog.Trigger>
-        <span className='bg-black text-white rounded-2xl flex items-center gap-2 w-20 h-8 justify-center hover:opacity-90 '>
+        <span className="bg-black text-white rounded-2xl flex items-center gap-2 w-20 h-8 justify-center hover:opacity-90 ">
           <Check className="h-4 w-4" />
           {label}
         </span>
       </Dialog.Trigger>
-        <Dialog.Portal>
-          <Dialog.Content className='fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-4 rounded-lg shadow-lg'>
-            <div className="dialog">
-              <Dialog.Title>
-                Dialog
-              </Dialog.Title>
-              <div>
-                <p>Dialog content</p>
-                <p>Dialog content</p>
-              </div>
+      <Dialog.Portal>
+        <Dialog.Content className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-4 rounded-lg shadow-lg">
+          <div className="dialog">
+            <Dialog.Title>Dialog</Dialog.Title>
+            <div>
+              <p>Dialog content</p>
+              <p>Dialog content</p>
             </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
     </Dialog.Root>
   )
 }
