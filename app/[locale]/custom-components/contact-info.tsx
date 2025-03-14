@@ -1,16 +1,24 @@
 'use client';
 
 import { mockContactData } from "@/app/mocks/contact-info.mock";
-import { ContactData, ContactInfoProps, ContactMethod } from "@/app/types/contact-info.types";
+import { ContactData, ContactInfoProps, ContactMethod, CommunicationLog } from "@/app/types/contact-info.types";
 import { Mail, MessagesSquare, Phone, Plus, Trash, X } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
+import { toast } from 'react-toastify';
 
-export default function ContactInfo({ preferredContactMethod }: ContactInfoProps) {
+export default function ContactInfo({ preferredContactMethod, contactData: propContactData }: ContactInfoProps) {
     const [shouldShowModal, setShouldShowModal] = useState(false);
     const [selectedTab, setSelectedTab] = useState<'message' | 'email'>('message');
-    const [contactData, setContactData] = useState<ContactData>(mockContactData);
+    const [contactData, setContactData] = useState<ContactData>(propContactData || mockContactData);
     const [selectedAttachments, setSelectedAttachments] = useState<string[]>([]);
     const [selectedContactMethod, setSelectedContactMethod] = useState<ContactMethod | null>(null);
+
+    // Update contactData when prop changes
+    useEffect(() => {
+        if (propContactData) {
+            setContactData(propContactData);
+        }
+    }, [propContactData]);
 
     const handleAttachmentToggle = (attachmentName: string) => {
         setSelectedAttachments(prev => 
@@ -73,6 +81,53 @@ export default function ContactInfo({ preferredContactMethod }: ContactInfoProps
         } else if (method === ContactMethod.message) {
             setSelectedTab('message');
         }
+    };
+
+    const handleSend = () => {
+        const method = selectedContactMethod || preferredContactMethod;
+        const attachmentText = selectedAttachments.length 
+            ? ` with ${selectedAttachments.length} attachment${selectedAttachments.length > 1 ? 's' : ''}`
+            : '';
+            
+        // Determine message context based on insurance updates
+        let context = '';
+        if (contactData.insurance.updates.includes('Pending')) {
+            context = ' regarding pending insurance approval';
+        } else if (contactData.insurance.updates.includes('Approved')) {
+            context = ' to schedule repair work';
+        } else if (contactData.insurance.updates.includes('Rejected')) {
+            context = ' regarding estimate revision';
+        }
+            
+        toast.success(
+            `Message sent to ${contactData.person.name} via ${method}${attachmentText}${context}`, 
+            {
+                position: "bottom-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            }
+        );
+        
+        // Add to communication logs
+        const newLog: CommunicationLog = {
+            type: method?.toString() || 'message',
+            date: new Date().toISOString(),
+            user: "Current User", // This would come from auth context in real implementation
+            isAutomatic: method === ContactMethod.email,
+            description: `Message sent${attachmentText}${context}`
+        };
+        
+        setContactData(prev => ({
+            ...prev,
+            communicationLogs: [newLog, ...prev.communicationLogs]
+        }));
+        
+        setShouldShowModal(false);
+        setSelectedAttachments([]);
     };
 
     return (
@@ -344,14 +399,11 @@ export default function ContactInfo({ preferredContactMethod }: ContactInfoProps
                                 </>
                             )}
 
-                            <div className="flex justify-between">
+                            <div className="flex justify-end p-6 border-t">
                                 <button 
-                                    onClick={() => setShouldShowModal(false)}
-                                    className="px-8 py-2 border rounded-3xl"
+                                    onClick={handleSend}
+                                    className="px-6 py-2 bg-black text-white rounded-full hover:bg-gray-800 transition-colors"
                                 >
-                                    Cancel
-                                </button>
-                                <button className="px-8 py-2 bg-black text-white rounded-3xl">
                                     Send
                                 </button>
                             </div>

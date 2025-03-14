@@ -17,9 +17,10 @@ import { useState, useCallback } from 'react'
 import { useOpportunityStore } from '@/app/stores/opportunity-store'
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
 import ConfirmationModal from '@/components/custom-components/confirmation-modal/confirmation-modal'
+import { showPickupToast } from '@/app/utils/toast-utils'
 
 export default function TotalLossOpportunities() {
-  const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity, updateOpportunity } = useOpportunityStore()
+  const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity, archiveOpportunity, updateOpportunity } = useOpportunityStore()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [pickupConfirmation, setPickupConfirmation] = useState<{ isOpen: boolean; opportunity: Opportunity | null }>({
     isOpen: false,
@@ -33,13 +34,16 @@ export default function TotalLossOpportunities() {
 
   const handlePickupConfirm = useCallback(() => {
     if (pickupConfirmation.opportunity) {
+      // First update the pickup date
       updateOpportunity(pickupConfirmation.opportunity.opportunityId, {
-        status: OpportunityStatus.Archived,
         pickedUpDate: new Date().toISOString()
       })
+      // Then archive the opportunity
+      archiveOpportunity(pickupConfirmation.opportunity.opportunityId)
+      showPickupToast(pickupConfirmation.opportunity)
       console.log('Marking opportunity as picked up:', pickupConfirmation.opportunity.opportunityId)
     }
-  }, [pickupConfirmation.opportunity, updateOpportunity])
+  }, [pickupConfirmation.opportunity, updateOpportunity, archiveOpportunity])
 
   const handlePickupClick = useCallback((opportunity: Opportunity) => {
     setPickupConfirmation({
@@ -112,6 +116,14 @@ export default function TotalLossOpportunities() {
     {
       accessorKey: 'finalBill',
       header: 'Final Bill',
+      cell: ({ row }) => {
+        const amount = row.original.finalBill?.amount
+        return (
+          <span className="whitespace-nowrap">
+            {amount ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount) : '---'}
+          </span>
+        )
+      }
     },
     {
       header: 'LAST UPDATE',

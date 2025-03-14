@@ -15,9 +15,10 @@ import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import { useState, useCallback } from 'react'
 import { useOpportunityStore } from '@/app/stores/opportunity-store'
+import { showUnarchiveToast } from '@/app/utils/toast-utils'
 
 export default function ArchivedOpportunities() {
-  const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity, updateOpportunity } = useOpportunityStore()
+  const { getArchivedOpportunities, setSelectedOpportunity, selectedOpportunity, unarchiveOpportunity } = useOpportunityStore()
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const handleRowClick = useCallback((opportunity: Opportunity) => {
@@ -36,22 +37,10 @@ export default function ArchivedOpportunities() {
   }, [])
 
   const handleUnarchive = useCallback((opportunity: Opportunity) => {
-    // Return to previous status based on repair stage
-    if (opportunity.stage === RepairStage.RepairOrder) {
-      updateOpportunity(opportunity.opportunityId, {
-        status: OpportunityStatus.Upcoming
-      })
-    } else if (opportunity.estimateAmount) {
-      updateOpportunity(opportunity.opportunityId, {
-        status: OpportunityStatus.Estimate
-      })
-    } else {
-      updateOpportunity(opportunity.opportunityId, {
-        status: OpportunityStatus.New
-      })
-    }
+    unarchiveOpportunity(opportunity.opportunityId)
+    showUnarchiveToast(opportunity)
     console.log('Unarchiving opportunity:', opportunity.opportunityId)
-  }, [updateOpportunity])
+  }, [unarchiveOpportunity])
 
   const formatDate = (date: string | undefined) => {
     if (!date) return '---'
@@ -75,7 +64,13 @@ export default function ArchivedOpportunities() {
         />
       ),
     },
-
+    {
+      accessorKey: 'status',
+      header: 'Previous Status',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">{row.original.status}</span>
+      ),
+    },
     {
       accessorKey: 'roNumber',
       header: 'RO',
@@ -160,8 +155,8 @@ export default function ArchivedOpportunities() {
     },
   ]
 
-  // Get opportunities in "Archived" status from the store
-  const opportunities = getOpportunitiesByStatus(OpportunityStatus.Archived)
+  // Get archived opportunities from the store
+  const opportunities = getArchivedOpportunities()
 
   return (
     <div className="w-full">

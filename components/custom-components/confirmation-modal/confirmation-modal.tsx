@@ -35,7 +35,7 @@ export default function ConfirmationModal({
             buttonText="Cancel"
             onClick={onClose}
             additionalProps={{
-              className: "bg-gray-500 hover:bg-gray-600"
+              className: "py-2 hover:bg-gray-300 hover:rounded-full"
             }}
           />
           <DarkButton
@@ -45,6 +45,7 @@ export default function ConfirmationModal({
               onConfirm()
               onClose()
             }}
+           
           />
         </DialogFooter>
       </DialogContent>

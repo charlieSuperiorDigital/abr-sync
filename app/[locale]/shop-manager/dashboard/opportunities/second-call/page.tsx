@@ -10,16 +10,18 @@ import {
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { ColumnDef } from '@tanstack/react-table'
 import { Archive, ClipboardPlus } from 'lucide-react'
-import { Opportunity, OpportunityStatus } from '@/app/types/opportunity'
+import { Opportunity, OpportunityStatus, PartsWarningStatus } from '@/app/types/opportunity'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import { useState, useCallback } from 'react'
 import { useOpportunityStore } from '@/app/stores/opportunity-store'
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
 import ConfirmationModal from '@/components/custom-components/confirmation-modal/confirmation-modal'
+import { StatusBadge } from '@/components/custom-components/status-badge/status-badge'
+import { showArchiveToast } from '@/app/utils/toast-utils'
 
 export default function SecondCallOpportunities() {
-  const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity, updateOpportunity } = useOpportunityStore()
+  const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity, archiveOpportunity } = useOpportunityStore()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [archiveConfirmation, setArchiveConfirmation] = useState<{ isOpen: boolean; opportunity: Opportunity | null }>({
     isOpen: false,
@@ -43,12 +45,11 @@ export default function SecondCallOpportunities() {
 
   const handleArchiveConfirm = useCallback(() => {
     if (archiveConfirmation.opportunity) {
-      updateOpportunity(archiveConfirmation.opportunity.opportunityId, {
-        status: OpportunityStatus.Archived
-      })
+      archiveOpportunity(archiveConfirmation.opportunity.opportunityId)
+      showArchiveToast(archiveConfirmation.opportunity)
       console.log('Archiving opportunity:', archiveConfirmation.opportunity.opportunityId)
     }
-  }, [archiveConfirmation.opportunity, updateOpportunity])
+  }, [archiveConfirmation.opportunity, archiveOpportunity])
 
   const handleArchiveClick = useCallback((opportunity: Opportunity) => {
     setArchiveConfirmation({
@@ -152,7 +153,41 @@ export default function SecondCallOpportunities() {
       header: 'SUMMARY',
       cell: ({ row }) => <SummaryCell />,
     },
-   
+    {
+      accessorKey: 'warning',
+      header: 'Warning',
+      cell: ({ row }) => {
+        const warning = row.original.warning;
+        if (!warning || !warning.message) return null;
+
+        // Determine variant and text based on warning type
+        let variant: 'warning' | 'danger' | 'pending';
+        let text: string;
+
+        if (warning.type === 'MISSING_VOR') {
+          variant = 'danger';
+          text = 'OVERDUE';
+        } else if (warning.type === 'UPDATED_IN_CCC') {
+          variant = 'warning';
+          text = 'URGENT';
+        } else {
+          variant = 'pending';
+          text = 'PENDING';
+        }
+
+        return (
+          <div title={warning.message}>
+            <StatusBadge
+              variant={variant}
+              size="sm"
+              className="whitespace-nowrap"
+            >
+              {text}
+            </StatusBadge>
+          </div>
+        );
+      },
+    },
     {
       id: 'archive',
       header: '',
