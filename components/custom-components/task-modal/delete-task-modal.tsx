@@ -10,7 +10,7 @@ interface DeleteTaskModalProps {
   title: string
 }
 
-export default function DeleteTaskModal({
+export function DeleteTaskModal({
   children,
   title,
 }: DeleteTaskModalProps) {
