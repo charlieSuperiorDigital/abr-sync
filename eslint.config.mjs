@@ -1,18 +1,17 @@
-import { FlatCompat } from '@eslint/eslintrc'
 import js from '@eslint/js'
 import nextPlugin from '@next/eslint-plugin-next'
+import globals from 'globals'
 
-const compat = new FlatCompat({
-  baseDirectory: import.meta.dirname,
-})
-
-const eslintConfig = [
+export default [
   js.configs.recommended,
-  ...compat.config({
-    extends: ['next/core-web-vitals', 'prettier'],
-  }),
   {
     files: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+    },
     plugins: {
       '@next/next': nextPlugin,
     },
@@ -34,20 +33,13 @@ const eslintConfig = [
       '@next/next/no-img-element': 'off',
     },
   },
-  // Add a new configuration object for test files
+
   {
     files: ['**/*.test.js', '**/*.test.jsx', '**/*.test.ts', '**/*.test.tsx'],
-    env: {
-      jest: true,
-      node: true,
-    },
-    globals: {
-      describe: 'readonly',
-      it: 'readonly',
-      expect: 'readonly',
-      jest: 'readonly',
+    languageOptions: {
+      globals: {
+        ...globals.jest,
+      },
     },
   },
 ]
-
-export default eslintConfig
