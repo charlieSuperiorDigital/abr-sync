@@ -1,22 +1,46 @@
 'use client'
-
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
-import { archiveMock, IArchive } from './mock/mock-data'
-import { ColumnDef } from '@tanstack/react-table'
 import {
-  ArchiveButtonCell,
-  DocumentCell,
+  AutoCell,
+  StatusBadgeCell,
   SummaryCell,
-  UserAvatarCell,
+  UploadTimeCell,
   VehicleCell,
 } from '@/components/custom-components/custom-table/table-cells'
+import ContactInfo from '@/app/[locale]/custom-components/contact-info'
+import { ColumnDef } from '@tanstack/react-table'
+import { ClipboardPlus } from 'lucide-react'
+import { Opportunity, OpportunityStatus } from '@/app/types/opportunity'
+import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
+import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
+import { useState, useCallback } from 'react'
+import { useOpportunityStore } from '@/app/stores/opportunity-store'
 
-export default function Archive() {
-  const columns: ColumnDef<IArchive>[] = [
-    {
-      accessorKey: 'claim',
-      header: 'Claim',
-    },
+export default function ArchivedOpportunities() {
+  const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity } = useOpportunityStore()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  const handleRowClick = useCallback((opportunity: Opportunity) => {
+    setSelectedOpportunity(opportunity)
+    setIsModalOpen(true)
+  }, [setSelectedOpportunity])
+
+  const handleContactClick = useCallback((opportunity: Opportunity) => {
+    // Handle contact info click based on opportunity state
+    console.log('Contact clicked for opportunity:', opportunity.opportunityId)
+  }, [])
+
+  const handleTaskClick = useCallback((opportunity: Opportunity) => {
+    // Handle task button click based on opportunity state
+    console.log('Task clicked for opportunity:', opportunity.opportunityId)
+  }, [])
+
+  const formatDate = (date: string | undefined) => {
+    if (!date) return '---'
+    return new Date(date).toLocaleDateString()
+  }
+
+  const columns: ColumnDef<Opportunity, any>[] = [
     {
       accessorKey: 'vehicle',
       header: 'Vehicle',
@@ -25,90 +49,126 @@ export default function Archive() {
           make={row.original.vehicle.make}
           model={row.original.vehicle.model}
           year={row.original.vehicle.year}
-          imageUrl={row.original.vehicle.image}
+          imageUrl={`https://picsum.photos/seed/${row.original.opportunityId}/200/100`}
         />
       ),
     },
     {
-      accessorKey: 'roNumber',
-      header: 'RO #',
+      accessorKey: 'insurance.claimNumber',
+      header: 'Claim',
+    },
+    {
+      accessorKey: 'insurance.company',
+      header: 'Insurance',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.roNumber}</span>
+        <span className={`whitespace-nowrap font-bold ${row.original.insurance.company === 'PROGRESSIVE' ? 'text-blue-700' : ''}`}>
+          {row.original.insurance.company.toUpperCase()}
+        </span>
       ),
     },
     {
-      accessorKey: 'customer',
-      header: 'Customer',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.customer}</span>
-      ),
-    },
-
-    {
-      accessorKey: 'firstCall',
-      header: 'First Call',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.firstCall}</span>
-      ),
+      accessorKey: 'customer.name',
+      header: 'Owner',
     },
     {
-      accessorKey: 'secondCall',
-      header: 'Second Call',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.secondCall}</span>
-      ),
+      accessorKey: 'isInRental',
+      header: 'In Rental',
+      cell: ({ row }) => (row.original.isInRental ? <AutoCell /> : null),
     },
-
     {
-      accessorKey: 'lastUpdatedBy',
-      header: 'Last Updated By',
+      accessorKey: 'dropDate',
+      header: 'Drop Date',
       cell: ({ row }) => (
-        <UserAvatarCell
-          name={row.original.lastUpdatedBy.name}
-          avatarUrl={row.original.lastUpdatedBy.avatar}
-        />
+        <span className="whitespace-nowrap">{formatDate(row.original.dropDate)}</span>
       ),
     },
     {
-      accessorKey: 'lastUpdated',
-      header: 'Last Updated',
+      accessorKey: 'warning',
+      header: 'Warning',
+      cell: ({ row }) =>
+        row.original.warning ? (
+          <StatusBadgeCell
+            variant="danger"
+            status="danger"
+          />
+        ) : null,
+    },
+    {
+      id: 'uploadDeadline',
+      header: 'Upload Deadline',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.lastUpdated}</span>
+        row.original.uploadDeadline ? (
+          <UploadTimeCell deadline={row.original.uploadDeadline} />
+        ) : (
+          <span className="text-gray-400">---</span>
+        )
       ),
     },
     {
-      id: 'timeTracking',
-      header: 'timeTracking',
+      id: 'lastCommDate',
+      header: 'Last Communication',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.lastUpdated}</span>
+        <span className="whitespace-nowrap">{formatDate(row.original.lastUpdatedDate)}</span>
       ),
     },
     {
-      id: 'lastUpdated',
-      header: 'Last Updated',
+      header: 'Summary',
       cell: ({ row }) => <SummaryCell />,
     },
     {
-      id: 'actions',
+      id: 'contact',
+      header: 'Contact',
+      cell: ({ row }) => (
+        <div 
+          data-testid="contact-info" 
+          className="cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation()
+            handleContactClick(row.original)
+          }}
+        >
+          <ContactInfo />
+        </div>
+      ),
+    },
+    {
+      id: 'task',
       header: '',
       cell: ({ row }) => (
-        <ArchiveButtonCell
-          archive={false}
-          onClick={() => console.log('Archive clicked')}
-        />
+        <div 
+          data-testid="task-button" 
+          className="cursor-pointer hover:text-blue-600 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation()
+            handleTaskClick(row.original)
+          }}
+        >
+          <ClipboardPlus size={18} />
+        </div>
       ),
     },
   ]
+
+  // Get opportunities in "Archived" status from the store
+  const opportunities = getOpportunitiesByStatus(OpportunityStatus.Archived)
+
   return (
-    <div className="flex flex-col min-h-screen">
-      <DataTable
+    <div className="w-full">
+      <DataTable<Opportunity, any>
         columns={columns}
-        data={archiveMock}
-        onRowClick={(row) => console.log('Row clicked:', row)}
+        data={opportunities}
+        onRowClick={handleRowClick}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
-        showPageSize={true}
       />
+
+      <BottomSheetModal
+        isOpen={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        title={selectedOpportunity ? `${selectedOpportunity.vehicle.year} ${selectedOpportunity.vehicle.make} ${selectedOpportunity.vehicle.model}` : ''}
+      >
+        {selectedOpportunity && <OpportunityModal opportunity={selectedOpportunity} />}
+      </BottomSheetModal>
     </div>
   )
 }

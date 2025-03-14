@@ -1,22 +1,46 @@
 'use client'
-
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
-import { ISecondCall, mockSecondCall } from './mock/mock-data'
-import { ColumnDef } from '@tanstack/react-table'
 import {
-  ArchiveButtonCell,
+  AutoCell,
+  StatusBadgeCell,
   SummaryCell,
-  UserAvatarCell,
+  UploadTimeCell,
   VehicleCell,
 } from '@/components/custom-components/custom-table/table-cells'
-import { PanelTop } from 'lucide-react'
+import ContactInfo from '@/app/[locale]/custom-components/contact-info'
+import { ColumnDef } from '@tanstack/react-table'
+import { ClipboardPlus } from 'lucide-react'
+import { Opportunity, OpportunityStatus } from '@/app/types/opportunity'
+import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
+import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
+import { useState, useCallback } from 'react'
+import { useOpportunityStore } from '@/app/stores/opportunity-store'
 
-export default function SecondCall() {
-  const columns: ColumnDef<ISecondCall>[] = [
-    {
-      accessorKey: 'claim',
-      header: 'Claim',
-    },
+export default function SecondCallOpportunities() {
+  const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity } = useOpportunityStore()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  const handleRowClick = useCallback((opportunity: Opportunity) => {
+    setSelectedOpportunity(opportunity)
+    setIsModalOpen(true)
+  }, [setSelectedOpportunity])
+
+  const handleContactClick = useCallback((opportunity: Opportunity) => {
+    // Handle contact info click based on opportunity state
+    console.log('Contact clicked for opportunity:', opportunity.opportunityId)
+  }, [])
+
+  const handleTaskClick = useCallback((opportunity: Opportunity) => {
+    // Handle task button click based on opportunity state
+    console.log('Task clicked for opportunity:', opportunity.opportunityId)
+  }, [])
+
+  const formatDate = (date: string | undefined) => {
+    if (!date) return '---'
+    return new Date(date).toLocaleDateString()
+  }
+
+  const columns: ColumnDef<Opportunity, any>[] = [
     {
       accessorKey: 'vehicle',
       header: 'Vehicle',
@@ -25,75 +49,126 @@ export default function SecondCall() {
           make={row.original.vehicle.make}
           model={row.original.vehicle.model}
           year={row.original.vehicle.year}
-          imageUrl={row.original.vehicle.imageUrl}
+          imageUrl={`https://picsum.photos/seed/${row.original.opportunityId}/200/100`}
         />
       ),
     },
     {
-      accessorKey: 'ro',
-      header: 'Ro#',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.roNumber}</span>
-      ),
+      accessorKey: 'insurance.claimNumber',
+      header: 'Claim',
     },
-
     {
-      accessorKey: 'lastUpdated',
-      header: 'last Updated',
+      accessorKey: 'insurance.company',
+      header: 'Insurance',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.lastUpdated}</span>
-      ),
-    },
-
-    {
-      accessorKey: 'lastUpdatedBy',
-      header: 'Last Updated By',
-      cell: ({ row }) => (
-        <UserAvatarCell
-          avatarUrl={row.original.lastUpdatedBy.avatarUrl}
-          name={row.original.lastUpdatedBy.name}
-        />
+        <span className={`whitespace-nowrap font-bold ${row.original.insurance.company === 'PROGRESSIVE' ? 'text-blue-700' : ''}`}>
+          {row.original.insurance.company.toUpperCase()}
+        </span>
       ),
     },
     {
-      accessorKey: 'timeTracking',
-      header: 'Time Tracking',
+      accessorKey: 'customer.name',
+      header: 'Owner',
+    },
+    {
+      accessorKey: 'isInRental',
+      header: 'In Rental',
+      cell: ({ row }) => (row.original.isInRental ? <AutoCell /> : null),
+    },
+    {
+      accessorKey: 'dropDate',
+      header: 'Drop Date',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.timeTracking}</span>
+        <span className="whitespace-nowrap">{formatDate(row.original.dropDate)}</span>
       ),
     },
     {
-      id: 'lastUpdated',
-      header: 'Last Updated',
+      accessorKey: 'warning',
+      header: 'Warning',
+      cell: ({ row }) =>
+        row.original.warning ? (
+          <StatusBadgeCell
+            variant="danger"
+            status="danger"
+          />
+        ) : null,
+    },
+    {
+      id: 'uploadDeadline',
+      header: 'Upload Deadline',
+      cell: ({ row }) => (
+        row.original.uploadDeadline ? (
+          <UploadTimeCell deadline={row.original.uploadDeadline} />
+        ) : (
+          <span className="text-gray-400">---</span>
+        )
+      ),
+    },
+    {
+      id: 'lastCommDate',
+      header: 'Last Communication',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">{formatDate(row.original.lastUpdatedDate)}</span>
+      ),
+    },
+    {
+      header: 'Summary',
       cell: ({ row }) => <SummaryCell />,
     },
-
     {
-      accessorKey: 'archive',
-      header: '',
+      id: 'contact',
+      header: 'Contact',
       cell: ({ row }) => (
-        <ArchiveButtonCell
-          archive={true}
-          onClick={() => console.log('click archive')}
-        />
+        <div 
+          data-testid="contact-info" 
+          className="cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation()
+            handleContactClick(row.original)
+          }}
+        >
+          <ContactInfo />
+        </div>
       ),
     },
     {
       id: 'task',
       header: '',
-      cell: ({ row }) => <PanelTop size={18} />,
+      cell: ({ row }) => (
+        <div 
+          data-testid="task-button" 
+          className="cursor-pointer hover:text-blue-600 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation()
+            handleTaskClick(row.original)
+          }}
+        >
+          <ClipboardPlus size={18} />
+        </div>
+      ),
     },
   ]
+
+  // Get opportunities in 2nd Call status from the store
+  const opportunities = getOpportunitiesByStatus(OpportunityStatus.SecondCall)
+
   return (
-    <div className="flex flex-col min-h-screen">
-      <DataTable
+    <div className="w-full">
+      <DataTable<Opportunity, any>
         columns={columns}
-        data={mockSecondCall}
-        onRowClick={(row) => console.log('Row clicked:', row)}
+        data={opportunities}
+        onRowClick={handleRowClick}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
-        showPageSize={true}
       />
+
+      <BottomSheetModal
+        isOpen={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        title={selectedOpportunity ? `${selectedOpportunity.vehicle.year} ${selectedOpportunity.vehicle.make} ${selectedOpportunity.vehicle.model}` : ''}
+      >
+        {selectedOpportunity && <OpportunityModal opportunity={selectedOpportunity} />}
+      </BottomSheetModal>
     </div>
   )
 }

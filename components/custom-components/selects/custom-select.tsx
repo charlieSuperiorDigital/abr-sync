@@ -51,7 +51,8 @@ export function CustomSelect({
   return (
     <div className="relative">
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        type='button'
+        onClick={() => {setIsOpen(!isOpen) }}
         className={cn(
           'flex h-10 w-full items-center justify-between rounded-[20px] border border-input bg-gray-100 px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
           selectedValues.length > 0 && !multiSelect && 'bg-black text-white'

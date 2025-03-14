@@ -3,6 +3,10 @@ import type { NextConfig } from 'next'
 
 const withNextIntl = createNextIntlPlugin()
 
-const nextConfig: NextConfig = {}
+const nextConfig: NextConfig = {
+  images: {
+    domains: ['picsum.photos'],
+  },
+}
 
 export default withNextIntl(nextConfig)
