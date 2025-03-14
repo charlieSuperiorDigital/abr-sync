@@ -10,6 +10,7 @@ export const opportunities: Opportunity[] = [
       lastUpdatedDate: "2023-10-01T09:15:00Z",
       priority: "High",
       isInRental: true,
+      uploadDeadline: "2023-10-02T09:15:00Z", // 24 hours after creation
       warning: {
         message: "Customer has history of late payments",
         type: null
@@ -71,6 +72,7 @@ export const opportunities: Opportunity[] = [
       lastUpdatedDate: "2023-10-02T10:30:00Z",
       priority: "Normal",
       isInRental: false,
+      uploadDeadline: "2023-10-03T10:30:00Z", // 24 hours after creation
       vehicle: {
         vin: "5XYZH4AG4JH123456",
         make: "Toyota",
@@ -131,6 +133,7 @@ export const opportunities: Opportunity[] = [
       lastUpdatedDate: "2023-10-05T12:00:00Z",
       priority: "Normal",
       isInRental: true,
+      uploadDeadline: "2023-10-06T08:00:00Z", // 24 hours after creation
       firstCallDate: "2023-10-05T09:15:00Z",
       secondCallDate: "2023-10-05T11:45:00Z",
       lastUpdatedBy: {
@@ -215,6 +218,7 @@ export const opportunities: Opportunity[] = [
       lastUpdatedDate: "2023-10-05T10:30:00Z",
       priority: "High",
       isInRental: false,
+      uploadDeadline: "2023-10-05T14:00:00Z", // 24 hours after creation
       firstCallDate: "2023-10-04T15:30:00Z",
       secondCallDate: "2023-10-05T10:00:00Z",
       lastUpdatedBy: {

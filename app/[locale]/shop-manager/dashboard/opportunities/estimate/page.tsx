@@ -42,6 +42,13 @@ export default function EstimateOpportunities() {
 
   const columns: ColumnDef<Opportunity, any>[] = [
     {
+      accessorKey: 'roNumber',
+      header: 'RO Number',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">{row.original.roNumber || '---'}</span>
+      ),
+    },
+    {
       accessorKey: 'vehicle',
       header: 'Vehicle',
       cell: ({ row }) => (
@@ -54,36 +61,14 @@ export default function EstimateOpportunities() {
       ),
     },
     {
-      accessorKey: 'roNumber',
-      header: 'RO Number',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.roNumber || '---'}</span>
-      ),
+      accessorKey: 'file',
+      header: 'FILE'
+    
     },
     {
-      accessorKey: 'opportunityId',
-      header: 'Opportunity ID',
-    },
-    {
-      accessorKey: 'insurance.claimNumber',
-      header: 'Claim',
-    },
-    {
-      accessorKey: 'insurance.company',
-      header: 'Insurance',
-      cell: ({ row }) => (
-        <span className={`whitespace-nowrap font-bold ${row.original.insurance.company === 'PROGRESSIVE' ? 'text-blue-700' : ''}`}>
-          {row.original.insurance.company.toUpperCase()}
-        </span>
-      ),
-    },
-    {
-      accessorKey: 'owner.name',
-      header: 'Owner',
-    },
-    {
-      accessorKey: 'stage',
-      header: 'Stage',
+      accessorKey: 'parts',
+      header: 'PARTS'
+    
     },
     {
       accessorKey: 'isInRental',
@@ -91,12 +76,11 @@ export default function EstimateOpportunities() {
       cell: ({ row }) => (row.original.isInRental ? <AutoCell /> : null),
     },
     {
-      accessorKey: 'dropDate',
-      header: 'Drop Date',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">{formatDate(row.original.dropDate)}</span>
-      ),
+      accessorKey: 'priority',
+      header: 'PRIORITY'
+    
     },
+    
     {
       accessorKey: 'warning',
       header: 'Warning',
@@ -109,27 +93,11 @@ export default function EstimateOpportunities() {
         ) : null,
     },
     {
-      id: 'uploadDeadline',
-      header: 'Upload Deadline',
-      cell: ({ row }) => (
-        row.original.uploadDeadline ? (
-          <UploadTimeCell deadline={row.original.uploadDeadline} />
-        ) : (
-          <span className="text-gray-400">---</span>
-        )
-      ),
+      accessorKey: 'insuranceApproval',
+      header: 'INSURANCE APPROVAL'
+    
     },
-    {
-      id: 'lastCommDate',
-      header: 'Last Communication',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">{formatDate(row.original.lastUpdatedDate)}</span>
-      ),
-    },
-    {
-      header: 'Summary',
-      cell: ({ row }) => <SummaryCell />,
-    },
+   
     {
       id: 'contact',
       header: 'Contact',
