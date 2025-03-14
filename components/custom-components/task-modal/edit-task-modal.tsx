@@ -67,7 +67,7 @@ export default function EditTaskModal({
   return (
     <>
       <div className="flex items-center h-full">
-        <div className="flex items-center mr-3">
+        <div className="flex items-center">
           <button
             onClick={() => handleShowModal()}
             className={`flex items-center rounded-full transition-colors duration-100 group
@@ -79,7 +79,7 @@ export default function EditTaskModal({
             </span>
           </button>
         </div>
-        <div className="flex items-center mr-3"></div>
+        <div className="flex items-center"></div>
       </div>
 
       {shouldShowModal && (
