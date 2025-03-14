@@ -14,5 +14,24 @@
     "errorPasswordRequired": "Password is required",
     "errorPassword": "Please enter a valid password",
     "errorLogin": "Invalid email or password"
+  },
+  "Task": {
+    "task-information": "Task Information",
+    "priority": "Priority",
+    "task-title": "Task Title",
+    "description": "Description",
+    "location": "Location",
+    "task-type": "Task Type",
+    "due-date": "Due Date",
+    "time": "Time",
+    "assign-to": "Assign To",
+    "assign-to-roles": "Assign to Roles",
+    "assign-to-user": "Assign to User",
+    "select-user": "Select user",
+    "select-roles": "Select roles",
+    "assign-to-me": "Assign to me",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving..."
   }
 }

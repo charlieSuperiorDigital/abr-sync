@@ -31,8 +31,8 @@ export function CustomInput({
     <div className="w-full space-y-2">
       <div
         className={cn(
-          'relative flex items-center w-full h-[39px] rounded-full border-2 overflow-hidden',
-          error && 'border-red-500'
+          'relative flex items-center w-full h-[39px] rounded-full overflow-hidden',
+          error && 'border-2 border-red-500'
         )}
       >
         <label
@@ -49,9 +49,8 @@ export function CustomInput({
           ref={ref}
           type={isPassword && showPassword ? 'text' : type}
           className={cn(
-            'w-full h-full px-4 py-2 text-sm focus:outline-none focus:ring-0 border-none text-right bg-[#D1D1D1]',
-            'placeholder:text-gray-500 placeholder:font-bold',
-            isPassword && 'pr-10',
+            'w-full h-full pl-4 pr-10 text-sm outline-none text-right transition-colors duration-200 bg-[#E3E3E3]',
+            error && 'text-red-500',
             className
           )}
           {...props}

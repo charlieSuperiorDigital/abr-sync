@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { useEffect, useState } from 'react'
-import { Pencil, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { Controller, useForm } from 'react-hook-form'
 import { CustomSelect } from '../selects/custom-select'
 import { CustomButtonSelect, CustomButtonSelectField } from '../selects/custom-button-select'
@@ -21,16 +21,17 @@ import {
 } from './schema'
 import { CustomInput } from '../inputs/custom-input'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Button } from '@/components/ui/button'
 
-interface EditTaskModalProps {
+interface NewTaskModalProps {
   children: React.ReactNode
   title: string
 }
 
-export function EditTaskModal({
+export function NewTaskModal({
   children,
   title,
-}: EditTaskModalProps) {
+}: NewTaskModalProps) {
   const [shouldShowModal, setShouldShowModal] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const t = useTranslations('Task')
@@ -105,10 +106,10 @@ export function EditTaskModal({
           <button
             onClick={() => handleShowModal()}
             className="flex items-center rounded-full transition-colors duration-200 hover:bg-black group"
-            aria-label="Edit Task"
+            aria-label="New Task"
           >
             <span className="p-2 group-hover:text-white">
-              <Pencil className="w-4 h-4" />
+              {children}
             </span>
           </button>
         </div>

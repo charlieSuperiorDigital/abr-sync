@@ -25,8 +25,8 @@ import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { mockTasks } from '../../../../../mocks/tasks.mock'
 import { useTaskStore } from '@/app/stores/task-store'
 import { Task } from '@/app/types/task'
-import EditTaskModal from '@/components/custom-components/task-modal/edit-task-modal'
-import DeleteTaskModal from '@/components/custom-components/task-modal/delete-task-modal'
+import { EditTaskModal } from '@/components/custom-components/task-modal/edit-task-modal'
+import * as deleteTaskModal from '@/components/custom-components/task-modal/delete-task-modal'
 
 export default function NewOpportunities() {
   
@@ -140,13 +140,10 @@ export default function NewOpportunities() {
             variant: 'secondary',
             icon: 'delete',
             _component: 
-              <DeleteTaskModal 
+              <deleteTaskModal.DeleteTaskModal 
               title={'Are you sure you want to delete this task?'}
               children={undefined} 
-              isOpen={false} 
-              onOpenChange={function (open: boolean): void {
-              throw new Error('Function not implemented.')
-            } }/>
+              />
           },
           {
             label: 'Edit',
@@ -157,10 +154,7 @@ export default function NewOpportunities() {
               <EditTaskModal 
               title={'Edit Task'}
               children={undefined} 
-              isOpen={false} 
-              onOpenChange={function (open: boolean): void {
-              throw new Error('Function not implemented.')
-            } }/>
+            />
           }
 
         ]}
