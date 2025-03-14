@@ -3,7 +3,7 @@ import { Task } from './task'
 // Tracks the high-level state of the opportunity or repair order
 export enum OpportunityStatus {
   New = "New", // Initial contact with owner to schedule drop date
-  SecondCall = "2nd Call", // Follow-up if owner doesn't respond
+  SecondCall = "2nd Call", // When CSR couldn't make contact with vehicle owner
   Estimate = "Estimate", // When estimate is created and approved
   TotalLoss = "Total Loss", // If vehicle is declared total loss
   Upcoming = "Upcoming", // Vehicle dropped off, workfile created
@@ -31,6 +31,13 @@ export type Opportunity = {
   createdDate: string; // Date the opportunity was created (ISO format)
   lastUpdatedDate: string; // Date the opportunity was last updated (ISO format)
   priority: "Normal" | "High"; // Priority level
+  firstCallDate?: string; // Date of first contact attempt
+  secondCallDate?: string; // Date of second contact attempt
+  pickedUpDate?: string; // Date when vehicle was picked up (ISO format)
+  lastUpdatedBy?: { // Person who last updated the opportunity
+    name: string;
+    avatar?: string;
+  };
   vehicle: {
     vin: string; // Vehicle Identification Number
     make: string; // Vehicle make (e.g., Toyota)

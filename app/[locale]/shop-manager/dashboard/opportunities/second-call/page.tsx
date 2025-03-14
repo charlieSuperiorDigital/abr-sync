@@ -9,16 +9,22 @@ import {
 } from '@/components/custom-components/custom-table/table-cells'
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { ColumnDef } from '@tanstack/react-table'
-import { ClipboardPlus } from 'lucide-react'
+import { Archive, ClipboardPlus } from 'lucide-react'
 import { Opportunity, OpportunityStatus } from '@/app/types/opportunity'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import { useState, useCallback } from 'react'
 import { useOpportunityStore } from '@/app/stores/opportunity-store'
+import DarkButton from '@/app/[locale]/custom-components/dark-button'
+import ConfirmationModal from '@/components/custom-components/confirmation-modal/confirmation-modal'
 
 export default function SecondCallOpportunities() {
-  const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity } = useOpportunityStore()
+  const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity, updateOpportunity } = useOpportunityStore()
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [archiveConfirmation, setArchiveConfirmation] = useState<{ isOpen: boolean; opportunity: Opportunity | null }>({
+    isOpen: false,
+    opportunity: null
+  })
 
   const handleRowClick = useCallback((opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity)
@@ -35,15 +41,41 @@ export default function SecondCallOpportunities() {
     console.log('Task clicked for opportunity:', opportunity.opportunityId)
   }, [])
 
+  const handleArchiveConfirm = useCallback(() => {
+    if (archiveConfirmation.opportunity) {
+      updateOpportunity(archiveConfirmation.opportunity.opportunityId, {
+        status: OpportunityStatus.Archived
+      })
+      console.log('Archiving opportunity:', archiveConfirmation.opportunity.opportunityId)
+    }
+  }, [archiveConfirmation.opportunity, updateOpportunity])
+
+  const handleArchiveClick = useCallback((opportunity: Opportunity) => {
+    setArchiveConfirmation({
+      isOpen: true,
+      opportunity
+    })
+  }, [])
+
   const formatDate = (date: string | undefined) => {
     if (!date) return '---'
-    return new Date(date).toLocaleDateString()
+    return new Date(date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    })
   }
 
   const columns: ColumnDef<Opportunity, any>[] = [
     {
+      accessorKey: 'insurance.claimNumber',
+      header: 'CLAIM',
+    },
+    {
       accessorKey: 'vehicle',
-      header: 'Vehicle',
+      header: 'VEHICLE',
       cell: ({ row }) => (
         <VehicleCell
           make={row.original.vehicle.make}
@@ -54,21 +86,15 @@ export default function SecondCallOpportunities() {
       ),
     },
     {
-      accessorKey: 'insurance.claimNumber',
-      header: 'Claim',
-    },
-    {
-      accessorKey: 'insurance.company',
-      header: 'Insurance',
+      accessorKey: 'roNumber',
+      header: 'RO',
       cell: ({ row }) => (
-        <span className={`whitespace-nowrap font-bold ${row.original.insurance.company === 'PROGRESSIVE' ? 'text-blue-700' : ''}`}>
-          {row.original.insurance.company.toUpperCase()}
-        </span>
+        <span className="whitespace-nowrap">{row.original.roNumber || '---'}</span>
       ),
     },
     {
       accessorKey: 'owner.name',
-      header: 'Owner',
+      header: 'CUSTOMER',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
           {row.original.owner.name}
@@ -76,72 +102,79 @@ export default function SecondCallOpportunities() {
       ),
     },
     {
-      accessorKey: 'isInRental',
-      header: 'In Rental',
-      cell: ({ row }) => (row.original.isInRental ? <AutoCell /> : null),
-    },
-    {
-      accessorKey: 'dropDate',
-      header: 'Drop Date',
+      accessorKey: 'firstCallDate',
+      header: '1ST CALL',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{formatDate(row.original.dropDate)}</span>
+        <span className="whitespace-nowrap text-gray-600">
+          {formatDate(row.original.firstCallDate)}
+        </span>
       ),
     },
     {
-      accessorKey: 'warning',
-      header: 'Warning',
-      cell: ({ row }) =>
-        row.original.warning ? (
-          <StatusBadgeCell
-            variant="danger"
-            status="danger"
-          />
-        ) : null,
-    },
-    {
-      id: 'uploadDeadline',
-      header: 'Upload Deadline',
+      accessorKey: 'secondCallDate',
+      header: '2ND CALL',
       cell: ({ row }) => (
-        row.original.uploadDeadline ? (
-          <UploadTimeCell deadline={row.original.uploadDeadline} />
-        ) : (
-          <span className="text-gray-400">---</span>
-        )
+        <span className="whitespace-nowrap text-gray-600">
+          {formatDate(row.original.secondCallDate)}
+        </span>
       ),
     },
     {
-      id: 'lastCommDate',
-      header: 'Last Communication',
+      accessorKey: 'lastUpdatedBy',
+      header: 'LAST UPDATED BY',
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          {row.original.lastUpdatedBy?.avatar && (
+            <img 
+              src={row.original.lastUpdatedBy.avatar} 
+              alt="" 
+              className="w-6 h-6 rounded-full"
+            />
+          )}
+          <span className="whitespace-nowrap">
+            {row.original.lastUpdatedBy?.name || '---'}
+          </span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'lastUpdatedDate',
+      header: 'LAST UPDATED',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">{formatDate(row.original.lastUpdatedDate)}</span>
       ),
     },
     {
-      header: 'Summary',
-      cell: ({ row }) => <SummaryCell />,
+      header: 'TIME TRACKING',
+      cell: ({ row }) => '2h',
     },
     {
-      id: 'contact',
-      header: 'Contact',
+      header: 'SUMMARY',
+      cell: ({ row }) => <SummaryCell />,
+    },
+   
+    {
+      id: 'archive',
+      header: '',
       cell: ({ row }) => (
-        <div 
-          data-testid="contact-info" 
-          className="cursor-pointer"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleContactClick(row.original)
-          }}
-        >
-          <ContactInfo />
+        <div className="flex justify-center">
+          <DarkButton
+            buttonText="Archive"
+            buttonIcon={<Archive className="w-4 h-4 mr-2" />}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleArchiveClick(row.original)
+            }}
+          />
         </div>
       ),
     },
     {
       id: 'task',
-      header: '',
+      header: 'TASK',
       cell: ({ row }) => (
-        <div 
-          data-testid="task-button" 
+        <div
+          data-testid="task-button"
           className="cursor-pointer hover:text-blue-600 transition-colors"
           onClick={(e) => {
             e.stopPropagation()
@@ -166,14 +199,22 @@ export default function SecondCallOpportunities() {
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
       />
-
-      <BottomSheetModal
+      <BottomSheetModal 
         isOpen={isModalOpen}
         onOpenChange={setIsModalOpen}
         title={selectedOpportunity ? `${selectedOpportunity.vehicle.year} ${selectedOpportunity.vehicle.make} ${selectedOpportunity.vehicle.model}` : ''}
       >
         {selectedOpportunity && <OpportunityModal opportunity={selectedOpportunity} />}
       </BottomSheetModal>
+      <ConfirmationModal
+        isOpen={archiveConfirmation.isOpen}
+        onClose={() => setArchiveConfirmation({ isOpen: false, opportunity: null })}
+        onConfirm={handleArchiveConfirm}
+        title="Archive Opportunity"
+        description="Are you sure you want to archive this opportunity? This action will remove it from the active opportunities list."
+        confirmText="Archive"
+        confirmIcon={Archive}
+      />
     </div>
   )
 }

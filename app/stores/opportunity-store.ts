@@ -4,7 +4,7 @@ import { opportunities } from '../mocks/opportunities_new'
 import { useWorkfileStore } from './workfile-store'
 import { WorkfileStatus } from '../types/workfile'
 
-interface OpportunityStore {
+export interface OpportunityStore {
   opportunities: Opportunity[]
   selectedOpportunity: Opportunity | null
   setSelectedOpportunity: (opportunity: Opportunity | null) => void
@@ -13,6 +13,8 @@ interface OpportunityStore {
   removeOpportunity: (opportunityId: string) => void
   // Filter opportunities by workflow state
   getOpportunitiesByStatus: (status: OpportunityStatus) => Opportunity[]
+  // Get counts for all opportunity statuses
+  getOpportunityStatusCounts: () => Record<OpportunityStatus, number>
   // Get opportunity by ID
   getOpportunityById: (opportunityId: string) => Opportunity | undefined
   // Get opportunities that need follow-up (in 2nd Call status)
@@ -64,6 +66,15 @@ export const useOpportunityStore = create<OpportunityStore>((set, get) => ({
 
   getOpportunitiesByStatus: (status) => {
     return get().opportunities.filter((opp) => opp.status === status)
+  },
+
+  getOpportunityStatusCounts: () => {
+    const opportunities = get().opportunities
+    const counts = Object.values(OpportunityStatus).reduce((acc, status) => {
+      acc[status] = opportunities.filter(opp => opp.status === status).length
+      return acc
+    }, {} as Record<OpportunityStatus, number>)
+    return counts
   },
 
   getOpportunityById: (opportunityId) => {

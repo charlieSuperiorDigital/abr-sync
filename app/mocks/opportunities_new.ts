@@ -9,6 +9,11 @@ export const opportunities: Opportunity[] = [
       createdDate: "2023-10-01T09:15:00Z",
       lastUpdatedDate: "2023-10-01T09:15:00Z",
       priority: "High",
+      isInRental: true,
+      warning: {
+        message: "Customer has history of late payments",
+        type: null
+      },
       vehicle: {
         vin: "1HGCM82633A123456",
         make: "Honda",
@@ -43,7 +48,7 @@ export const opportunities: Opportunity[] = [
         city: "Anytown",
         state: "CA",
         zip: "12345",
-        company: "ABC Corp",
+        company: "ABC Corp"
       },
       insurance: {
         company: "Progressive",
@@ -56,7 +61,7 @@ export const opportunities: Opportunity[] = [
         adjusterPhone: "+1-555-987-6543",
         adjusterEmail: "mike.smith@progressive.com"
       },
-      lastCommunicationSummary: "Initial assignment received from Progressive. Need to contact owner to schedule drop-off.",
+      lastCommunicationSummary: "Initial assignment received from Progressive. Need to contact owner to schedule drop-off."
     },
     {
       opportunityId: "OPP789012",
@@ -65,6 +70,7 @@ export const opportunities: Opportunity[] = [
       createdDate: "2023-10-02T10:30:00Z",
       lastUpdatedDate: "2023-10-02T10:30:00Z",
       priority: "Normal",
+      isInRental: false,
       vehicle: {
         vin: "5XYZH4AG4JH123456",
         make: "Toyota",
@@ -99,7 +105,7 @@ export const opportunities: Opportunity[] = [
         city: "Othertown",
         state: "NY",
         zip: "67890",
-        company: "Smith Enterprises",
+        company: "Smith Enterprises"
       },
       insurance: {
         company: "State Farm",
@@ -112,17 +118,45 @@ export const opportunities: Opportunity[] = [
         adjusterPhone: "+1-555-111-2222",
         adjusterEmail: "emily.davis@statefarm.com"
       },
-      lastCommunicationSummary: "Initial assignment received from State Farm. Attempting first contact with owner.",
+      lastCommunicationSummary: "Initial assignment received from State Farm. Attempting first contact with owner."
     },
   
-    // 2nd Call Opportunities - Follow-up if owner doesn't respond
+    // 2nd Call Opportunities - When CSR couldn't make contact with vehicle owner
     {
       opportunityId: "OPP567890",
+      roNumber: "RO-114850",
       status: OpportunityStatus.SecondCall,
       stage: RepairStage.Opportunity,
       createdDate: "2023-10-05T08:00:00Z",
       lastUpdatedDate: "2023-10-05T12:00:00Z",
       priority: "Normal",
+      isInRental: true,
+      firstCallDate: "2023-10-05T09:15:00Z",
+      secondCallDate: "2023-10-05T11:45:00Z",
+      lastUpdatedBy: {
+        name: "Tom Wilson",
+        avatar: "https://picsum.photos/seed/tom/32/32"
+      },
+      logs: [
+        {
+          type: "phone_call",
+          date: "2023-10-05T09:15:00Z",
+          user: "Tom Wilson",
+          description: "First attempt to contact owner. No answer, left voicemail about scheduling vehicle drop-off."
+        },
+        {
+          type: "email",
+          date: "2023-10-05T10:30:00Z",
+          user: "Tom Wilson",
+          description: "Sent follow-up email with drop-off scheduling information."
+        },
+        {
+          type: "phone_call",
+          date: "2023-10-05T11:45:00Z",
+          user: "Tom Wilson",
+          description: "Second attempt to contact owner. Still no answer, left detailed voicemail."
+        }
+      ],
       vehicle: {
         vin: "1G1JC6SH9A1234567",
         make: "Chevrolet",
@@ -157,7 +191,7 @@ export const opportunities: Opportunity[] = [
         city: "Newtown",
         state: "TX",
         zip: "34567",
-        company: "Wilson Enterprises",
+        company: "Wilson Enterprises"
       },
       insurance: {
         company: "Farmers",
@@ -170,17 +204,105 @@ export const opportunities: Opportunity[] = [
         adjusterPhone: "+1-555-333-4444",
         adjusterEmail: "sarah.taylor@farmers.com"
       },
-      lastCommunicationSummary: "Left voicemail for owner. Second attempt to schedule drop-off date.",
+      lastCommunicationSummary: "Attempted to contact owner via phone - no answer. Left voicemail requesting callback to schedule vehicle drop-off. Will try alternate contact methods."
+    },
+    {
+      opportunityId: "OPP567891",
+      roNumber: "RO-114851",
+      status: OpportunityStatus.SecondCall,
+      stage: RepairStage.Opportunity,
+      createdDate: "2023-10-04T14:00:00Z",
+      lastUpdatedDate: "2023-10-05T10:30:00Z",
+      priority: "High",
+      isInRental: false,
+      firstCallDate: "2023-10-04T15:30:00Z",
+      secondCallDate: "2023-10-05T10:00:00Z",
+      lastUpdatedBy: {
+        name: "Sarah Johnson",
+        avatar: "https://picsum.photos/seed/sarah/32/32"
+      },
+      logs: [
+        {
+          type: "phone_call",
+          date: "2023-10-04T15:30:00Z",
+          user: "Sarah Johnson",
+          description: "First attempt to contact owner. No answer, left voicemail about scheduling vehicle drop-off."
+        },
+        {
+          type: "email",
+          date: "2023-10-04T16:30:00Z",
+          user: "Sarah Johnson",
+          description: "Sent follow-up email with drop-off scheduling information."
+        },
+        {
+          type: "phone_call",
+          date: "2023-10-05T10:00:00Z",
+          user: "Sarah Johnson",
+          description: "Second attempt to contact owner. Still no answer, left detailed voicemail."
+        }
+      ],
+      vehicle: {
+        vin: "WBAPH7C52BE123456",
+        make: "BMW",
+        model: "M3",
+        year: 2021,
+        licensePlate: "MNO345",
+        exteriorColor: "Alpine White",
+        interiorColor: "Black",
+        mileageIn: 18000,
+        damageDescription: "Rear-end collision with significant damage to trunk and rear bumper. Possible frame damage.",
+        vehiclePicturesUrls: [`https://picsum.photos/seed/OPP567891/384/256`],
+        photos: [
+          {
+            id: "PHOTO007",
+            url: `https://picsum.photos/seed/OPP567891/384/256`,
+            type: "exterior",
+            dateAdded: "2023-10-04T14:00:00Z"
+          }
+        ]
+      },
+      owner: {
+        name: "Robert Chen",
+        phone: "+1-555-789-0123",
+        email: "robert.chen@example.com",
+        address: "789 Oak Lane",
+        city: "Westbrook",
+        state: "CA",
+        zip: "90210"
+      },
+      insurance: {
+        company: "GEICO",
+        claimNumber: "CLM901234",
+        policyNumber: "POL567890",
+        deductible: 750,
+        typeOfLoss: "Collision",
+        representative: "Lisa Park",
+        adjuster: "James Wilson",
+        adjusterPhone: "+1-555-444-5555",
+        adjusterEmail: "james.wilson@geico.com",
+        approved: false
+      },
+      dropDate: "2023-10-08T09:00:00Z",
+      estimatedCompletionDate: "2023-10-15T17:00:00Z",
+      weatherImpact: {
+        affectsPaint: false,
+        forecast: "Clear",
+        impactDescription: "No impact expected"
+      },
+      location: "Shop 3",
+      repairPhase: "Not Started"
     },
   
     // Estimate Opportunities - When estimate is created and approved
     {
       opportunityId: "OPP234567",
+      roNumber: "RO-2024-001",
       status: OpportunityStatus.Estimate,
       stage: RepairStage.EstimateCreated,
       createdDate: "2023-10-06T14:00:00Z",
       lastUpdatedDate: "2023-10-06T16:30:00Z",
       priority: "High",
+      isInRental: false,
       vehicle: {
         vin: "WBAJB9C59JB123456",
         make: "BMW",
@@ -214,12 +336,12 @@ export const opportunities: Opportunity[] = [
         address: "789 Oak St",
         city: "Somewhere",
         state: "FL",
-        zip: "90123",
-        company: "Brown & Associates",
+        zip: "89012",
+        company: "Brown Industries"
       },
       insurance: {
         company: "GEICO",
-        claimNumber: "CLM234567",
+        claimNumber: "CLM123456",
         policyNumber: "POL789012",
         deductible: 750,
         typeOfLoss: "Collision",
@@ -229,9 +351,8 @@ export const opportunities: Opportunity[] = [
         adjusterEmail: "john.lee@geico.com"
       },
       lastCommunicationSummary: "Estimate completed and sent to insurance for approval.",
-      isInRental: true,
       isVoilComplete: true,
-      is4CornersComplete: true,
+      is4CornersComplete: true
     },
   
     // Total Loss Opportunities - Vehicle declared total loss
@@ -242,16 +363,17 @@ export const opportunities: Opportunity[] = [
       createdDate: "2023-10-07T09:00:00Z",
       lastUpdatedDate: "2023-10-07T11:30:00Z",
       priority: "Normal",
+      isInRental: true,
       vehicle: {
         vin: "5NPE24AF1FH123456",
         make: "Hyundai",
         model: "Sonata",
-        year: 2016,
-        licensePlate: "GHI789",
+        year: 2021,
+        licensePlate: "MNO345",
         exteriorColor: "Red",
         interiorColor: "Black",
-        mileageIn: 85000,
-        damageDescription: "Vehicle caught in flash flood. Water damage to interior electronics and engine. Water line visible at door level suggesting significant submersion.",
+        mileageIn: 15000,
+        damageDescription: "Severe front-end collision with deployed airbags. Significant structural damage to frame and engine compartment.",
         vehiclePicturesUrls: [`https://picsum.photos/seed/${Math.random()}/384/256`, `https://picsum.photos/seed/${Math.random()}/384/256`],
         photos: [
           {
@@ -263,93 +385,33 @@ export const opportunities: Opportunity[] = [
           {
             id: "PHOTO010",
             url: `https://picsum.photos/seed/${Math.random()}/384/256`,
-            type: "interior",
+            type: "damage",
             dateAdded: "2023-10-07T09:00:00Z"
           }
         ]
       },
       owner: {
-        name: "Emily Davis",
-        phone: "+1-555-321-0987",
-        email: "emilydavis@example.com",
+        name: "Sarah Davis",
+        phone: "+1-555-456-7890",
+        email: "sarahdavis@example.com",
         address: "321 Pine St",
         city: "Elsewhere",
-        state: "IL",
-        zip: "45678",
-        company: "Davis Inc.",
-      },
-      insurance: {
-        company: "Allstate",
-        claimNumber: "CLM345678",
-        policyNumber: "POL123456",
-        deductible: 1000,
-        typeOfLoss: "Flood Damage",
-        representative: "Robert Lee",
-        adjuster: "Emily Chen",
-        adjusterPhone: "+1-555-444-5555",
-        adjusterEmail: "emily.chen@allstate.com"
-      },
-      lastCommunicationSummary: "Vehicle declared total loss. Awaiting owner decision on salvage.",
-      isTotalLoss: true,
-    },
-  
-    // Upcoming Opportunities - Vehicle dropped off, workfile created
-    {
-      opportunityId: "OPP890123",
-      status: OpportunityStatus.Upcoming,
-      stage: RepairStage.RepairOrder,
-      createdDate: "2023-10-08T11:00:00Z",
-      lastUpdatedDate: "2023-10-08T15:30:00Z",
-      priority: "Normal",
-      vehicle: {
-        vin: "2T3ZFREV9EW123456",
-        make: "Toyota",
-        model: "RAV4",
-        year: 2021,
-        licensePlate: "MNO345",
-        exteriorColor: "White",
-        interiorColor: "Gray",
-        mileageIn: 15000,
-        damageDescription: "Minor fender bender in residential area. Front bumper and grille damaged when vehicle struck a parked car while backing out of driveway.",
-        vehiclePicturesUrls: [`https://picsum.photos/seed/${Math.random()}/384/256`, `https://picsum.photos/seed/${Math.random()}/384/256`],
-        photos: [
-          {
-            id: "PHOTO011",
-            url: `https://picsum.photos/seed/${Math.random()}/384/256`,
-            type: "exterior",
-            dateAdded: "2023-10-08T11:00:00Z"
-          },
-          {
-            id: "PHOTO012",
-            url: `https://picsum.photos/seed/${Math.random()}/384/256`,
-            type: "damage",
-            dateAdded: "2023-10-08T11:00:00Z"
-          }
-        ]
-      },
-      owner: {
-        name: "Sarah Johnson",
-        phone: "+1-555-456-7890",
-        email: "sarahjohnson@example.com",
-        address: "456 Cedar St",
-        city: "Anywhere",
-        state: "MI",
+        state: "AZ",
         zip: "56789",
-        company: "Johnson Legal Group",
+        company: "Davis Corp"
       },
       insurance: {
         company: "Liberty Mutual",
-        claimNumber: "CLM890123",
+        claimNumber: "CLM234567",
         policyNumber: "POL567890",
-        deductible: 500,
-        typeOfLoss: "Vandalism",
-        representative: "David Chen",
-        adjuster: "Sarah Kim",
-        adjusterPhone: "+1-555-666-7777",
-        adjusterEmail: "sarah.kim@libertymutual.com"
+        deductible: 1000,
+        typeOfLoss: "Collision",
+        representative: "James Wilson",
+        adjuster: "Karen White",
+        adjusterPhone: "+1-555-444-5555",
+        adjusterEmail: "karen.white@libertymutual.com"
       },
-      lastCommunicationSummary: "Vehicle repaired and picked up by owner. All paperwork completed.",
-      isVoilComplete: true,
-      is4CornersComplete: true,
-    },
-  ];
+      lastCommunicationSummary: "Vehicle declared total loss by insurance adjuster. Awaiting owner decision.",
+      isTotalLoss: true
+    }
+]

@@ -56,6 +56,13 @@ export default function EstimateOpportunities() {
     {
       accessorKey: 'roNumber',
       header: 'RO Number',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">{row.original.roNumber || '---'}</span>
+      ),
+    },
+    {
+      accessorKey: 'opportunityId',
+      header: 'Opportunity ID',
     },
     {
       accessorKey: 'insurance.claimNumber',

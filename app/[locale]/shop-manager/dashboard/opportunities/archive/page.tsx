@@ -60,6 +60,10 @@ export default function ArchivedOpportunities() {
 
   const columns: ColumnDef<Opportunity, any>[] = [
     {
+      accessorKey: 'insurance.claimNumber',
+      header: 'Claim',
+    },
+    {
       accessorKey: 'vehicle',
       header: 'Vehicle',
       cell: ({ row }) => (
@@ -71,17 +75,12 @@ export default function ArchivedOpportunities() {
         />
       ),
     },
+
     {
-      accessorKey: 'insurance.claimNumber',
-      header: 'Claim',
-    },
-    {
-      accessorKey: 'insurance.company',
-      header: 'Insurance',
+      accessorKey: 'roNumber',
+      header: 'RO',
       cell: ({ row }) => (
-        <span className={`whitespace-nowrap font-bold ${row.original.insurance.company === 'PROGRESSIVE' ? 'text-blue-700' : ''}`}>
-          {row.original.insurance.company.toUpperCase()}
-        </span>
+        <span className="whitespace-nowrap">{row.original.roNumber || '---'}</span>
       ),
     },
     {
@@ -92,73 +91,63 @@ export default function ArchivedOpportunities() {
           {row.original.owner.name}
         </span>
       ),
-    },
-    {
-      accessorKey: 'isInRental',
-      header: 'In Rental',
-      cell: ({ row }) => (row.original.isInRental ? <AutoCell /> : null),
-    },
-    {
-      accessorKey: 'dropDate',
-      header: 'Drop Date',
+    }, {
+      accessorKey: 'firstCallDate',
+      header: '1ST CALL',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{formatDate(row.original.dropDate)}</span>
+        <span className="whitespace-nowrap text-gray-600">
+          {formatDate(row.original.firstCallDate)}
+        </span>
       ),
     },
     {
-      accessorKey: 'warning',
-      header: 'Warning',
-      cell: ({ row }) =>
-        row.original.warning ? (
-          <StatusBadgeCell
-            variant="danger"
-            status="danger"
-          />
-        ) : null,
-    },
-    {
-      id: 'uploadDeadline',
-      header: 'Upload Deadline',
+      accessorKey: 'secondCallDate',
+      header: '2ND CALL',
       cell: ({ row }) => (
-        row.original.uploadDeadline ? (
-          <UploadTimeCell deadline={row.original.uploadDeadline} />
-        ) : (
-          <span className="text-gray-400">---</span>
-        )
+        <span className="whitespace-nowrap text-gray-600">
+          {formatDate(row.original.secondCallDate)}
+        </span>
       ),
     },
     {
-      id: 'lastCommDate',
-      header: 'Last Communication',
+      accessorKey: 'lastUpdatedBy',
+      header: 'LAST UPDATED BY',
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          {row.original.lastUpdatedBy?.avatar && (
+            <img
+              src={row.original.lastUpdatedBy.avatar}
+              alt=""
+              className="w-6 h-6 rounded-full"
+            />
+          )}
+          <span className="whitespace-nowrap">
+            {row.original.lastUpdatedBy?.name || '---'}
+          </span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'lastUpdatedDate',
+      header: 'LAST UPDATED',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">{formatDate(row.original.lastUpdatedDate)}</span>
       ),
     },
     {
-      header: 'Summary',
+      header: 'TIME TRACKING',
+      cell: ({ row }) => '2h',
+    },
+    {
+      header: 'SUMMARY',
       cell: ({ row }) => <SummaryCell />,
     },
+   
     {
-      id: 'contact',
-      header: 'Contact',
-      cell: ({ row }) => (
-        <div 
-          data-testid="contact-info" 
-          className="cursor-pointer"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleContactClick(row.original)
-          }}
-        >
-          <ContactInfo />
-        </div>
-      ),
-    },
-    {
-      id: 'task',
+      id: 'unarchive',
       header: 'Unarchive',
       cell: ({ row }) => (
-        <button 
+        <button
           className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
           onClick={(e) => {
             e.stopPropagation()
