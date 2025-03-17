@@ -17,8 +17,8 @@ export interface TaskAttachment {
 export interface Task {
   id: string
   priority: {
-    variant: 'default' | 'danger' | 'warning' | 'neutral' | 'slate' | 'info' | 'success' | 'forest' | 'dark'
-    text: string
+    variant: 'danger' | 'warning' | 'success' | 'slate'
+    text: 'Urgent' | 'High' | 'Normal' | 'Low'
   }
   title: string
   description: string
@@ -36,5 +36,7 @@ export interface Task {
   completedDate?: string
   attachments?: TaskAttachment[]
   comments?: TaskComment[]
-  estimatedHours?: number // Optional field for repair tasks
+  estimatedHours?: number
+  location?: string
+  template?: string
 }

@@ -32,6 +32,8 @@
     "assign-to-me": "Assign to me",
     "cancel": "Cancel",
     "save": "Save",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "template-placeholder": "Select a template",
+    "location-placeholder": "Select a location"
   }
 }

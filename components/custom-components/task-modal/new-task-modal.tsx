@@ -24,6 +24,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { useTaskStore } from '@/app/stores/task-store'
 import { Task } from '@/app/types/task'
+import crypto from 'crypto'
 
 interface NewTaskModalProps {
   children: React.ReactNode
@@ -82,26 +83,33 @@ export function NewTaskModal({
     try {
       setIsLoading(true)
       
+      // Map priority to the correct format
+      const priorityMap = {
+        Urgent: { variant: 'danger', text: 'Urgent' },
+        High: { variant: 'warning', text: 'High' },
+        Normal: { variant: 'success', text: 'Normal' },
+        Low: { variant: 'slate', text: 'Low' }
+      } as const
+      
       // Create task from form data
-      const mockTask: Task = {
-        id: '473829',
-        priority: {
-            variant: 'danger',
-            text: 'URGENT'
-        },
-        title: 'Insurance Documentation Validation',
-        description: 'Verify all paperwork required by the insurance provider',
-        createdBy: 'Charlie Thompson',
-        due: '2025-03-12',
-        relatedTo: 'Insurance, Progressive',
-        email: 'charliethompson@xpto.com',
-        phone: '123-456-7890',
-        message: '27',
-        assignedTo: '123456'
+      const newTask: Task = {
+        id: crypto.randomUUID(),
+        priority: priorityMap[data.priority],
+        title: data.taskTitle,
+        description: data.description || '',
+        createdBy: 'Current User', // TODO: Get from auth context
+        due: data.dueDate || new Date().toISOString().slice(0, 10),
+        relatedTo: data.template || '',
+        email: '',  // TODO: Get from contact info
+        phone: '',  // TODO: Get from contact info
+        message: '',
+        location: data.location,
+        template: data.template,
+        assignedTo: data.assignToMe ? 'currentUserId' : data.assignToUser // TODO: Get currentUserId from auth context
       }
       
-      console.log('Adding task:', mockTask)
-      addTask(mockTask)
+      console.log('Adding task:', newTask)
+      addTask(newTask)
       console.log('Task added successfully')
       setShouldShowModal(false)
     } catch (error) {
@@ -177,13 +185,16 @@ export function NewTaskModal({
                     name="template"
                     render={({ field }) => (
                       <CustomSelect
-                        placeholder="Select"
+                        placeholder={t('template-placeholder')}
                         options={[
+                          // TODO: Get from template store
                           { value: 'template1', label: 'Template 1' },
                           { value: 'template2', label: 'Template 2' },
                         ]}
                         value={field.value ? [field.value] : []}
-                        onChange={(values) => field.onChange(values[0] || '')}
+                        onChange={(values) => {
+                          field.onChange(values[0] || '')
+                        }}
                       />
                     )}
                   />
@@ -245,21 +256,21 @@ export function NewTaskModal({
                         control={control}
                         name="location"
                         render={({ field }) => (
-                          <div>
-                            <CustomSelect
-                              options={[
-                                { value: 'location a', label: 'Location A' },
-                                { value: 'location b', label: 'Location B' },
-                              ]}
-                              value={[field.value]}
-                              onChange={(value) => field.onChange(value[0])}
-                            />
-                            {errors.location && (
-                              <p className="text-sm text-red-500 mt-1">{errors.location.message}</p>
-                            )}
-                          </div>
+                          <CustomSelect
+                            placeholder={t('location-placeholder')}
+                            options={[
+                              // TODO: Get from location store
+                              { value: 'location1', label: 'Location 1' },
+                              { value: 'location2', label: 'Location 2' },
+                            ]}
+                            value={field.value ? [field.value] : []}
+                            onChange={(values) => field.onChange(values[0] || '')}
+                          />
                         )}
                       />
+                      {errors.location && (
+                        <p className="text-sm text-red-500 mt-1">{errors.location.message}</p>
+                      )}
                     </div>
 
                     <div>

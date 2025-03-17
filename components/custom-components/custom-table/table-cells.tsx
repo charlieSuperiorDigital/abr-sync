@@ -113,12 +113,16 @@ export function DateCell({
 }
 
 interface FriendlyDateCellProps {
-  date: string | Date
+  date: string | undefined
   variant?: 'due' | 'created'
 }
 
 export function FriendlyDateCell({ date, variant }: FriendlyDateCellProps) {
-  const dateObj = new Date(date + 'T00:00:00')
+  if (!date) {
+    return <span className="whitespace-nowrap">-</span>
+  }
+
+  const dateObj = new Date(date)
 
   // Check if date is valid
   if (isNaN(dateObj.getTime())) {

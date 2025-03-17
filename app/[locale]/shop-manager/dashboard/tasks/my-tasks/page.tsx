@@ -2,6 +2,7 @@
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import { shallow } from 'zustand/shallow'
 import { useEffect, useState } from 'react'
+import { Badge } from '@/components/ui/badge'
 
 import {
   ActionButtonCell,
@@ -46,10 +47,10 @@ export default function NewOpportunities() {
       accessorKey: 'priority',
       header: 'Priority',
       cell: ({ row }) => 
-      <PriorityBadgeCell 
-        variant={row.original.priority.variant}
-        priority={row.original.priority.text} 
-      />,
+        <PriorityBadgeCell 
+          variant={row.original.priority.variant}
+          priority={row.original.priority.text} 
+        />,
     },
     {
       accessorKey: 'title',
