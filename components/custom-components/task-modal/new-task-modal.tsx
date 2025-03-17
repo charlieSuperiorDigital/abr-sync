@@ -110,8 +110,9 @@ export function NewTaskModal({
         message: '',
         status: 'open', // Initial status as per requirements
         location: data.location,
+        type: data.type,
         template: data.template,
-        assignedTo: '123456',//data.assignToMe ? 'currentUserId' : data.assignToUser, // TODO: Get currentUserId from auth context
+        assignedTo: data.assignToMe ? 'currentUserId' : data.assignToUser, // TODO: Get currentUserId from auth context
         assignedToRoles: data.assignToRoles,
         lastUpdatedDate: new Date().toISOString(),
         // Add recurring task properties if type is Recurring
@@ -492,17 +493,17 @@ export function NewTaskModal({
                             placeholder={t('select-user')}
                             options={[
                               {
-                                value: 'Alexander Walker',
+                                value: '123456',
                                 label: 'Alexander Walker',
                                 avatar: '/placeholder.svg',
                               },
                               {
-                                value: 'Aiden Moore',
+                                value: '12345',
                                 label: 'Aiden Moore',
                                 avatar: '/placeholder.svg',
                               },
                               {
-                                value: 'James Davis',
+                                value: '4444',
                                 label: 'James Davis',
                                 avatar: '/placeholder.svg',
                               },

@@ -1,3 +1,5 @@
+import { TaskType } from "@/components/custom-components/task-modal/schema"
+
 export interface TaskComment {
   id: string
   text: string
@@ -39,6 +41,7 @@ export interface Task {
   comments?: TaskComment[]
   estimatedHours?: number
   location?: string
+  type?: TaskType
   template?: string
   // Recurring task properties
   recurringFrequency?: string
