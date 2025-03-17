@@ -24,7 +24,6 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { useTaskStore } from '@/app/stores/task-store'
 import { Task } from '@/app/types/task'
-import crypto from 'crypto'
 
 interface NewTaskModalProps {
   children: React.ReactNode
@@ -72,8 +71,10 @@ export function NewTaskModal({
       assignToUser: '',
       assignToRoles: [],
       assignToMe: false,
-      recurringFrequency: 'Every Day',
-      recurringDays: []
+      recurringFrequency: undefined,
+      recurringDays: undefined,
+      recurringEndDate: '',
+      recurringEndTime: ''
     },
   })
 
@@ -83,7 +84,7 @@ export function NewTaskModal({
     try {
       setIsLoading(true)
       
-      // Map priority to the correct format
+      // Map priority to the correct task variants
       const priorityMap = {
         Urgent: { variant: 'danger', text: 'Urgent' },
         High: { variant: 'warning', text: 'High' },
@@ -91,27 +92,58 @@ export function NewTaskModal({
         Low: { variant: 'slate', text: 'Low' }
       } as const
       
+      // Generate 6-digit task ID starting from 000000
+      const taskId = String(Math.floor(Math.random() * 1000000)).padStart(6, '0')
+      
       // Create task from form data
       const newTask: Task = {
-        id: crypto.randomUUID(),
+        id: taskId,
         priority: priorityMap[data.priority],
         title: data.taskTitle,
         description: data.description || '',
         createdBy: 'Current User', // TODO: Get from auth context
+        createdDate: new Date().toISOString().slice(0, 10),
         due: data.dueDate || new Date().toISOString().slice(0, 10),
-        relatedTo: data.template || '',
+        relatedTo: '',//data.template || '',
         email: '',  // TODO: Get from contact info
         phone: '',  // TODO: Get from contact info
         message: '',
+        status: 'open', // Initial status as per requirements
         location: data.location,
         template: data.template,
-        assignedTo: data.assignToMe ? 'currentUserId' : data.assignToUser // TODO: Get currentUserId from auth context
+        assignedTo: '123456',//data.assignToMe ? 'currentUserId' : data.assignToUser, // TODO: Get currentUserId from auth context
+        lastUpdatedDate: new Date().toISOString(),
+        // Add recurring task properties if type is Recurring
+        ...(data.type === 'Recurring' && {
+          recurringFrequency: data.recurringFrequency,
+          recurringDays: data.recurringDays,
+          recurringEndDate: data.recurringEndDate,
+          recurringEndTime: data.recurringEndTime,
+          timezone: 'UTC' // Default to UTC until we implement location-based timezones
+        })
       }
       
-      console.log('Adding task:', newTask)
+      // Log both raw form data and processed task object for debugging
+      console.log('Form submission:', {
+        rawFormData: data,
+        processedTask: newTask,
+        validations: {
+          hasRequiredFields: !!(data.taskTitle && data.location && data.priority && data.type),
+          hasRecurringFields: data.type === 'Recurring' ? !!(
+            data.recurringFrequency && 
+            data.recurringDays?.length && 
+            data.recurringEndDate && 
+            data.recurringEndTime
+          ) : true,
+          priorityMapping: priorityMap[data.priority],
+          status: newTask.status === 'open'
+        }
+      })
+      
+      // Add task to store
       addTask(newTask)
-      console.log('Task added successfully')
       setShouldShowModal(false)
+      
     } catch (error) {
       console.error('Error submitting form:', error)
     } finally {
@@ -166,20 +198,44 @@ export function NewTaskModal({
             <div className="overflow-y-auto flex-1 p-6">
               <form 
                 onSubmit={(e) => {
-                  e.preventDefault();
-                  console.log('Form submit event triggered');
-                  const result = handleSubmit((data) => {
-                    console.log('Form validation passed, data:', data);
-                    return onSubmit(data);
-                  }, (errors) => {
-                    console.error('Form validation failed:', errors);
-                  })(e);
-                  console.log('Form submission result:', result);
+                  e.preventDefault()
+                  console.log('Form submission started')
+                  handleSubmit(
+                    (data) => {
+                      console.log('Form validation passed. Form data:', {
+                        ...data,
+                        type: data.type,
+                        recurring: data.type === 'Recurring' ? {
+                          frequency: data.recurringFrequency,
+                          days: data.recurringDays,
+                          endDate: data.recurringEndDate,
+                          endTime: data.recurringEndTime,
+                          // TODO: Add end date and time settings
+                        } : undefined,
+                        assignedTo: data.assignToMe ? 'currentUserId' : data.assignToUser,
+                        roles: data.assignToRoles
+                      })
+                      return onSubmit(data)
+                    },
+                    (errors) => {
+                      console.error('Form validation failed:', {
+                        formErrors: errors,
+                        formValues: watch(),
+                        type: watch('type'),
+                        recurring: watch('type') === 'Recurring' ? {
+                          frequency: watch('recurringFrequency'),
+                          days: watch('recurringDays'),
+                          endDate: watch('recurringEndDate'),
+                          endTime: watch('recurringEndTime')
+                        } : undefined
+                      })
+                    }
+                  )(e)
                 }} 
                 className="space-y-6"
               >
                 <div>
-                  <label className="block mb-2 font-semibold">Template</label>
+                  <label className="block mb-2 font-semibold">{t('template')}</label>
                   <Controller
                     control={control}
                     name="template"
@@ -319,6 +375,36 @@ export function NewTaskModal({
                           />
                           {errors.recurringDays && (
                             <p className="text-sm text-red-500 mt-1">{errors.recurringDays.message}</p>
+                          )}
+                          <Controller
+                            control={control}
+                            name="recurringEndDate"
+                            render={({ field }) => (
+                              <CustomInput
+                                label={t('recurring-end-date')}
+                                type="date"
+                                error={errors.recurringEndDate?.message}
+                                {...field}
+                              />
+                            )}
+                          />
+                          {errors.recurringEndDate && (
+                            <p className="text-sm text-red-500 mt-1">{errors.recurringEndDate.message}</p>
+                          )}
+                          <Controller
+                            control={control}
+                            name="recurringEndTime"
+                            render={({ field }) => (
+                              <CustomInput
+                                label={t('recurring-end-time')}
+                                type="time"
+                                error={errors.recurringEndTime?.message}
+                                {...field}
+                              />
+                            )}
+                          />
+                          {errors.recurringEndTime && (
+                            <p className="text-sm text-red-500 mt-1">{errors.recurringEndTime.message}</p>
                           )}
                         </div>
                       </>

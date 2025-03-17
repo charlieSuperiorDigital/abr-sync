@@ -39,4 +39,10 @@ export interface Task {
   estimatedHours?: number
   location?: string
   template?: string
+  // Recurring task properties
+  recurringFrequency?: string
+  recurringDays?: string[]
+  recurringEndDate?: string
+  recurringEndTime?: string
+  timezone?: string
 }

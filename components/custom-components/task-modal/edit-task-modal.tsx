@@ -67,8 +67,8 @@ export function EditTaskModal({
       assignToUser: '',
       assignToRoles: [],
       assignToMe: false,
-      recurringFrequency: 'Every Day',
-      recurringDays: []
+      recurringFrequency: undefined,
+      recurringDays: undefined
     },
   })
 
@@ -77,9 +77,41 @@ export function EditTaskModal({
   const onSubmit = async (data: TaskFormData) => {
     try {
       setIsLoading(true)
-      console.log(data)
-      // Handle form submission
-      setShouldShowModal(false)
+      
+      // Map priority to the correct format
+      const priorityMap = {
+        Urgent: { variant: 'danger', text: 'Urgent' },
+        High: { variant: 'warning', text: 'High' },
+        Normal: { variant: 'success', text: 'Normal' },
+        Low: { variant: 'slate', text: 'Low' }
+      } as const
+
+      // Create task from form data
+      const taskUpdate = {
+        priority: priorityMap[data.priority],
+        title: data.taskTitle,
+        description: data.description || '',
+        location: data.location,
+        template: data.template,
+        due: data.dueDate,
+        assignedTo: data.assignToMe ? 'currentUserId' : data.assignToUser, // TODO: Get currentUserId from auth context
+        lastUpdatedDate: new Date().toISOString(),
+        // Add recurring task properties if type is Recurring
+        ...(data.type === 'Recurring' && {
+          recurringFrequency: data.recurringFrequency,
+          recurringDays: data.recurringDays,
+        })
+      }
+      
+      console.log('Task update object:', {
+        formData: data,
+        processedUpdate: taskUpdate
+      })
+      
+      // Commented for development
+      // updateTask(taskId, taskUpdate)
+      // setShouldShowModal(false)
+      
     } catch (error) {
       console.error('Error submitting form:', error)
     } finally {

@@ -1,39 +1,48 @@
 {
   "Login": {
-    "title": "Iniciar Sesión",
     "email": "Correo electrónico",
-    "password": "Contraseña",
-    "remember": "Recordar",
     "forgot": "¿Olvidaste tu contraseña?",
+    "password": "Contraseña",
+    "register": "Registrarse",
+    "remember": "Recordar",
     "submit": "Iniciar Sesión",
-    "register": "Registrarse"
-  },
-  "Validation": {
-    "errorEmail": "Por favor ingrese un correo electrónico válido",
-    "errorEmailRequired": "El correo electrónico es requerido",
-    "errorPasswordRequired": "La contraseña es requerida",
-    "errorPassword": "Por favor ingrese una contraseña válida",
-    "errorLogin": "Correo electrónico o contraseña inválidos"
+    "title": "Iniciar Sesión"
   },
   "Task": {
-    "task-information": "Información de la Tarea",
-    "priority": "Prioridad",
-    "task-title": "Título de la Tarea",
-    "description": "Descripción",
-    "location": "Ubicación",
-    "task-type": "Tipo de Tarea",
-    "due-date": "Fecha de Vencimiento",
-    "time": "Hora",
     "assign-to": "Asignar a",
+    "assign-to-me": "Asignarme",
     "assign-to-roles": "Asignar a Roles",
     "assign-to-user": "Asignar a Usuario",
-    "select-user": "Seleccionar usuario",
-    "select-roles": "Seleccionar roles",
-    "assign-to-me": "Asignarme",
     "cancel": "Cancelar",
+    "description": "Descripción",
+    "due-date": "Fecha de Vencimiento",
+    "location": "Ubicación",
+    "location-placeholder": "Seleccionar una ubicación",
+    "priority": "Prioridad",
     "save": "Guardar",
     "saving": "Guardando...",
+    "select-roles": "Seleccionar roles",
+    "select-user": "Seleccionar usuario",
+    "task-information": "Información de la Tarea",
+    "task-title": "Título de la Tarea",
+    "template": "Plantilla",
     "template-placeholder": "Seleccionar una plantilla",
-    "location-placeholder": "Seleccionar una ubicación"
+    "time": "Hora",
+    "task-type": "Tipo de Tarea"
+  },
+  "Validation": {
+    "due-date-required": "La fecha de vencimiento es requerida",
+    "errorEmail": "Por favor ingrese un correo electrónico válido",
+    "errorEmailRequired": "El correo electrónico es requerido",
+    "errorLogin": "Correo electrónico o contraseña inválidos",
+    "errorPassword": "Por favor ingrese una contraseña válida",
+    "errorPasswordRequired": "La contraseña es requerida",
+    "location-required": "La ubicación es requerida",
+    "priority-required": "La prioridad es requerida",
+    "recurring-days-required": "Seleccione al menos un día para tareas recurrentes",
+    "recurring-fields-required": "La frecuencia y los días son requeridos para tareas recurrentes",
+    "recurring-frequency-required": "La frecuencia es requerida para tareas recurrentes",
+    "task-title-required": "El título de la tarea es requerido",
+    "task-type-required": "El tipo de tarea es requerido"
   }
 }
