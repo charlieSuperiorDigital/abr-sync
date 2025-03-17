@@ -112,6 +112,7 @@ export function NewTaskModal({
         location: data.location,
         template: data.template,
         assignedTo: '123456',//data.assignToMe ? 'currentUserId' : data.assignToUser, // TODO: Get currentUserId from auth context
+        assignedToRoles: data.assignToRoles,
         lastUpdatedDate: new Date().toISOString(),
         // Add recurring task properties if type is Recurring
         ...(data.type === 'Recurring' && {

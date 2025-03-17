@@ -21,20 +21,24 @@ import {
 } from './schema'
 import { CustomInput } from '../inputs/custom-input'
 import { Checkbox } from '@/components/ui/checkbox'
+import { useTaskStore } from '@/app/stores/task-store'
 
 interface EditTaskModalProps {
   children: React.ReactNode
   title: string
+  taskId: string
 }
 
 export function EditTaskModal({
   children,
   title,
+  taskId,
 }: EditTaskModalProps) {
   const [shouldShowModal, setShouldShowModal] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const t = useTranslations('Task')
   const validationMessage = useTranslations('Validation')
+  const { getTaskById } = useTaskStore()
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -43,6 +47,8 @@ export function EditTaskModal({
   }
 
   const handleShowModal = () => {
+    const task = getTaskById(taskId)
+    console.log('Task loaded:', task)
     setShouldShowModal(true)
   }
 

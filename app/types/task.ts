@@ -32,6 +32,7 @@ export interface Task {
   warningMessage?: string
   status?: 'open' | 'in_progress' | 'completed' | 'archived'
   assignedTo?: string
+  assignedToRoles?: string[]
   lastUpdatedDate?: string
   completedDate?: string
   attachments?: TaskAttachment[]

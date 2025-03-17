@@ -155,9 +155,10 @@ export default function NewOpportunities() {
             icon: 'edit',
             _component: 
               <EditTaskModal 
-              title={'Edit Task'}
-              children={undefined} 
-            />
+                title={'Edit Task'}
+                taskId={row.original.id}
+                children={undefined} 
+              />
           }
 
         ]}
