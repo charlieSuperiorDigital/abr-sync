@@ -306,15 +306,20 @@ export function EditTaskModal({
                         name="location"
                         render={({ field }) => (
                           <CustomSelect
+                            placeholder={t('location-placeholder')}
                             options={[
-                              { value: 'location a', label: 'Location A' },
-                              { value: 'location b', label: 'Location B' },
+                              // TODO: Get from location store
+                              { value: 'location1', label: 'Location 1' },
+                              { value: 'location2', label: 'Location 2' },
                             ]}
-                            value={[field.value]}
-                            onChange={(value) => field.onChange(value[0])}
+                            value={field.value ? [field.value] : []}
+                            onChange={(values) => field.onChange(values[0] || '')}
                           />
                         )}
                       />
+                      {errors.location && (
+                        <p className="text-sm text-red-500 mt-1">{errors.location.message}</p>
+                      )}
                     </div>
 
                     <div>
