@@ -19,8 +19,8 @@ export const workfiles: Workfile[] = [
         interiorColor: "Black",
         mileageIn: 45000,
         vehiclePicturesUrls: [
-          "https://example.com/vehicle1-front.jpg",
-          "https://example.com/vehicle1-rear.jpg",
+          "https://picsum.photos/200/100?random=1",
+          "https://picsum.photos/200/100?random=2",
         ],
       },
       owner: {
@@ -89,8 +89,8 @@ export const workfiles: Workfile[] = [
         interiorColor: "Beige",
         mileageIn: 32000,
         vehiclePicturesUrls: [
-          "https://example.com/vehicle2-front.jpg",
-          "https://example.com/vehicle2-rear.jpg",
+          "https://picsum.photos/200/100?random=3",
+          "https://picsum.photos/200/100?random=4",
         ],
       },
       owner: {
@@ -159,8 +159,8 @@ export const workfiles: Workfile[] = [
         interiorColor: "Black",
         mileageIn: 28000,
         vehiclePicturesUrls: [
-          "https://example.com/vehicle3-front.jpg",
-          "https://example.com/vehicle3-rear.jpg",
+          "https://picsum.photos/200/100?random=5",
+          "https://picsum.photos/200/100?random=6",
         ],
       },
       owner: {
@@ -229,8 +229,8 @@ export const workfiles: Workfile[] = [
         interiorColor: "Black",
         mileageIn: 25000,
         vehiclePicturesUrls: [
-          "https://example.com/vehicle4-front.jpg",
-          "https://example.com/vehicle4-rear.jpg",
+          "https://picsum.photos/200/100?random=7",
+          "https://picsum.photos/200/100?random=8",
         ],
       },
       owner: {
@@ -299,8 +299,8 @@ export const workfiles: Workfile[] = [
         interiorColor: "Black",
         mileageIn: 12000,
         vehiclePicturesUrls: [
-          "https://example.com/vehicle5-front.jpg",
-          "https://example.com/vehicle5-rear.jpg",
+          "https://picsum.photos/200/100?random=9",
+          "https://picsum.photos/200/100?random=10",
         ],
       },
       owner: {
