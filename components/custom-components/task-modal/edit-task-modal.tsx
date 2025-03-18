@@ -27,6 +27,7 @@ import { Pencil, Plus } from 'lucide-react'
 import { CustomSelect } from '../selects/custom-select'
 import { CustomButtonSelect, CustomButtonSelectField } from '../selects/custom-button-select'
 import { Checkbox } from '@/components/ui/checkbox'
+import { createLocalISOString } from '@/lib/utils/date'
 
 interface EditTaskModalProps {
   children: React.ReactNode
@@ -142,10 +143,16 @@ export function EditTaskModal({
         Low: { variant: 'slate', text: 'Low' }
       } as const
 
-      // Combine date and time into ISO string
-      const dueDateTime = new Date(`${data.dueDate}T${data.dueTime}`).toISOString()
-
-      // Get current task and update it
+      // Combine date and time into ISO string preserving local time
+      const dueDateTime = createLocalISOString(data.dueDate, data.dueTime)
+      
+      // Handle recurring end date/time if present
+      let recurringEndDateTime
+      if (data.type === 'Recurring' && data.recurringEndDate && data.recurringEndTime) {
+        recurringEndDateTime = createLocalISOString(data.recurringEndDate, data.recurringEndTime)
+      }
+      
+      // Update task
       const currentTask = getTaskById(taskId)
       if (!currentTask) {
         throw new Error(`Task with ID ${taskId} not found`)
@@ -158,24 +165,17 @@ export function EditTaskModal({
         title: data.taskTitle,
         description: data.description || '',
         dueDateTime,
+        lastUpdatedDate: new Date().toISOString(),
         location: data.location,
         type: data.type,
         assignedTo: data.assignToMe ? 'currentUserId' : data.assignToUser, // TODO: Get currentUserId from auth context
         assignedToRoles: data.assignToRoles as TaskRole[],
-        lastUpdatedDate: new Date().toISOString(),
         // Add recurring task properties if type is Recurring
-        ...(data.type === 'Recurring' ? {
+        ...(data.type === 'Recurring' && {
           recurringFrequency: data.recurringFrequency,
           recurringDays: data.recurringDays,
-          recurringEndDateTime: data.recurringEndDate && data.recurringEndTime 
-            ? new Date(`${data.recurringEndDate}T${data.recurringEndTime}`).toISOString()
-            : undefined,
+          recurringEndDateTime,
           timezone: 'UTC' // Default to UTC until we implement location-based timezones
-        } : {
-          recurringFrequency: undefined,
-          recurringDays: undefined,
-          recurringEndDateTime: undefined,
-          timezone: undefined
         })
       }
 

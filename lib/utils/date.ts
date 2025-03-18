@@ -76,3 +76,24 @@ export function getFriendlyDate(date: string | Date): string {
   // If more than 7 days ago, return formatted date
   return formatDate(d)
 }
+
+export function createLocalISOString(date: string, time: string): string {
+  // Parse the time string (e.g., "12:00 PM") to get hours and minutes
+  const [timePart, meridiem] = time.split(' ')
+  let [hours, minutes] = timePart.split(':').map(Number)
+  
+  // Convert to 24-hour format if needed
+  if (meridiem === 'PM' && hours !== 12) {
+    hours += 12
+  } else if (meridiem === 'AM' && hours === 12) {
+    hours = 0
+  }
+
+  // Create a new date object with the correct local time
+  const [year, month, day] = date.split('-').map(Number)
+  const d = new Date(year, month - 1, day, hours, minutes)
+
+  // Format as ISO string but preserve the local time by adjusting for timezone offset
+  const offset = d.getTimezoneOffset() * 60000 // Convert minutes to milliseconds
+  return new Date(d.getTime() - offset).toISOString()
+}

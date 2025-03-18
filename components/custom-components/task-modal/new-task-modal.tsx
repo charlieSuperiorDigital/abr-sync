@@ -19,6 +19,7 @@ import {
   RecurringFrequencies,
   DaysOfWeek
 } from './schema'
+import { createLocalISOString } from '@/lib/utils/date'
 import { CustomInput } from '../inputs/custom-input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
@@ -92,8 +93,8 @@ export function NewTaskModal({
         Low: { variant: 'slate', text: 'Low' }
       } as const
 
-      // Combine date and time into ISO string
-      const dueDateTime = new Date(`${data.dueDate}T${data.dueTime}`).toISOString()
+      // Combine date and time into ISO string preserving local time
+      const dueDateTime = createLocalISOString(data.dueDate, data.dueTime)
       
       // Generate 6-digit task ID starting from 000000
       const taskId = String(Math.floor(Math.random() * 1000000)).padStart(6, '0')
@@ -123,7 +124,7 @@ export function NewTaskModal({
           recurringFrequency: data.recurringFrequency,
           recurringDays: data.recurringDays,
           recurringEndDateTime: data.recurringEndDate && data.recurringEndTime 
-            ? new Date(`${data.recurringEndDate}T${data.recurringEndTime}`).toISOString()
+            ? createLocalISOString(data.recurringEndDate, data.recurringEndTime)
             : undefined,
           timezone: 'UTC' // Default to UTC until we implement location-based timezones
         })
