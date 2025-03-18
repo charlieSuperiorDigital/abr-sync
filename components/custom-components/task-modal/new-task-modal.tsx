@@ -58,7 +58,7 @@ export function NewTaskModal({
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<TaskFormData>({
-    resolver: zodResolver(getTaskFormSchema(validationMessage)),
+    resolver: zodResolver(getTaskFormSchema()),
     defaultValues: {
       template: '',
       priority: 'Normal' as TaskPriority,
@@ -67,7 +67,7 @@ export function NewTaskModal({
       location: '',
       type: 'One-time' as TaskType,
       dueDate: '',
-      time: '',
+      dueTime: '',
       assignToUser: '',
       assignToRoles: [],
       assignToMe: false,
@@ -91,6 +91,9 @@ export function NewTaskModal({
         Normal: { variant: 'success', text: 'Normal' },
         Low: { variant: 'slate', text: 'Low' }
       } as const
+
+      // Combine date and time into ISO string
+      const dueDateTime = new Date(`${data.dueDate}T${data.dueTime}`).toISOString()
       
       // Generate 6-digit task ID starting from 000000
       const taskId = String(Math.floor(Math.random() * 1000000)).padStart(6, '0')
@@ -103,7 +106,7 @@ export function NewTaskModal({
         description: data.description || '',
         createdBy: 'Current User', // TODO: Get from auth context
         createdDate: new Date().toISOString().slice(0, 10),
-        due: data.dueDate || new Date().toISOString().slice(0, 10),
+        dueDateTime,
         relatedTo: '',//data.template || '',
         email: '',  // TODO: Get from contact info
         phone: '',  // TODO: Get from contact info
@@ -119,8 +122,9 @@ export function NewTaskModal({
         ...(data.type === 'Recurring' && {
           recurringFrequency: data.recurringFrequency,
           recurringDays: data.recurringDays,
-          recurringEndDate: data.recurringEndDate,
-          recurringEndTime: data.recurringEndTime,
+          recurringEndDateTime: data.recurringEndDate && data.recurringEndTime 
+            ? new Date(`${data.recurringEndDate}T${data.recurringEndTime}`).toISOString()
+            : undefined,
           timezone: 'UTC' // Default to UTC until we implement location-based timezones
         })
       }
@@ -128,18 +132,7 @@ export function NewTaskModal({
       // Log both raw form data and processed task object for debugging
       console.log('Form submission:', {
         rawFormData: data,
-        processedTask: newTask,
-        validations: {
-          hasRequiredFields: !!(data.taskTitle && data.location && data.priority && data.type),
-          hasRecurringFields: data.type === 'Recurring' ? !!(
-            data.recurringFrequency && 
-            data.recurringDays?.length && 
-            data.recurringEndDate && 
-            data.recurringEndTime
-          ) : true,
-          priorityMapping: priorityMap[data.priority],
-          status: newTask.status === 'open'
-        }
+        processedTask: newTask
       })
       
       // Add task to store
@@ -428,12 +421,12 @@ export function NewTaskModal({
                         <label className="block mb-2 font-semibold">{t('time')}</label>
                         <Controller
                           control={control}
-                          name="time"
+                          name="dueTime"
                           render={({ field }) => (
                             <CustomInput
                               label={t('time')}
                               type="time"
-                              error={errors.time?.message}
+                              error={errors.dueTime?.message}
                               {...field}
                             />
                           )}

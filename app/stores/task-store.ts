@@ -49,6 +49,19 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
   setSelectedTask: (task) => set({ selectedTask: task }),
 
+  addTask: (task) =>
+    set((state) => ({
+      tasks: [
+        ...state.tasks,
+        {
+          ...task,
+          status: task.status || 'open',
+          lastUpdatedDate: new Date().toISOString(),
+          createdDate: new Date().toISOString()
+        }
+      ]
+    })),
+
   updateTask: (taskId, updates) =>
     set((state) => ({
       tasks: state.tasks.map((task) =>
@@ -56,7 +69,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
           ? {
               ...task,
               ...updates,
-              lastUpdatedDate: new Date().toISOString(),
+              lastUpdatedDate: new Date().toISOString()
             }
           : task
       ),
@@ -65,22 +78,9 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
           ? {
               ...state.selectedTask,
               ...updates,
-              lastUpdatedDate: new Date().toISOString(),
+              lastUpdatedDate: new Date().toISOString()
             }
           : state.selectedTask,
-    })),
-
-  addTask: (task) =>
-    set((state) => ({
-      tasks: [
-        ...state.tasks,
-        {
-          ...task,
-          status: 'open',
-          createdDate: new Date().toISOString().slice(0, 10),
-          lastUpdatedDate: new Date().toISOString(),
-        },
-      ],
     })),
 
   removeTask: (taskId) =>
@@ -102,6 +102,14 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       : state.tasks
   },
 
+  getTasksByDueDate: (date: string) => {
+    const state = get()
+    return state.tasks.filter((task) => {
+      const taskDate = task.dueDateTime.split('T')[0]
+      return taskDate === date
+    })
+  },
+
   getTasksByPriority: (priorityText) => {
     const state = get()
     return state.tasks.filter(
@@ -118,7 +126,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     const state = get()
     const now = new Date()
     return state.tasks.filter((task) => {
-      const dueDate = new Date(task.due)
+      const dueDate = new Date(task.dueDateTime)
       return (
         task.status !== 'completed' &&
         task.status !== 'archived' &&
@@ -134,7 +142,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     futureDate.setDate(now.getDate() + daysAhead)
 
     return state.tasks.filter((task) => {
-      const dueDate = new Date(task.due)
+      const dueDate = new Date(task.dueDateTime)
       return (
         task.status !== 'completed' &&
         task.status !== 'archived' &&

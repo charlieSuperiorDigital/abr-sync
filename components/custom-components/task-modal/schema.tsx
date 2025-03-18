@@ -47,28 +47,30 @@ export type TaskType = typeof TaskTypes[number]
 export type RecurringFrequency = typeof RecurringFrequencies[number]
 export type DayOfWeek = typeof DaysOfWeek[number]
 
-export function getTaskFormSchema(t?: (key: string) => string) {
+export function getTaskFormSchema() {
   return z.object({
     template: z.string().optional(),
-    priority: z.enum(TaskPriorities).refine(
-      (val) => TaskPriorities.includes(val),
-      { message: t?.('priority-required') || 'Priority is required' }
-    ),
+    priority: z.enum(TaskPriorities, {
+      required_error: 'Priority is required',
+      invalid_type_error: 'Please select a valid priority'
+    }),
     taskTitle: z.string().min(1, { 
-      message: t?.('task-title-required') || 'Task title is required' 
+      message: 'Task title is required' 
     }),
     description: z.string().optional(),
     location: z.string().min(1, { 
-      message: t?.('location-required') || 'Location is required' 
+      message: 'Location is required' 
     }),
-    type: z.enum(TaskTypes).refine(
-      (val) => TaskTypes.includes(val),
-      { message: t?.('task-type-required') || 'Task type is required' }
-    ),
+    type: z.enum(TaskTypes, {
+      required_error: 'Task type is required',
+      invalid_type_error: 'Please select a valid task type'
+    }),
     dueDate: z.string().min(1, {
-      message: t?.('due-date-required') || 'Due date is required'
+      message: 'Due date is required'
     }),
-    time: z.string().optional(),
+    dueTime: z.string().min(1, {
+      message: 'Due time is required'
+    }),
     assignToUser: z.string().optional(),
     assignToRoles: z.array(z.enum(TaskRoles)).optional(),
     assignToMe: z.boolean().optional(),
@@ -89,12 +91,10 @@ export function getTaskFormSchema(t?: (key: string) => string) {
       return true
     },
     {
-      message: t?.('recurring-fields-required') || 'Frequency, days, end date and time are required for recurring tasks',
-      path: ['type'] // This will show the error on the type field
+      message: 'Frequency, days, end date and time are required for recurring tasks',
+      path: ['type']
     }
   )
 }
 
-export type TaskFormData = z.infer<
-  Awaited<ReturnType<typeof getTaskFormSchema>>
->
+export type TaskFormData = z.infer<ReturnType<typeof getTaskFormSchema>>

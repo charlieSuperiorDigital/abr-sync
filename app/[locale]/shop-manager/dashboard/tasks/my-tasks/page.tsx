@@ -81,11 +81,11 @@ export default function NewOpportunities() {
       
     },
     {
-      accessorKey: 'due',
+      accessorKey: 'dueDateTime',
       header: 'DUE',
       cell: ({ row }) => 
       <FriendlyDateCell   
-        date={row.original.due} 
+        date={row.original.dueDateTime} 
         variant='due' 
       />,
       
@@ -175,7 +175,7 @@ export default function NewOpportunities() {
       <DataTable
         columns={columns}
         data={userTasks}
-        onRowClick={(row) => console.log('Row clicked:', row)}
+        // onRowClick={(row) => console.log('Row clicked:', row)}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
         showPageSize={true}

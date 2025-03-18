@@ -2,26 +2,31 @@
 
 import * as React from 'react'
 import { useEffect, useState } from 'react'
-import { Pencil, Plus } from 'lucide-react'
 import { Controller, useForm } from 'react-hook-form'
-import { CustomSelect } from '../selects/custom-select'
-import { CustomButtonSelect, CustomButtonSelectField } from '../selects/custom-button-select'
-import { useTranslations } from 'next-intl'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { CustomInput } from '../inputs/custom-input'
+import { useTaskStore } from '@/app/stores/task-store'
+import { Task } from '@/app/types/task'
 import { 
   getTaskFormSchema,
   TaskFormData,
-  TaskPriorities,
+  TaskPriority,
   TaskTypes,
   TaskRoles,
-  TaskPriority,
-  TaskType,
   RecurringFrequencies,
-  DaysOfWeek
+  DaysOfWeek,
+  RecurringFrequency,
+  DayOfWeek,
+  TaskRole,
+  TaskPriorities
 } from './schema'
-import { CustomInput } from '../inputs/custom-input'
+import { useTranslations } from 'next-intl'
+import { Pencil, Plus } from 'lucide-react'
+import { CustomSelect } from '../selects/custom-select'
+import { CustomButtonSelect, CustomButtonSelectField } from '../selects/custom-button-select'
 import { Checkbox } from '@/components/ui/checkbox'
-import { useTaskStore } from '@/app/stores/task-store'
 
 interface EditTaskModalProps {
   children: React.ReactNode
@@ -38,7 +43,7 @@ export function EditTaskModal({
   const [isLoading, setIsLoading] = useState(false)
   const t = useTranslations('Task')
   const validationMessage = useTranslations('Validation')
-  const { getTaskById } = useTaskStore()
+  const { getTaskById, updateTask } = useTaskStore()
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -46,9 +51,52 @@ export function EditTaskModal({
     }
   }
 
-  const handleShowModal = () => {
+  const handleShowModal = async () => {
     const task = getTaskById(taskId)
-    console.log('Task loaded:', task)
+    if (!task) {
+      console.error(`Task with ID ${taskId} not found`)
+      return
+    }
+
+    // Split datetime into date and time components
+    const dueDate = task.dueDateTime.split('T')[0]
+    const dueTime = task.dueDateTime.split('T')[1].slice(0, 5) // Get HH:mm
+
+    // Split recurring end datetime if present
+    let recurringEndDate, recurringEndTime
+    if (task.recurringEndDateTime) {
+      recurringEndDate = task.recurringEndDateTime.split('T')[0]
+      recurringEndTime = task.recurringEndDateTime.split('T')[1].slice(0, 5)
+    }
+
+    // Map the priority variant back to the form's priority type
+    const priorityMap = {
+      danger: 'Urgent',
+      warning: 'High',
+      success: 'Normal',
+      slate: 'Low'
+    } as const
+
+    // Set form values
+    setValue('priority', priorityMap[task.priority.variant] as TaskPriority)
+    setValue('taskTitle', task.title)
+    setValue('description', task.description)
+    setValue('type', task.type || 'One-time')
+    setValue('dueDate', dueDate)
+    setValue('dueTime', dueTime)
+    setValue('location', task.location || '')
+    setValue('assignToUser', task.assignedTo || '')
+    setValue('assignToRoles', (task.assignedToRoles || []) as TaskRole[])
+    setValue('assignToMe', task.assignedTo === 'currentUserId') // TODO: Get from auth context
+
+    // Set recurring task fields if applicable
+    if (task.type === 'Recurring') {
+      setValue('recurringFrequency', task.recurringFrequency as RecurringFrequency)
+      setValue('recurringDays', task.recurringDays as DayOfWeek[])
+      setValue('recurringEndDate', recurringEndDate || '')
+      setValue('recurringEndTime', recurringEndTime || '')
+    }
+
     setShouldShowModal(true)
   }
 
@@ -60,21 +108,23 @@ export function EditTaskModal({
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<TaskFormData>({
-    resolver: zodResolver(getTaskFormSchema(validationMessage)),
+    resolver: zodResolver(getTaskFormSchema()),
     defaultValues: {
       template: '',
       priority: 'Normal' as TaskPriority,
       taskTitle: '',
       description: '',
       location: '',
-      type: 'One-time' as TaskType,
+      type: 'One-time',
       dueDate: '',
-      time: '',
+      dueTime: '',
       assignToUser: '',
       assignToRoles: [],
       assignToMe: false,
       recurringFrequency: undefined,
-      recurringDays: undefined
+      recurringDays: undefined,
+      recurringEndDate: '',
+      recurringEndTime: ''
     },
   })
 
@@ -83,8 +133,8 @@ export function EditTaskModal({
   const onSubmit = async (data: TaskFormData) => {
     try {
       setIsLoading(true)
-      
-      // Map priority to the correct format
+
+      // Map priority to the correct task variants
       const priorityMap = {
         Urgent: { variant: 'danger', text: 'Urgent' },
         High: { variant: 'warning', text: 'High' },
@@ -92,34 +142,49 @@ export function EditTaskModal({
         Low: { variant: 'slate', text: 'Low' }
       } as const
 
-      // Create task from form data
-      const taskUpdate = {
+      // Combine date and time into ISO string
+      const dueDateTime = new Date(`${data.dueDate}T${data.dueTime}`).toISOString()
+
+      // Get current task and update it
+      const currentTask = getTaskById(taskId)
+      if (!currentTask) {
+        throw new Error(`Task with ID ${taskId} not found`)
+      }
+
+      // Update task with form data
+      const updatedTask: Task = {
+        ...currentTask,
         priority: priorityMap[data.priority],
         title: data.taskTitle,
         description: data.description || '',
+        dueDateTime,
         location: data.location,
-        template: data.template,
-        due: data.dueDate,
+        type: data.type,
         assignedTo: data.assignToMe ? 'currentUserId' : data.assignToUser, // TODO: Get currentUserId from auth context
+        assignedToRoles: data.assignToRoles as TaskRole[],
         lastUpdatedDate: new Date().toISOString(),
         // Add recurring task properties if type is Recurring
-        ...(data.type === 'Recurring' && {
+        ...(data.type === 'Recurring' ? {
           recurringFrequency: data.recurringFrequency,
           recurringDays: data.recurringDays,
+          recurringEndDateTime: data.recurringEndDate && data.recurringEndTime 
+            ? new Date(`${data.recurringEndDate}T${data.recurringEndTime}`).toISOString()
+            : undefined,
+          timezone: 'UTC' // Default to UTC until we implement location-based timezones
+        } : {
+          recurringFrequency: undefined,
+          recurringDays: undefined,
+          recurringEndDateTime: undefined,
+          timezone: undefined
         })
       }
-      
-      console.log('Task update object:', {
-        formData: data,
-        processedUpdate: taskUpdate
-      })
-      
-      // Commented for development
-      // updateTask(taskId, taskUpdate)
-      // setShouldShowModal(false)
-      
+
+      // Update task in store
+      updateTask(taskId, updatedTask)
+      setShouldShowModal(false)
+
     } catch (error) {
-      console.error('Error submitting form:', error)
+      console.error('Error updating task:', error)
     } finally {
       setIsLoading(false)
     }
@@ -313,11 +378,12 @@ export function EditTaskModal({
                         <label className="block mb-2 font-semibold">{t('time')}</label>
                         <Controller
                           control={control}
-                          name="time"
+                          name="dueTime"
                           render={({ field }) => (
                             <CustomInput
                               label={t('time')}
                               type="time"
+                              error={errors.dueTime?.message}
                               {...field}
                             />
                           )}
@@ -370,17 +436,17 @@ export function EditTaskModal({
                             placeholder={t('select-user')}
                             options={[
                               {
-                                value: 'Alexander Walker',
+                                value: '123456',
                                 label: 'Alexander Walker',
                                 avatar: '/placeholder.svg',
                               },
                               {
-                                value: 'Aiden Moore',
+                                value: '234567',
                                 label: 'Aiden Moore',
                                 avatar: '/placeholder.svg',
                               },
                               {
-                                value: 'James Davis',
+                                value: '345678',
                                 label: 'James Davis',
                                 avatar: '/placeholder.svg',
                               },

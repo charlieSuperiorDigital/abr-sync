@@ -26,7 +26,7 @@ export interface Task {
   description: string
   createdBy: string
   createdDate?: string
-  due: string
+  dueDateTime: string
   relatedTo: string
   email: string
   phone: string
@@ -46,7 +46,6 @@ export interface Task {
   // Recurring task properties
   recurringFrequency?: string
   recurringDays?: string[]
-  recurringEndDate?: string
-  recurringEndTime?: string
+  recurringEndDateTime?: string
   timezone?: string
 }

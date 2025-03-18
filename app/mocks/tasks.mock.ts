@@ -8,7 +8,7 @@ export function mapTasksData(data: any): Task {
     description: data.description,
     createdBy: data.createdBy,
     createdDate: data.createdDate,
-    due: data.due,
+    dueDateTime: data.dueDateTime,
     relatedTo: data.relatedTo,
     warningMessage: data.warningMessage,
     email: data.email,
@@ -19,88 +19,75 @@ export function mapTasksData(data: any): Task {
 
 export const mockTasks: Task[] = [
   {
-    id: '473829',
-    priority: {
-      variant: 'danger',
-      text: 'Urgent'
-    },
-    title: 'Insurance Documentation Validation',
-    description: 'Verify all paperwork required by the insurance provider',
-    createdBy: 'Charlie Thompson',
+    id: '000001',
+    priority: { variant: 'danger', text: 'Urgent' },
+    title: 'Review Urgent Repair Request',
+    description: 'Customer reported severe damage, needs immediate attention',
+    createdBy: 'John Smith',
     createdDate: '2025-03-15',
-    due: '2025-03-12',
-    relatedTo: 'Insurance, Progressive',
-    email: 'charliethompson@xpto.com',
-    phone: '123-456-7890',
-    message: '27',
-    assignedTo: '123456'
+    dueDateTime: '2025-03-18T14:30:00.000Z',
+    relatedTo: 'Repair Request #45678',
+    email: 'customer@example.com',
+    phone: '555-0123',
+    message: 'Vehicle needs immediate inspection',
+    status: 'open',
+    location: 'Bay Area Shop',
+    type: 'One-time'
   },
   {
-    id: '473830',
-    priority: {
-      variant: 'warning',
-      text: 'High'
-    },
-    title: 'Parts Order Follow-up',
-    description: 'Contact supplier about delayed parts delivery',
+    id: '000002',
+    priority: { variant: 'warning', text: 'High' },
+    title: 'Schedule Vehicle Inspection',
+    description: 'New vehicle arrived for damage assessment',
+    createdBy: 'Jane Doe',
+    createdDate: '2025-03-16',
+    dueDateTime: '2025-03-19T10:00:00.000Z',
+    relatedTo: 'Vehicle #89012',
+    email: 'fleet@example.com',
+    phone: '555-0124',
+    message: 'Complete inspection needed',
+    status: 'open',
+    location: 'Downtown Shop',
+    type: 'One-time'
+  },
+  {
+    id: '000003',
+    priority: { variant: 'success', text: 'Normal' },
+    title: 'Update Inventory Records',
+    description: 'Monthly inventory check and update',
+    createdBy: 'Mike Johnson',
+    createdDate: '2025-03-17',
+    dueDateTime: '2025-03-20T16:00:00.000Z',
+    relatedTo: 'Inventory #2025-03',
+    email: 'inventory@example.com',
+    phone: '555-0125',
+    message: 'Regular inventory update',
+    status: 'in_progress',
+    location: 'Main Warehouse',
+    type: 'Recurring',
+    recurringFrequency: 'Every Month',
+    recurringDays: ['Monday'],
+    recurringEndDateTime: '2025-12-31T16:00:00.000Z',
+    timezone: 'UTC'
+  },
+  {
+    id: '000004',
+    priority: { variant: 'slate', text: 'Low' },
+    title: 'Equipment Maintenance Check',
+    description: 'Routine equipment maintenance',
     createdBy: 'Sarah Wilson',
-    createdDate: '2025-03-14',
-    due: '2025-03-14',
-    relatedTo: 'Parts, Order #45678',
-    email: 'sarahwilson@xpto.com',
-    phone: '123-456-7891',
-    message: '15',
-    assignedTo: '123456'
-  },
-  {
-    id: '473831',
-    priority: {
-      variant: 'success',
-      text: 'Normal'
-    },
-    title: 'Customer Update Call',
-    description: 'Weekly progress update call with customer',
-    createdBy: 'Mike Davis',
-    createdDate: '2025-03-13',
-    due: '2025-03-15',
-    relatedTo: 'Customer Relations',
-    email: 'mikedavis@xpto.com',
-    phone: '123-456-7892',
-    message: '8',
-    assignedTo: '123456'
-  },
-  {
-    id: '473832',
-    priority: {
-      variant: 'success',
-      text: 'Normal'
-    },
-    title: 'Quality Check',
-    description: 'Perform final quality inspection',
-    createdBy: 'Emily Brown',
-    createdDate: '2025-03-12',
-    due: '2025-03-16',
-    relatedTo: 'Quality Control',
-    email: 'emilybrown@xpto.com',
-    phone: '123-456-7893',
-    message: '12',
-    assignedTo: '123456'
-  },
-  {
-    id: '473833',
-    priority: {
-      variant: 'slate',
-      text: 'Low'
-    },
-    title: 'Update Documentation',
-    description: 'Update repair documentation with recent changes',
-    createdBy: 'Tom Clark',
-    createdDate: '2025-03-11',
-    due: '2025-03-17',
-    relatedTo: 'Documentation',
-    email: 'tomclark@xpto.com',
-    phone: '123-456-7894',
-    message: '5',
-    assignedTo: '123456'
+    createdDate: '2025-03-17',
+    dueDateTime: '2025-03-21T09:00:00.000Z',
+    relatedTo: 'Equipment #12345',
+    email: 'maintenance@example.com',
+    phone: '555-0126',
+    message: 'Regular maintenance task',
+    status: 'open',
+    location: 'Workshop A',
+    type: 'Recurring',
+    recurringFrequency: 'Every Week',
+    recurringDays: ['Wednesday'],
+    recurringEndDateTime: '2025-06-30T09:00:00.000Z',
+    timezone: 'UTC'
   }
 ]
