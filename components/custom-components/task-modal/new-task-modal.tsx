@@ -116,7 +116,7 @@ export function NewTaskModal({
         location: data.location,
         type: data.type,
         template: data.template,
-        assignedTo: data.assignToMe ? 'currentUserId' : data.assignToUser, // TODO: Get currentUserId from auth context
+        assignedTo: data.assignToUser, // TODO: Get currentUserId from auth context
         assignedToRoles: data.assignToRoles,
         lastUpdatedDate: new Date().toISOString(),
         // Add recurring task properties if type is Recurring
@@ -204,7 +204,7 @@ export function NewTaskModal({
                           endTime: data.recurringEndTime,
                           // TODO: Add end date and time settings
                         } : undefined,
-                        assignedTo: data.assignToMe ? 'currentUserId' : data.assignToUser,
+                        assignedTo: data.assignToUser,
                         roles: data.assignToRoles
                       })
                       return onSubmit(data)
@@ -479,51 +479,44 @@ export function NewTaskModal({
                         control={control}
                         name="assignToUser"
                         render={({ field }) => (
-                          <CustomSelect
-                            placeholder={t('select-user')}
-                            options={[
-                              {
-                                value: '123456',
-                                label: 'Alexander Walker',
-                                avatar: '/placeholder.svg',
-                              },
-                              {
-                                value: '12345',
-                                label: 'Aiden Moore',
-                                avatar: '/placeholder.svg',
-                              },
-                              {
-                                value: '4444',
-                                label: 'James Davis',
-                                avatar: '/placeholder.svg',
-                              },
-                            ]}
-                            value={field.value ? [field.value] : []}
-                            onChange={(values) => field.onChange(values[0] || '')}
-                          />
+                          <>
+                            <CustomSelect
+                              placeholder={t('select-user')}
+                              options={[
+                                {
+                                  value: '123456',
+                                  label: 'Alexander Walker',
+                                  avatar: '/placeholder.svg',
+                                },
+                                {
+                                  value: '12345',
+                                  label: 'Aiden Moore',
+                                  avatar: '/placeholder.svg',
+                                },
+                                {
+                                  value: '4444',
+                                  label: 'James Davis',
+                                  avatar: '/placeholder.svg',
+                                },
+                              ]}
+                              value={field.value ? [field.value] : []}
+                              onChange={(values) => field.onChange(values[0] || '')}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                field.onChange('123456')
+                              }}
+                              className="mt-2 font-semibold text-black underline"
+                            >
+                              {t('assign-to-me')}
+                            </button>
+                          </>
                         )}
                       />
                       {errors.assignToUser && (
                         <p className="text-sm text-red-500 mt-1">{errors.assignToUser.message}</p>
                       )}
-                      <div className="mt-2">
-                        <Controller
-                          control={control}
-                          name="assignToMe"
-                          render={({ field }) => (
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id="assignToMe"
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                              <label htmlFor="assignToMe" className="text-sm font-medium">
-                                {t('assign-to-me')}
-                              </label>
-                            </div>
-                          )}
-                        />
-                      </div>
                     </div>
                   </div>
                 </div>

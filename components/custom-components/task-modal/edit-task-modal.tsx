@@ -88,7 +88,7 @@ export function EditTaskModal({
     setValue('location', task.location || '')
     setValue('assignToUser', task.assignedTo || '')
     setValue('assignToRoles', (task.assignedToRoles || []) as TaskRole[])
-    setValue('assignToMe', task.assignedTo === 'currentUserId') // TODO: Get from auth context
+    // setValue('assignToMe', task.assignedTo === 'currentUserId') // TODO: Get from auth context
 
     // Set recurring task fields if applicable
     if (task.type === 'Recurring') {
@@ -121,7 +121,6 @@ export function EditTaskModal({
       dueTime: '',
       assignToUser: '',
       assignToRoles: [],
-      assignToMe: false,
       recurringFrequency: undefined,
       recurringDays: undefined,
       recurringEndDate: '',
@@ -168,7 +167,7 @@ export function EditTaskModal({
         lastUpdatedDate: new Date().toISOString(),
         location: data.location,
         type: data.type,
-        assignedTo: data.assignToMe ? 'currentUserId' : data.assignToUser, // TODO: Get currentUserId from auth context
+        assignedTo: data.assignToUser, // TODO: Get currentUserId from auth context
         assignedToRoles: data.assignToRoles as TaskRole[],
         // Add recurring task properties if type is Recurring
         ...(data.type === 'Recurring' && {
@@ -437,48 +436,44 @@ export function EditTaskModal({
                         control={control}
                         name="assignToUser"
                         render={({ field }) => (
-                          <CustomSelect
-                            placeholder={t('select-user')}
-                            options={[
-                              {
-                                value: '123456',
-                                label: 'Alexander Walker',
-                                avatar: '/placeholder.svg',
-                              },
-                              {
-                                value: '234567',
-                                label: 'Aiden Moore',
-                                avatar: '/placeholder.svg',
-                              },
-                              {
-                                value: '345678',
-                                label: 'James Davis',
-                                avatar: '/placeholder.svg',
-                              },
-                            ]}
-                            value={field.value ? [field.value] : []}
-                            onChange={(values) => field.onChange(values[0] || '')}
-                          />
+                          <>
+                            <CustomSelect
+                              placeholder={t('select-user')}
+                              options={[
+                                {
+                                  value: '123456',
+                                  label: 'Alexander Walker',
+                                  avatar: '/placeholder.svg',
+                                },
+                                {
+                                  value: '234567',
+                                  label: 'Aiden Moore',
+                                  avatar: '/placeholder.svg',
+                                },
+                                {
+                                  value: '345678',
+                                  label: 'James Davis',
+                                  avatar: '/placeholder.svg',
+                                },
+                              ]}
+                              value={field.value ? [field.value] : []}
+                              onChange={(values) => field.onChange(values[0] || '')}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                field.onChange('123456')
+                              }}
+                              className="mt-2 font-semibold text-black underline"
+                            >
+                              {t('assign-to-me')}
+                            </button>
+                            {errors.assignToUser && (
+                              <p className="text-sm text-red-500 mt-1">{errors.assignToUser.message}</p>
+                            )}
+                          </>
                         )}
                       />
-                      <div className="mt-2">
-                        <Controller
-                          control={control}
-                          name="assignToMe"
-                          render={({ field }) => (
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id="assignToMe"
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                              <label htmlFor="assignToMe" className="text-sm font-medium">
-                                {t('assign-to-me')}
-                              </label>
-                            </div>
-                          )}
-                        />
-                      </div>
                     </div>
                   </div>
                 </div>
