@@ -28,7 +28,27 @@
     "template": "Template",
     "template-placeholder": "Select a template",
     "time": "Time",
-    "task-type": "Task Type"
+    "task-type": "Task Type",
+    "recurring-frequency": "Frequency",
+    "recurring-days": "Days",
+    "recurring-end-date": "End Date",
+    "recurring-end-time": "End Time",
+    "recurring-options": {
+      "daily": "Every Day",
+      "weekly": "Every Week",
+      "monthly": "Every Month",
+      "yearly": "Every Year",
+      "custom": "Custom"
+    },
+    "recurring-days-options": {
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday",
+      "sunday": "Sunday"
+    }
   },
   "Validation": {
     "due-date-required": "Due date is required",

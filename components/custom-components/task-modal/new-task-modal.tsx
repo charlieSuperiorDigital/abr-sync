@@ -167,17 +167,13 @@ export function NewTaskModal({
   return (
     <>
       <div className="flex items-center h-full">
-        <div className="flex items-center">
-          <button
-            onClick={() => handleShowModal()}
-            className="flex items-center rounded-full transition-colors duration-200 hover:bg-black group"
-            aria-label="New Task"
-          >
-            <span className="p-2 group-hover:text-white">
-              {children}
-            </span>
-          </button>
-        </div>
+        <button
+          onClick={() => handleShowModal()}
+          className="flex items-center justify-center h-8 w-8 rounded-full transition-colors duration-200 hover:bg-black hover:text-white"
+          aria-label="New Task"
+        >
+          {children}
+        </button>
       </div>
 
       {shouldShowModal && (
