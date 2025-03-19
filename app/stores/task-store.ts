@@ -35,6 +35,7 @@ interface TaskStore {
   startTask: (taskId: string) => void
   completeTask: (taskId: string) => void
   archiveTask: (taskId: string) => void
+  reopenTask: (taskId: string) => void
   addComment: (taskId: string, comment: Omit<TaskComment, 'id' | 'createdDate'>) => void
   addAttachment: (taskId: string, attachment: Omit<TaskAttachment, 'uploadedDate'>) => void
   
@@ -48,6 +49,19 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
   setSelectedTask: (task) => set({ selectedTask: task }),
 
+  addTask: (task) =>
+    set((state) => ({
+      tasks: [
+        ...state.tasks,
+        {
+          ...task,
+          status: task.status || 'open',
+          lastUpdatedDate: new Date().toISOString(),
+          createdDate: new Date().toISOString()
+        }
+      ]
+    })),
+
   updateTask: (taskId, updates) =>
     set((state) => ({
       tasks: state.tasks.map((task) =>
@@ -55,7 +69,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
           ? {
               ...task,
               ...updates,
-              lastUpdatedDate: new Date().toISOString(),
+              lastUpdatedDate: new Date().toISOString()
             }
           : task
       ),
@@ -64,22 +78,9 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
           ? {
               ...state.selectedTask,
               ...updates,
-              lastUpdatedDate: new Date().toISOString(),
+              lastUpdatedDate: new Date().toISOString()
             }
           : state.selectedTask,
-    })),
-
-  addTask: (task) =>
-    set((state) => ({
-      tasks: [
-        ...state.tasks,
-        {
-          ...task,
-          status: 'open',
-          createdDate: new Date().toISOString(),
-          lastUpdatedDate: new Date().toISOString(),
-        },
-      ],
     })),
 
   removeTask: (taskId) =>
@@ -101,6 +102,14 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       : state.tasks
   },
 
+  getTasksByDueDate: (date: string) => {
+    const state = get()
+    return state.tasks.filter((task) => {
+      const taskDate = task.dueDateTime.split('T')[0]
+      return taskDate === date
+    })
+  },
+
   getTasksByPriority: (priorityText) => {
     const state = get()
     return state.tasks.filter(
@@ -117,7 +126,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     const state = get()
     const now = new Date()
     return state.tasks.filter((task) => {
-      const dueDate = new Date(task.due)
+      const dueDate = new Date(task.dueDateTime)
       return (
         task.status !== 'completed' &&
         task.status !== 'archived' &&
@@ -133,7 +142,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     futureDate.setDate(now.getDate() + daysAhead)
 
     return state.tasks.filter((task) => {
-      const dueDate = new Date(task.due)
+      const dueDate = new Date(task.dueDateTime)
       return (
         task.status !== 'completed' &&
         task.status !== 'archived' &&
@@ -208,6 +217,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     const state = get()
     state.updateTask(taskId, {
       status: 'in_progress',
+      lastUpdatedDate: new Date().toISOString(),
     })
   },
 
@@ -216,6 +226,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     state.updateTask(taskId, {
       status: 'completed',
       completedDate: new Date().toISOString(),
+      lastUpdatedDate: new Date().toISOString(),
     })
   },
 
@@ -223,6 +234,16 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     const state = get()
     state.updateTask(taskId, {
       status: 'archived',
+      lastUpdatedDate: new Date().toISOString(),
+    })
+  },
+
+  reopenTask: (taskId) => {
+    const state = get()
+    state.updateTask(taskId, {
+      status: 'open',
+      completedDate: undefined,
+      lastUpdatedDate: new Date().toISOString(),
     })
   },
 
@@ -263,40 +284,14 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     const state = get()
     const tasks = state.getTasksByOpportunityId(opportunityId)
     
-    // Auto-complete or archive existing tasks
     tasks.forEach(task => {
-      if (task.status === 'completed') {
-        state.archiveTask(task.id)
-      } else {
-        state.updateTask(task.id, {
-          status: 'completed',
-          completedDate: new Date().toISOString(),
-          lastUpdatedDate: new Date().toISOString(),
-          comments: [
-            ...(task.comments || []),
-            {
-              id: crypto.randomUUID(),
-              text: 'Task auto-completed due to Total Loss status',
-              createdBy: 'system',
-              createdDate: new Date().toISOString(),
-            }
-          ]
-        })
-      }
-    })
-
-    // Create a new task for total loss documentation
-    state.addTaskToOpportunity(opportunityId, {
-      title: 'Process Total Loss Documentation',
-      description: 'Complete and submit all required documentation for total loss claim',
-      priority: { variant: 'danger', text: 'High' },
-      due: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
-      relatedTo: `opportunity:${opportunityId}`,
-      email: '',
-      phone: '',
-      message: 'Vehicle declared total loss - documentation required',
-      status: 'open',
-      createdBy: 'system'
+      state.updateTask(task.id, {
+        priority: {
+          variant: 'danger',
+          text: 'Urgent'
+        },
+        warningMessage: 'Total Loss - Requires immediate attention'
+      })
     })
   },
 }))

@@ -25,6 +25,7 @@ import { PriorityBadge } from '../priority-badge/priority-badge'
 import * as Dialog from '@radix-ui/react-dialog'
 import { act, useState } from 'react'
 import { EditTaskModal } from '../task-modal/edit-task-modal'
+import { getFriendlyDate, formatDateTime, formatDate } from '@/lib/utils/date'
 
 interface TitleCellProps {
   title: string
@@ -97,65 +98,42 @@ export function PriorityBadgeCell({ priority, variant }: PriorityBadgeProps) {
 
 interface DateCellProps {
   date: string | Date
-  format?: Intl.DateTimeFormatOptions
+  showTime?: boolean
 }
 
-export function DateCell({
-  date,
-  format = {
-    month: 'numeric',
-    day: 'numeric',
-    year: '2-digit',
-  },
-}: DateCellProps) {
-  const formattedDate = new Date(date).toLocaleDateString('en-US', format)
-  return <span className="whitespace-nowrap">{formattedDate}</span>
+export function DateCell({ date, showTime = false }: DateCellProps) {
+  return (
+    <span className="whitespace-nowrap">
+      {showTime ? formatDateTime(date) : formatDate(date)}
+    </span>
+  )
 }
 
 interface FriendlyDateCellProps {
-  date: string | Date
+  date: string | undefined
   variant?: 'due' | 'created'
 }
 
 export function FriendlyDateCell({ date, variant }: FriendlyDateCellProps) {
-  const dateObj = new Date(date + 'T00:00:00')
-  const today = new Date()
-  const differenceInDays = Math.floor(
-    (today.getTime() - dateObj.getTime()) / (1000 * 60 * 60 * 24)
-  )
-
-  let formattedDate
-  if (differenceInDays === 0) {
-    formattedDate = 'Today'
-  } else if (differenceInDays === 1) {
-    formattedDate = 'Yesterday'
-  } else if (differenceInDays === -1) {
-    formattedDate = 'Tomorrow'
-  } else if (differenceInDays > 1 && differenceInDays <= 5) {
-    formattedDate = `${differenceInDays} days ago`
-  } else if (differenceInDays < -1 && differenceInDays >= -5) {
-    formattedDate = `${Math.abs(differenceInDays)} days`
-  } else {
-    formattedDate = format(dateObj, 'MMM d')
+  if (!date) {
+    return <span className="whitespace-nowrap">-</span>
   }
 
-  const textVariant =
-    variant === 'due' &&
-    (formattedDate === 'Today' ||
-      formattedDate === 'Tomorrow' ||
-      formattedDate === '2 days')
-      ? 'text-red-500 font-semibold'
-      : ''
+  const friendlyDate = getFriendlyDate(date)
+  const isUrgent = variant === 'due' && 
+    (friendlyDate === 'Today' || friendlyDate === 'Tomorrow')
 
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className={`whitespace-nowrap ${textVariant}`}>
-            {formattedDate}
+          <span className={`whitespace-nowrap ${isUrgent ? 'text-red-500 font-semibold' : ''}`}>
+            {friendlyDate}
           </span>
         </TooltipTrigger>
-        <TooltipContent>{format(dateObj, 'MMM dd yyyy')}</TooltipContent>
+        <TooltipContent>
+          {formatDateTime(date)}
+        </TooltipContent>
       </Tooltip>
     </TooltipProvider>
   )

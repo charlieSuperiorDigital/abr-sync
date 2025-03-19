@@ -1,3 +1,5 @@
+import { TaskType } from "@/components/custom-components/task-modal/schema"
+
 export interface TaskComment {
   id: string
   text: string
@@ -17,14 +19,14 @@ export interface TaskAttachment {
 export interface Task {
   id: string
   priority: {
-    variant: 'default' | 'danger' | 'warning' | 'neutral' | 'slate' | 'info' | 'success' | 'forest' | 'dark'
-    text: string
+    variant: 'danger' | 'warning' | 'success' | 'slate'
+    text: 'Urgent' | 'High' | 'Normal' | 'Low'
   }
   title: string
   description: string
   createdBy: string
-  createdDate: string
-  due: string
+  createdDate?: string
+  dueDateTime: string
   relatedTo: string
   email: string
   phone: string
@@ -32,9 +34,18 @@ export interface Task {
   warningMessage?: string
   status?: 'open' | 'in_progress' | 'completed' | 'archived'
   assignedTo?: string
+  assignedToRoles?: string[]
   lastUpdatedDate?: string
   completedDate?: string
   attachments?: TaskAttachment[]
   comments?: TaskComment[]
-  estimatedHours?: number // Optional field for repair tasks
+  estimatedHours?: number
+  location?: string
+  type?: TaskType
+  template?: string
+  // Recurring task properties
+  recurringFrequency?: string
+  recurringDays?: string[]
+  recurringEndDateTime?: string
+  timezone?: string
 }

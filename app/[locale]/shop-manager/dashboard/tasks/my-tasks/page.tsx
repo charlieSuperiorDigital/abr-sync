@@ -1,5 +1,8 @@
 'use client'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
+import { shallow } from 'zustand/shallow'
+import { useEffect, useState } from 'react'
+import { Badge } from '@/components/ui/badge'
 
 import {
   ActionButtonCell,
@@ -30,8 +33,9 @@ import * as deleteTaskModal from '@/components/custom-components/task-modal/dele
 
 export default function NewOpportunities() {
   
-  const { getTasksByAssignee } = useTaskStore()
-  
+  // Subscribe to the store's tasks array
+  const tasks = useTaskStore(state => state.tasks)
+  const userTasks = tasks//.filter(task => task.assignedTo === '123456')
   
   const columns: ColumnDef<Task>[] = [
     {
@@ -43,10 +47,10 @@ export default function NewOpportunities() {
       accessorKey: 'priority',
       header: 'Priority',
       cell: ({ row }) => 
-      <PriorityBadgeCell 
-        variant={row.original.priority.variant}
-        priority={row.original.priority.text} 
-      />,
+        <PriorityBadgeCell 
+          variant={row.original.priority.variant}
+          priority={row.original.priority.text} 
+        />,
     },
     {
       accessorKey: 'title',
@@ -77,11 +81,11 @@ export default function NewOpportunities() {
       
     },
     {
-      accessorKey: 'due',
+      accessorKey: 'dueDateTime',
       header: 'DUE',
       cell: ({ row }) => 
       <FriendlyDateCell   
-        date={row.original.due} 
+        date={row.original.dueDateTime} 
         variant='due' 
       />,
       
@@ -117,10 +121,9 @@ export default function NewOpportunities() {
       header: '',
       cell: ({ row }) => 
         <ActionButtonCell
-        label='Done'
-        onClick={() => console.log('Done Task:', row.original.id)}
+          label='Done'
+          onClick={() => console.log('Done Task:', row.original.id)}
         />
-      
       ,
     },
     {
@@ -152,9 +155,10 @@ export default function NewOpportunities() {
             icon: 'edit',
             _component: 
               <EditTaskModal 
-              title={'Edit Task'}
-              children={undefined} 
-            />
+                title={'Edit Task'}
+                taskId={row.original.id}
+                children={undefined} 
+              />
           }
 
         ]}
@@ -166,15 +170,12 @@ export default function NewOpportunities() {
 
 
 
-  //get tasks from the store
-  const tasks = getTasksByAssignee('123456');
-
   return (
     <div className="w-full">
       <DataTable
         columns={columns}
-        data={tasks}
-        onRowClick={(row) => console.log('Row clicked:', row)}
+        data={userTasks}
+        // onRowClick={(row) => console.log('Row clicked:', row)}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
         showPageSize={true}
