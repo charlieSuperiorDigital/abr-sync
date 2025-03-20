@@ -1,37 +1,68 @@
 {
   "Login": {
-    "title": "Sign In",
     "email": "Email",
-    "password": "Password",
-    "remember": "Remember",
     "forgot": "Forgot your password?",
+    "password": "Password",
+    "register": "Register",
+    "remember": "Remember",
     "submit": "Sign In",
-    "register": "Register"
-  },
-  "Validation": {
-    "errorEmail": "Please enter a valid email address",
-    "errorEmailRequired": "Email is required",
-    "errorPasswordRequired": "Password is required",
-    "errorPassword": "Please enter a valid password",
-    "errorLogin": "Invalid email or password"
+    "title": "Sign In"
   },
   "Task": {
-    "task-information": "Task Information",
-    "priority": "Priority",
-    "task-title": "Task Title",
-    "description": "Description",
-    "location": "Location",
-    "task-type": "Task Type",
-    "due-date": "Due Date",
-    "time": "Time",
     "assign-to": "Assign To",
+    "assign-to-me": "Assign to me",
     "assign-to-roles": "Assign to Roles",
     "assign-to-user": "Assign to User",
-    "select-user": "Select user",
-    "select-roles": "Select roles",
-    "assign-to-me": "Assign to me",
     "cancel": "Cancel",
+    "description": "Description",
+    "due-date": "Due Date",
+    "location": "Location",
+    "location-placeholder": "Select a location",
+    "priority": "Priority",
     "save": "Save",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "select-roles": "Select roles",
+    "select-user": "Select user",
+    "task-information": "Task Information",
+    "task-title": "Task Title",
+    "template": "Template",
+    "template-placeholder": "Select a template",
+    "time": "Time",
+    "task-type": "Task Type",
+    "recurring-frequency": "Frequency",
+    "recurring-days": "Days",
+    "recurring-end-date": "End Date",
+    "recurring-end-time": "End Time",
+    "recurring-options": {
+      "daily": "Every Day",
+      "weekly": "Every Week",
+      "monthly": "Every Month",
+      "yearly": "Every Year",
+      "custom": "Custom"
+    },
+    "recurring-days-options": {
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday",
+      "sunday": "Sunday"
+    }
+  },
+  "Validation": {
+    "due-date-required": "Due date is required",
+    "errorEmail": "Please enter a valid email address",
+    "errorEmailRequired": "Email is required",
+    "errorLogin": "Invalid email or password",
+    "errorPassword": "Please enter a valid password",
+    "errorPasswordRequired": "Password is required",
+    "location-required": "Location is required",
+    "priority-required": "Priority is required",
+    "recurring-days-required": "Select at least one day for recurring tasks",
+    "recurring-fields-required": "Frequency and days are required for recurring tasks",
+    "recurring-frequency-required": "Frequency is required for recurring tasks",
+    "task-title-required": "Task title is required",
+    "task-type-required": "Task type is required"
   }
 }

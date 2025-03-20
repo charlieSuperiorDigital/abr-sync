@@ -24,9 +24,7 @@ export default function TasksLayout({
         <NewTaskModal
           title="New Task"
           children={
-            <button className="flex items-center justify-center h-8 w-8 rounded-full transition-colors duration-200 hover:bg-black hover:text-white">
-              <Plus className="w-5 h-5 m-auto" />
-            </button>
+            <Plus className="w-5 h-5 m-auto" />
           }
         />
       </div>

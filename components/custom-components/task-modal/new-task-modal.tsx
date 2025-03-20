@@ -19,9 +19,12 @@ import {
   RecurringFrequencies,
   DaysOfWeek
 } from './schema'
+import { createLocalISOString } from '@/lib/utils/date'
 import { CustomInput } from '../inputs/custom-input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
+import { useTaskStore } from '@/app/stores/task-store'
+import { Task } from '@/app/types/task'
 
 interface NewTaskModalProps {
   children: React.ReactNode
@@ -36,6 +39,7 @@ export function NewTaskModal({
   const [isLoading, setIsLoading] = useState(false)
   const t = useTranslations('Task')
   const validationMessage = useTranslations('Validation')
+  const addTask = useTaskStore((state) => state.addTask)
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -55,7 +59,7 @@ export function NewTaskModal({
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<TaskFormData>({
-    resolver: zodResolver(getTaskFormSchema(validationMessage)),
+    resolver: zodResolver(getTaskFormSchema()),
     defaultValues: {
       template: '',
       priority: 'Normal' as TaskPriority,
@@ -64,12 +68,14 @@ export function NewTaskModal({
       location: '',
       type: 'One-time' as TaskType,
       dueDate: '',
-      time: '',
+      dueTime: '',
       assignToUser: '',
       assignToRoles: [],
       assignToMe: false,
-      recurringFrequency: 'Every Day',
-      recurringDays: []
+      recurringFrequency: undefined,
+      recurringDays: undefined,
+      recurringEndDate: '',
+      recurringEndTime: ''
     },
   })
 
@@ -78,9 +84,62 @@ export function NewTaskModal({
   const onSubmit = async (data: TaskFormData) => {
     try {
       setIsLoading(true)
-      console.log(data)
-      // Handle form submission
+      
+      // Map priority to the correct task variants
+      const priorityMap = {
+        Urgent: { variant: 'danger', text: 'Urgent' },
+        High: { variant: 'warning', text: 'High' },
+        Normal: { variant: 'success', text: 'Normal' },
+        Low: { variant: 'slate', text: 'Low' }
+      } as const
+
+      // Combine date and time into ISO string preserving local time
+      const dueDateTime = createLocalISOString(data.dueDate, data.dueTime)
+      
+      // Generate 6-digit task ID starting from 000000
+      const taskId = String(Math.floor(Math.random() * 1000000)).padStart(6, '0')
+      
+      // Create task from form data
+      const newTask: Task = {
+        id: taskId,
+        priority: priorityMap[data.priority],
+        title: data.taskTitle,
+        description: data.description || '',
+        createdBy: 'Current User', // TODO: Get from auth context
+        createdDate: new Date().toISOString().slice(0, 10),
+        dueDateTime,
+        relatedTo: '',//data.template || '',
+        email: '',  // TODO: Get from contact info
+        phone: '',  // TODO: Get from contact info
+        message: '',
+        status: 'open', // Initial status as per requirements
+        location: data.location,
+        type: data.type,
+        template: data.template,
+        assignedTo: data.assignToUser, // TODO: Get currentUserId from auth context
+        assignedToRoles: data.assignToRoles,
+        lastUpdatedDate: new Date().toISOString(),
+        // Add recurring task properties if type is Recurring
+        ...(data.type === 'Recurring' && {
+          recurringFrequency: data.recurringFrequency,
+          recurringDays: data.recurringDays,
+          recurringEndDateTime: data.recurringEndDate && data.recurringEndTime 
+            ? createLocalISOString(data.recurringEndDate, data.recurringEndTime)
+            : undefined,
+          timezone: 'UTC' // Default to UTC until we implement location-based timezones
+        })
+      }
+      
+      // Log both raw form data and processed task object for debugging
+      console.log('Form submission:', {
+        rawFormData: data,
+        processedTask: newTask
+      })
+      
+      // Add task to store
+      addTask(newTask)
       setShouldShowModal(false)
+      
     } catch (error) {
       console.error('Error submitting form:', error)
     } finally {
@@ -102,17 +161,13 @@ export function NewTaskModal({
   return (
     <>
       <div className="flex items-center h-full">
-        <div className="flex items-center">
-          <button
-            onClick={() => handleShowModal()}
-            className="flex items-center rounded-full transition-colors duration-200 hover:bg-black group"
-            aria-label="New Task"
-          >
-            <span className="p-2 group-hover:text-white">
-              {children}
-            </span>
-          </button>
-        </div>
+        <button
+          onClick={() => handleShowModal()}
+          className="flex items-center justify-center h-8 w-8 rounded-full transition-colors duration-200 hover:bg-black hover:text-white"
+          aria-label="New Task"
+        >
+          {children}
+        </button>
       </div>
 
       {shouldShowModal && (
@@ -133,24 +188,67 @@ export function NewTaskModal({
             </div>
 
             <div className="overflow-y-auto flex-1 p-6">
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  console.log('Form submission started')
+                  handleSubmit(
+                    (data) => {
+                      console.log('Form validation passed. Form data:', {
+                        ...data,
+                        type: data.type,
+                        recurring: data.type === 'Recurring' ? {
+                          frequency: data.recurringFrequency,
+                          days: data.recurringDays,
+                          endDate: data.recurringEndDate,
+                          endTime: data.recurringEndTime,
+                          // TODO: Add end date and time settings
+                        } : undefined,
+                        assignedTo: data.assignToUser,
+                        roles: data.assignToRoles
+                      })
+                      return onSubmit(data)
+                    },
+                    (errors) => {
+                      console.error('Form validation failed:', {
+                        formErrors: errors,
+                        formValues: watch(),
+                        type: watch('type'),
+                        recurring: watch('type') === 'Recurring' ? {
+                          frequency: watch('recurringFrequency'),
+                          days: watch('recurringDays'),
+                          endDate: watch('recurringEndDate'),
+                          endTime: watch('recurringEndTime')
+                        } : undefined
+                      })
+                    }
+                  )(e)
+                }} 
+                className="space-y-6"
+              >
                 <div>
-                  <label className="block mb-2 font-semibold">Template</label>
+                  <label className="block mb-2 font-semibold">{t('template')}</label>
                   <Controller
                     control={control}
                     name="template"
                     render={({ field }) => (
                       <CustomSelect
-                        placeholder="Select"
+                        placeholder={t('template-placeholder')}
                         options={[
+                          // TODO: Get from template store
                           { value: 'template1', label: 'Template 1' },
                           { value: 'template2', label: 'Template 2' },
                         ]}
                         value={field.value ? [field.value] : []}
-                        onChange={(values) => field.onChange(values[0] || '')}
+                        onChange={(values) => {
+                          field.onChange(values[0] || '')
+                        }}
                       />
                     )}
                   />
+                  {errors.template && (
+                    <p className="text-sm text-red-500 mt-1">{errors.template.message}</p>
+                  )}
                 </div>
 
                 <div>
@@ -168,6 +266,9 @@ export function NewTaskModal({
                         />
                       )}
                     />
+                    {errors.priority && (
+                      <p className="text-sm text-red-500 mt-1">{errors.priority.message}</p>
+                    )}
                   </div>
 
                   <div className="space-y-4">
@@ -204,15 +305,20 @@ export function NewTaskModal({
                         name="location"
                         render={({ field }) => (
                           <CustomSelect
+                            placeholder={t('location-placeholder')}
                             options={[
-                              { value: 'location a', label: 'Location A' },
-                              { value: 'location b', label: 'Location B' },
+                              // TODO: Get from location store
+                              { value: 'location1', label: 'Location 1' },
+                              { value: 'location2', label: 'Location 2' },
                             ]}
-                            value={[field.value]}
-                            onChange={(value) => field.onChange(value[0])}
+                            value={field.value ? [field.value] : []}
+                            onChange={(values) => field.onChange(values[0] || '')}
                           />
                         )}
                       />
+                      {errors.location && (
+                        <p className="text-sm text-red-500 mt-1">{errors.location.message}</p>
+                      )}
                     </div>
 
                     <div>
@@ -227,6 +333,9 @@ export function NewTaskModal({
                           />
                         )}
                       />
+                      {errors.type && (
+                        <p className="text-sm text-red-500 mt-1">{errors.type.message}</p>
+                      )}
                     </div>
 
                     {watchType === 'Recurring' && (
@@ -242,6 +351,9 @@ export function NewTaskModal({
                               />
                             )}
                           />
+                          {errors.recurringFrequency && (
+                            <p className="text-sm text-red-500 mt-1">{errors.recurringFrequency.message}</p>
+                          )}
                           <Controller
                             control={control}
                             name="recurringDays"
@@ -253,6 +365,39 @@ export function NewTaskModal({
                               />
                             )}
                           />
+                          {errors.recurringDays && (
+                            <p className="text-sm text-red-500 mt-1">{errors.recurringDays.message}</p>
+                          )}
+                          <Controller
+                            control={control}
+                            name="recurringEndDate"
+                            render={({ field }) => (
+                              <CustomInput
+                                label={t('recurring-end-date')}
+                                type="date"
+                                error={errors.recurringEndDate?.message}
+                                {...field}
+                              />
+                            )}
+                          />
+                          {errors.recurringEndDate && (
+                            <p className="text-sm text-red-500 mt-1">{errors.recurringEndDate.message}</p>
+                          )}
+                          <Controller
+                            control={control}
+                            name="recurringEndTime"
+                            render={({ field }) => (
+                              <CustomInput
+                                label={t('recurring-end-time')}
+                                type="time"
+                                error={errors.recurringEndTime?.message}
+                                {...field}
+                              />
+                            )}
+                          />
+                          {errors.recurringEndTime && (
+                            <p className="text-sm text-red-500 mt-1">{errors.recurringEndTime.message}</p>
+                          )}
                         </div>
                       </>
                     )}
@@ -267,6 +412,7 @@ export function NewTaskModal({
                             <CustomInput
                               label={t('due-date')}
                               type="date"
+                              error={errors.dueDate?.message}
                               {...field}
                             />
                           )}
@@ -276,11 +422,12 @@ export function NewTaskModal({
                         <label className="block mb-2 font-semibold">{t('time')}</label>
                         <Controller
                           control={control}
-                          name="time"
+                          name="dueTime"
                           render={({ field }) => (
                             <CustomInput
                               label={t('time')}
                               type="time"
+                              error={errors.dueTime?.message}
                               {...field}
                             />
                           )}
@@ -322,6 +469,9 @@ export function NewTaskModal({
                           </div>
                         )}
                       />
+                      {errors.assignToRoles && (
+                        <p className="text-sm text-red-500 mt-1">{errors.assignToRoles.message}</p>
+                      )}
                     </div>
                     <div>
                       <h4 className="font-semibold mb-2">{t('assign-to-user')}</h4>
@@ -329,68 +479,64 @@ export function NewTaskModal({
                         control={control}
                         name="assignToUser"
                         render={({ field }) => (
-                          <CustomSelect
-                            placeholder={t('select-user')}
-                            options={[
-                              {
-                                value: 'Alexander Walker',
-                                label: 'Alexander Walker',
-                                avatar: '/placeholder.svg',
-                              },
-                              {
-                                value: 'Aiden Moore',
-                                label: 'Aiden Moore',
-                                avatar: '/placeholder.svg',
-                              },
-                              {
-                                value: 'James Davis',
-                                label: 'James Davis',
-                                avatar: '/placeholder.svg',
-                              },
-                            ]}
-                            value={field.value ? [field.value] : []}
-                            onChange={(values) => field.onChange(values[0] || '')}
-                          />
+                          <>
+                            <CustomSelect
+                              placeholder={t('select-user')}
+                              options={[
+                                {
+                                  value: '123456',
+                                  label: 'Alexander Walker',
+                                  avatar: '/placeholder.svg',
+                                },
+                                {
+                                  value: '12345',
+                                  label: 'Aiden Moore',
+                                  avatar: '/placeholder.svg',
+                                },
+                                {
+                                  value: '4444',
+                                  label: 'James Davis',
+                                  avatar: '/placeholder.svg',
+                                },
+                              ]}
+                              value={field.value ? [field.value] : []}
+                              onChange={(values) => field.onChange(values[0] || '')}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                field.onChange('123456')
+                              }}
+                              className="mt-2 font-semibold text-black underline"
+                            >
+                              {t('assign-to-me')}
+                            </button>
+                          </>
                         )}
                       />
-                      <div className="mt-2">
-                        <Controller
-                          control={control}
-                          name="assignToMe"
-                          render={({ field }) => (
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id="assignToMe"
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                              <label htmlFor="assignToMe" className="text-sm font-medium">
-                                {t('assign-to-me')}
-                              </label>
-                            </div>
-                          )}
-                        />
-                      </div>
+                      {errors.assignToUser && (
+                        <p className="text-sm text-red-500 mt-1">{errors.assignToUser.message}</p>
+                      )}
                     </div>
                   </div>
                 </div>
 
                 <div className="flex justify-end gap-4 mt-8">
-                  <button
+                  <Button
                     type="button"
                     onClick={() => setShouldShowModal(false)}
                     className="p-2 rounded-full transition-colors duration-200 hover:bg-black hover:text-white w-32"
                     disabled={isSubmitting}
                   >
                     {t('cancel')}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
                     className="p-2 rounded-full transition-colors duration-200 bg-black text-white hover:bg-gray-800 w-32"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? t('saving') : t('save')}
-                  </button>
+                  </Button>
                 </div>
               </form>
             </div>

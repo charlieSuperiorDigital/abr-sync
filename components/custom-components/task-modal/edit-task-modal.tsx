@@ -2,39 +2,49 @@
 
 import * as React from 'react'
 import { useEffect, useState } from 'react'
-import { Pencil, Plus } from 'lucide-react'
 import { Controller, useForm } from 'react-hook-form'
-import { CustomSelect } from '../selects/custom-select'
-import { CustomButtonSelect, CustomButtonSelectField } from '../selects/custom-button-select'
-import { useTranslations } from 'next-intl'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { CustomInput } from '../inputs/custom-input'
+import { useTaskStore } from '@/app/stores/task-store'
+import { Task } from '@/app/types/task'
 import { 
   getTaskFormSchema,
   TaskFormData,
-  TaskPriorities,
+  TaskPriority,
   TaskTypes,
   TaskRoles,
-  TaskPriority,
-  TaskType,
   RecurringFrequencies,
-  DaysOfWeek
+  DaysOfWeek,
+  RecurringFrequency,
+  DayOfWeek,
+  TaskRole,
+  TaskPriorities
 } from './schema'
-import { CustomInput } from '../inputs/custom-input'
+import { useTranslations } from 'next-intl'
+import { Pencil, Plus } from 'lucide-react'
+import { CustomSelect } from '../selects/custom-select'
+import { CustomButtonSelect, CustomButtonSelectField } from '../selects/custom-button-select'
 import { Checkbox } from '@/components/ui/checkbox'
+import { createLocalISOString } from '@/lib/utils/date'
 
 interface EditTaskModalProps {
   children: React.ReactNode
   title: string
+  taskId: string
 }
 
 export function EditTaskModal({
   children,
   title,
+  taskId,
 }: EditTaskModalProps) {
   const [shouldShowModal, setShouldShowModal] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const t = useTranslations('Task')
   const validationMessage = useTranslations('Validation')
+  const { getTaskById, updateTask } = useTaskStore()
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -42,7 +52,52 @@ export function EditTaskModal({
     }
   }
 
-  const handleShowModal = () => {
+  const handleShowModal = async () => {
+    const task = getTaskById(taskId)
+    if (!task) {
+      console.error(`Task with ID ${taskId} not found`)
+      return
+    }
+
+    // Split datetime into date and time components
+    const dueDate = task.dueDateTime.split('T')[0]
+    const dueTime = task.dueDateTime.split('T')[1].slice(0, 5) // Get HH:mm
+
+    // Split recurring end datetime if present
+    let recurringEndDate, recurringEndTime
+    if (task.recurringEndDateTime) {
+      recurringEndDate = task.recurringEndDateTime.split('T')[0]
+      recurringEndTime = task.recurringEndDateTime.split('T')[1].slice(0, 5)
+    }
+
+    // Map the priority variant back to the form's priority type
+    const priorityMap = {
+      danger: 'Urgent',
+      warning: 'High',
+      success: 'Normal',
+      slate: 'Low'
+    } as const
+
+    // Set form values
+    setValue('priority', priorityMap[task.priority.variant] as TaskPriority)
+    setValue('taskTitle', task.title)
+    setValue('description', task.description)
+    setValue('type', task.type || 'One-time')
+    setValue('dueDate', dueDate)
+    setValue('dueTime', dueTime)
+    setValue('location', task.location || '')
+    setValue('assignToUser', task.assignedTo || '')
+    setValue('assignToRoles', (task.assignedToRoles || []) as TaskRole[])
+    // setValue('assignToMe', task.assignedTo === 'currentUserId') // TODO: Get from auth context
+
+    // Set recurring task fields if applicable
+    if (task.type === 'Recurring') {
+      setValue('recurringFrequency', task.recurringFrequency as RecurringFrequency)
+      setValue('recurringDays', task.recurringDays as DayOfWeek[])
+      setValue('recurringEndDate', recurringEndDate || '')
+      setValue('recurringEndTime', recurringEndTime || '')
+    }
+
     setShouldShowModal(true)
   }
 
@@ -54,21 +109,22 @@ export function EditTaskModal({
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<TaskFormData>({
-    resolver: zodResolver(getTaskFormSchema(validationMessage)),
+    resolver: zodResolver(getTaskFormSchema()),
     defaultValues: {
       template: '',
       priority: 'Normal' as TaskPriority,
       taskTitle: '',
       description: '',
       location: '',
-      type: 'One-time' as TaskType,
+      type: 'One-time',
       dueDate: '',
-      time: '',
+      dueTime: '',
       assignToUser: '',
       assignToRoles: [],
-      assignToMe: false,
-      recurringFrequency: 'Every Day',
-      recurringDays: []
+      recurringFrequency: undefined,
+      recurringDays: undefined,
+      recurringEndDate: '',
+      recurringEndTime: ''
     },
   })
 
@@ -77,11 +133,57 @@ export function EditTaskModal({
   const onSubmit = async (data: TaskFormData) => {
     try {
       setIsLoading(true)
-      console.log(data)
-      // Handle form submission
+
+      // Map priority to the correct task variants
+      const priorityMap = {
+        Urgent: { variant: 'danger', text: 'Urgent' },
+        High: { variant: 'warning', text: 'High' },
+        Normal: { variant: 'success', text: 'Normal' },
+        Low: { variant: 'slate', text: 'Low' }
+      } as const
+
+      // Combine date and time into ISO string preserving local time
+      const dueDateTime = createLocalISOString(data.dueDate, data.dueTime)
+      
+      // Handle recurring end date/time if present
+      let recurringEndDateTime
+      if (data.type === 'Recurring' && data.recurringEndDate && data.recurringEndTime) {
+        recurringEndDateTime = createLocalISOString(data.recurringEndDate, data.recurringEndTime)
+      }
+      
+      // Update task
+      const currentTask = getTaskById(taskId)
+      if (!currentTask) {
+        throw new Error(`Task with ID ${taskId} not found`)
+      }
+
+      // Update task with form data
+      const updatedTask: Task = {
+        ...currentTask,
+        priority: priorityMap[data.priority],
+        title: data.taskTitle,
+        description: data.description || '',
+        dueDateTime,
+        lastUpdatedDate: new Date().toISOString(),
+        location: data.location,
+        type: data.type,
+        assignedTo: data.assignToUser, // TODO: Get currentUserId from auth context
+        assignedToRoles: data.assignToRoles as TaskRole[],
+        // Add recurring task properties if type is Recurring
+        ...(data.type === 'Recurring' && {
+          recurringFrequency: data.recurringFrequency,
+          recurringDays: data.recurringDays,
+          recurringEndDateTime,
+          timezone: 'UTC' // Default to UTC until we implement location-based timezones
+        })
+      }
+
+      // Update task in store
+      updateTask(taskId, updatedTask)
       setShouldShowModal(false)
+
     } catch (error) {
-      console.error('Error submitting form:', error)
+      console.error('Error updating task:', error)
     } finally {
       setIsLoading(false)
     }
@@ -203,15 +305,20 @@ export function EditTaskModal({
                         name="location"
                         render={({ field }) => (
                           <CustomSelect
+                            placeholder={t('location-placeholder')}
                             options={[
-                              { value: 'location a', label: 'Location A' },
-                              { value: 'location b', label: 'Location B' },
+                              // TODO: Get from location store
+                              { value: 'location1', label: 'Location 1' },
+                              { value: 'location2', label: 'Location 2' },
                             ]}
-                            value={[field.value]}
-                            onChange={(value) => field.onChange(value[0])}
+                            value={field.value ? [field.value] : []}
+                            onChange={(values) => field.onChange(values[0] || '')}
                           />
                         )}
                       />
+                      {errors.location && (
+                        <p className="text-sm text-red-500 mt-1">{errors.location.message}</p>
+                      )}
                     </div>
 
                     <div>
@@ -275,11 +382,12 @@ export function EditTaskModal({
                         <label className="block mb-2 font-semibold">{t('time')}</label>
                         <Controller
                           control={control}
-                          name="time"
+                          name="dueTime"
                           render={({ field }) => (
                             <CustomInput
                               label={t('time')}
                               type="time"
+                              error={errors.dueTime?.message}
                               {...field}
                             />
                           )}
@@ -328,48 +436,44 @@ export function EditTaskModal({
                         control={control}
                         name="assignToUser"
                         render={({ field }) => (
-                          <CustomSelect
-                            placeholder={t('select-user')}
-                            options={[
-                              {
-                                value: 'Alexander Walker',
-                                label: 'Alexander Walker',
-                                avatar: '/placeholder.svg',
-                              },
-                              {
-                                value: 'Aiden Moore',
-                                label: 'Aiden Moore',
-                                avatar: '/placeholder.svg',
-                              },
-                              {
-                                value: 'James Davis',
-                                label: 'James Davis',
-                                avatar: '/placeholder.svg',
-                              },
-                            ]}
-                            value={field.value ? [field.value] : []}
-                            onChange={(values) => field.onChange(values[0] || '')}
-                          />
+                          <>
+                            <CustomSelect
+                              placeholder={t('select-user')}
+                              options={[
+                                {
+                                  value: '123456',
+                                  label: 'Alexander Walker',
+                                  avatar: '/placeholder.svg',
+                                },
+                                {
+                                  value: '234567',
+                                  label: 'Aiden Moore',
+                                  avatar: '/placeholder.svg',
+                                },
+                                {
+                                  value: '345678',
+                                  label: 'James Davis',
+                                  avatar: '/placeholder.svg',
+                                },
+                              ]}
+                              value={field.value ? [field.value] : []}
+                              onChange={(values) => field.onChange(values[0] || '')}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                field.onChange('123456')
+                              }}
+                              className="mt-2 font-semibold text-black underline"
+                            >
+                              {t('assign-to-me')}
+                            </button>
+                            {errors.assignToUser && (
+                              <p className="text-sm text-red-500 mt-1">{errors.assignToUser.message}</p>
+                            )}
+                          </>
                         )}
                       />
-                      <div className="mt-2">
-                        <Controller
-                          control={control}
-                          name="assignToMe"
-                          render={({ field }) => (
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id="assignToMe"
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                              <label htmlFor="assignToMe" className="text-sm font-medium">
-                                {t('assign-to-me')}
-                              </label>
-                            </div>
-                          )}
-                        />
-                      </div>
                     </div>
                   </div>
                 </div>
