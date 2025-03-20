@@ -2,21 +2,38 @@
 
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import {
-  SummaryCell,
   VehicleCell,
 } from '@/components/custom-components/custom-table/table-cells'
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { ColumnDef } from '@tanstack/react-table'
-import { ClipboardPlus } from 'lucide-react'
+import { ClipboardPlus, Calendar, Check, MessageSquareMore, CheckCircle } from 'lucide-react'
 import { Workfile, WorkfileStatus } from '@/app/types/workfile'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useWorkfileStore } from '@/app/stores/workfile-store'
+import { useOpportunityStore } from '@/app/stores/opportunity-store'
+import RoundButtonWithTooltip from '@/app/[locale]/custom-components/round-button-with-tooltip'
+import { formatDate } from '@/app/utils/date-utils'
+import { formatCurrency } from '@/app/utils/currency-utils'
+import DarkButton from '@/app/[locale]/custom-components/dark-button'
+import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
+import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 
 export default function ReadyForPickup() {
   const { getWorkfilesByStatus, setSelectedWorkfile, selectedWorkfile } = useWorkfileStore()
+  const { getOpportunityById, setSelectedOpportunity, selectedOpportunity } = useOpportunityStore()
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const readyWorkfiles = getWorkfilesByStatus(WorkfileStatus.ReadyForPickup)
+
+  // When a workfile is selected, find the related opportunity
+  useEffect(() => {
+    if (selectedWorkfile) {
+      const relatedOpportunity = getOpportunityById(selectedWorkfile.opportunityId)
+      if (relatedOpportunity) {
+        setSelectedOpportunity(relatedOpportunity)
+      }
+    }
+  }, [selectedWorkfile, getOpportunityById, setSelectedOpportunity])
 
   const handleRowClick = useCallback((workfile: Workfile) => {
     setSelectedWorkfile(workfile)
@@ -33,10 +50,11 @@ export default function ReadyForPickup() {
     console.log('Task clicked for workfile:', workfile.workfileId)
   }, [])
 
-  const formatDate = (date: string | undefined) => {
-    if (!date) return '---'
-    return new Date(date).toLocaleDateString()
-  }
+  const handleCompleteClick = useCallback((workfile: Workfile, e: React.MouseEvent) => {
+    e.stopPropagation()
+    // Handle complete button click - would transition to Archived status
+    console.log('Complete clicked for workfile:', workfile.workfileId)
+  }, [])
 
   const columns: ColumnDef<Workfile, any>[] = [
     {
@@ -59,11 +77,38 @@ export default function ReadyForPickup() {
       ),
     },
     {
+      accessorKey: 'estimateAmount',
+      header: 'Estimate',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">
+          {formatCurrency(row.original.estimateAmount)}
+        </span>
+      ),
+    },
+    {
       accessorKey: 'owner.name',
       header: 'Owner',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
           {row.original.owner.name}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'qualityControl.completionDate',
+      header: 'QC Date',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">
+          {formatDate(row.original.qualityControl?.completionDate) || '---'}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'pickupDate',
+      header: 'Pick-up',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">
+          {formatDate(row.original.pickupDate) || '---'}
         </span>
       ),
     },
@@ -76,7 +121,12 @@ export default function ReadyForPickup() {
     },
     {
       header: 'Summary',
-      cell: ({ row }) => <SummaryCell />,
+      cell: ({ row }) => (
+        <RoundButtonWithTooltip 
+          buttonIcon={<MessageSquareMore className="h-5 w-5" />}
+          tooltipText={row.original.lastCommunicationSummary || 'No summary available'}
+        />
+      ),
     },
     {
       id: 'contact',
@@ -91,6 +141,19 @@ export default function ReadyForPickup() {
           }}
         >
           <ContactInfo />
+        </div>
+      ),
+    },
+    {
+      id: 'complete',
+      header: 'Complete',
+      cell: ({ row }) => (
+        <div className="flex justify-center">
+          <DarkButton
+            buttonText="Complete"
+            buttonIcon={<CheckCircle size={16} />}
+            onClick={(e) => handleCompleteClick(row.original, e)}
+          />
         </div>
       ),
     },
@@ -114,7 +177,6 @@ export default function ReadyForPickup() {
 
   return (
     <div className="w-full">
-      <h1 className="text-2xl font-bold mb-6">Ready For Pickup Workfiles</h1>
       <DataTable
         columns={columns}
         data={readyWorkfiles}
@@ -122,6 +184,14 @@ export default function ReadyForPickup() {
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
       />
+
+      <BottomSheetModal
+        isOpen={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        title={selectedWorkfile ? `${selectedWorkfile.vehicle.year} ${selectedWorkfile.vehicle.make} ${selectedWorkfile.vehicle.model}` : ''}
+      >
+        {selectedOpportunity && <OpportunityModal opportunity={selectedOpportunity} />}
+      </BottomSheetModal>
     </div>
   )
 }

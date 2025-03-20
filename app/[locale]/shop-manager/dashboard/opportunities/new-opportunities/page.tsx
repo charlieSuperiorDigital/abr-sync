@@ -162,7 +162,7 @@ export default function NewOpportunities() {
     },
     {
       header: 'Summary',
-      cell: ({ row }) => <SummaryCell />,
+      cell: ({ row }) => <SummaryCell text='Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'/>,
     },
     {
       id: 'contact',

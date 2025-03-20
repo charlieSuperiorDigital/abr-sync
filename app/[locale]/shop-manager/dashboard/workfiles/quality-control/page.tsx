@@ -4,21 +4,41 @@
 
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import {
-  SummaryCell,
   VehicleCell,
 } from '@/components/custom-components/custom-table/table-cells'
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { ColumnDef } from '@tanstack/react-table'
-import { ClipboardPlus } from 'lucide-react'
-import { Workfile, WorkfileStatus } from '@/app/types/workfile'
-import { useState, useCallback } from 'react'
+import { ClipboardPlus, Calendar, Check, MessageSquareMore, ClipboardCheck } from 'lucide-react'
+import { Workfile, WorkfileStatus, QualityControlStatus } from '@/app/types/workfile'
+import { useState, useCallback, useEffect } from 'react'
 import { useWorkfileStore } from '@/app/stores/workfile-store'
+import { useOpportunityStore } from '@/app/stores/opportunity-store'
+import RoundButtonWithTooltip from '@/app/[locale]/custom-components/round-button-with-tooltip'
+import { StatusBadge } from '@/components/custom-components/status-badge/status-badge'
+import DarkButton from '@/app/[locale]/custom-components/dark-button'
+import { formatDate } from '@/app/utils/date-utils'
+import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
+import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
+import QCChecklistBottomSheet from '@/components/custom-components/qc-checklist-modal'
 
 export default function QualityControl() {
   const { getWorkfilesByStatus, setSelectedWorkfile, selectedWorkfile } = useWorkfileStore()
+  const { getOpportunityById, setSelectedOpportunity, selectedOpportunity } = useOpportunityStore()
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isQCChecklistOpen, setIsQCChecklistOpen] = useState(false)
+  const [selectedQCWorkfile, setSelectedQCWorkfile] = useState<Workfile | null>(null)
 
   const qcWorkfiles = getWorkfilesByStatus(WorkfileStatus.QC)
+
+  // When a workfile is selected, find the related opportunity
+  useEffect(() => {
+    if (selectedWorkfile) {
+      const relatedOpportunity = getOpportunityById(selectedWorkfile.opportunityId)
+      if (relatedOpportunity) {
+        setSelectedOpportunity(relatedOpportunity)
+      }
+    }
+  }, [selectedWorkfile, getOpportunityById, setSelectedOpportunity])
 
   const handleRowClick = useCallback((workfile: Workfile) => {
     setSelectedWorkfile(workfile)
@@ -35,10 +55,12 @@ export default function QualityControl() {
     console.log('Task clicked for workfile:', workfile.workfileId)
   }, [])
 
-  const formatDate = (date: string | undefined) => {
-    if (!date) return '---'
-    return new Date(date).toLocaleDateString()
-  }
+  const handleQCChecklistClick = useCallback((workfile: Workfile, e: React.MouseEvent) => {
+    e.stopPropagation()
+    // Open QC checklist modal
+    setSelectedQCWorkfile(workfile)
+    setIsQCChecklistOpen(true)
+  }, [])
 
   const columns: ColumnDef<Workfile, any>[] = [
     {
@@ -70,6 +92,57 @@ export default function QualityControl() {
       ),
     },
     {
+      accessorKey: 'qualityControl.status',
+      header: 'QC Status',
+      cell: ({ row }) => {
+        const status = row.original.qualityControl?.status || QualityControlStatus.AWAITING;
+        return (
+          <div className="flex items-center gap-2">
+            <StatusBadge 
+              variant={status === QualityControlStatus.COMPLETED ? 'success' : 'warning'} 
+              size="sm"
+            >
+              {status}
+            </StatusBadge>
+            {status === QualityControlStatus.AWAITING && (
+              <DarkButton 
+                buttonText="QC Checklist" 
+                buttonIcon={<ClipboardCheck size={16} />}
+                onClick={(e) => handleQCChecklistClick(row.original, e)}
+              />
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: 'qualityControl.completionDate',
+      header: 'QC Date',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">
+          {formatDate(row.original.qualityControl?.completionDate) || '---'}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'estimatedCompletionDate',
+      header: 'ECD',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">
+          {formatDate(row.original.estimatedCompletionDate) || '---'}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'qualityControl.assignedTo',
+      header: 'QC Assigned To',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">
+          {row.original.qualityControl?.assignedTo || '---'}
+        </span>
+      ),
+    },
+    {
       id: 'lastCommDate',
       header: 'Last Comm Date',
       cell: ({ row }) => (
@@ -78,7 +151,12 @@ export default function QualityControl() {
     },
     {
       header: 'Summary',
-      cell: ({ row }) => <SummaryCell />,
+      cell: ({ row }) => (
+        <RoundButtonWithTooltip 
+          buttonIcon={<MessageSquareMore className="h-5 w-5" />}
+          tooltipText={row.original.lastCommunicationSummary || 'No summary available'}
+        />
+      ),
     },
     {
       id: 'contact',
@@ -116,13 +194,28 @@ export default function QualityControl() {
 
   return (
     <div className="w-full">
-      <h1 className="text-2xl font-bold mb-6">Quality Control Workfiles</h1>
       <DataTable
         columns={columns}
         data={qcWorkfiles}
         onRowClick={handleRowClick}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
+      />
+
+      {/* Opportunity Details Modal */}
+      <BottomSheetModal
+        isOpen={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        title={selectedWorkfile ? `${selectedWorkfile.vehicle.year} ${selectedWorkfile.vehicle.make} ${selectedWorkfile.vehicle.model}` : ''}
+      >
+        {selectedOpportunity && <OpportunityModal opportunity={selectedOpportunity} />}
+      </BottomSheetModal>
+
+      {/* QC Checklist Modal */}
+      <QCChecklistBottomSheet
+        workfile={selectedQCWorkfile}
+        isOpen={isQCChecklistOpen}
+        onOpenChange={setIsQCChecklistOpen}
       />
     </div>
   )

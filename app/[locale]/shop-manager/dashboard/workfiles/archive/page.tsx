@@ -2,40 +2,66 @@
 
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import {
-  SummaryCell,
   VehicleCell,
 } from '@/components/custom-components/custom-table/table-cells'
-import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { ColumnDef } from '@tanstack/react-table'
-import { ClipboardPlus } from 'lucide-react'
+import { MessageSquareMore, Archive as ArchiveIcon } from 'lucide-react'
 import { Workfile, WorkfileStatus } from '@/app/types/workfile'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useWorkfileStore } from '@/app/stores/workfile-store'
+import { useOpportunityStore } from '@/app/stores/opportunity-store'
+import RoundButtonWithTooltip from '@/app/[locale]/custom-components/round-button-with-tooltip'
+import DarkButton from '@/app/[locale]/custom-components/dark-button'
+import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
+import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 
 export default function Archive() {
-  const { getWorkfilesByStatus, setSelectedWorkfile, selectedWorkfile } = useWorkfileStore()
+  const { getWorkfilesByStatus, setSelectedWorkfile, selectedWorkfile, updateWorkfile } = useWorkfileStore()
+  const { getOpportunityById, setSelectedOpportunity, selectedOpportunity } = useOpportunityStore()
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const archivedWorkfiles = getWorkfilesByStatus(WorkfileStatus.Archived)
+
+  // When a workfile is selected, find the related opportunity
+  useEffect(() => {
+    if (selectedWorkfile) {
+      const relatedOpportunity = getOpportunityById(selectedWorkfile.opportunityId)
+      if (relatedOpportunity) {
+        setSelectedOpportunity(relatedOpportunity)
+      }
+    }
+  }, [selectedWorkfile, getOpportunityById, setSelectedOpportunity])
 
   const handleRowClick = useCallback((workfile: Workfile) => {
     setSelectedWorkfile(workfile)
     setIsModalOpen(true)
   }, [setSelectedWorkfile])
 
-  const handleContactClick = useCallback((workfile: Workfile) => {
-    // Handle contact info click
-    console.log('Contact clicked for workfile:', workfile.workfileId)
-  }, [])
-
-  const handleTaskClick = useCallback((workfile: Workfile) => {
-    // Handle task button click
-    console.log('Task clicked for workfile:', workfile.workfileId)
-  }, [])
+  const handleUnarchive = useCallback((e: React.MouseEvent, workfile: Workfile) => {
+    e.stopPropagation()
+    // Update workfile status to Ready for Pickup
+    updateWorkfile(workfile.workfileId, {
+      status: WorkfileStatus.ReadyForPickup
+    })
+    console.log('Unarchived workfile:', workfile.workfileId)
+  }, [updateWorkfile])
 
   const formatDate = (date: string | undefined) => {
     if (!date) return '---'
     return new Date(date).toLocaleDateString()
+  }
+
+  const formatCurrency = (amount: number | undefined) => {
+    if (amount === undefined) return '---'
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount)
+  }
+
+  // Helper to check if a workfile has a rental vehicle
+  const hasRentalVehicle = (workfile: Workfile) => {
+    return workfile.isInRental === true;
   }
 
   const columns: ColumnDef<Workfile, any>[] = [
@@ -68,6 +94,42 @@ export default function Archive() {
       ),
     },
     {
+      accessorKey: 'estimateAmount',
+      header: 'Estimate',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">
+          {formatCurrency(row.original.estimateAmount)}
+        </span>
+      ),
+    },
+    {
+      id: 'inRental',
+      header: 'In Rental',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">
+          {hasRentalVehicle(row.original) ? 'Yes' : 'No'}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'inDate',
+      header: 'In Date',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">
+          {formatDate(row.original.inDate)}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'insurance.company',
+      header: 'Insurance',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">
+          {row.original.insurance?.company || '---'}
+        </span>
+      ),
+    },
+    {
       id: 'lastCommDate',
       header: 'Last Comm Date',
       cell: ({ row }) => (
@@ -76,45 +138,29 @@ export default function Archive() {
     },
     {
       header: 'Summary',
-      cell: ({ row }) => <SummaryCell />,
-    },
-    {
-      id: 'contact',
-      header: 'Contact',
       cell: ({ row }) => (
-        <div 
-          data-testid="contact-info" 
-          className="cursor-pointer"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleContactClick(row.original)
-          }}
-        >
-          <ContactInfo />
-        </div>
+        <RoundButtonWithTooltip 
+          buttonIcon={<MessageSquareMore className="h-5 w-5" />}
+          tooltipText={row.original.lastCommunicationSummary || 'No summary available'}
+        />
       ),
     },
     {
-      id: 'task',
-      header: 'Add Task',
+      id: 'unarchive',
+      header: 'Unarchive',
       cell: ({ row }) => (
-        <div 
-          data-testid="task-button" 
-          className="cursor-pointer hover:text-blue-600 transition-colors"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleTaskClick(row.original)
-          }}
-        >
-          <ClipboardPlus size={18} />
-        </div>
+        <span onClick={(e) => handleUnarchive(e, row.original)}>
+          <DarkButton 
+            buttonText="Unarchive" 
+            buttonIcon={<ArchiveIcon className="h-4 w-4" />}
+          />
+        </span>
       ),
     },
   ]
 
   return (
     <div className="w-full">
-      <h1 className="text-2xl font-bold mb-6">Archived Workfiles</h1>
       <DataTable
         columns={columns}
         data={archivedWorkfiles}
@@ -122,6 +168,14 @@ export default function Archive() {
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
       />
+
+      <BottomSheetModal
+        isOpen={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        title={selectedWorkfile ? `${selectedWorkfile.vehicle.year} ${selectedWorkfile.vehicle.make} ${selectedWorkfile.vehicle.model}` : ''}
+      >
+        {selectedOpportunity && <OpportunityModal opportunity={selectedOpportunity} />}
+      </BottomSheetModal>
     </div>
   )
 }
