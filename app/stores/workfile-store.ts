@@ -24,6 +24,7 @@ interface WorkfileStore {
   moveToQC: (workfileId: string) => boolean
   moveToReadyForPickup: (workfileId: string) => boolean
   archiveWorkfile: (workfileId: string) => boolean
+  checkInVehicle: (workfileId: string) => boolean
 }
 
 export const useWorkfileStore = create<WorkfileStore>((set, get) => ({
@@ -280,6 +281,20 @@ export const useWorkfileStore = create<WorkfileStore>((set, get) => ({
       lastUpdatedDate: new Date().toISOString(),
       vehicleOutDate: new Date().toISOString(),
       cycleTime: cycleTime || undefined
+    })
+
+    return true
+  },
+
+  checkInVehicle: (workfileId) => {
+    const workfile = get().getWorkfileById(workfileId)
+    if (!workfile) return false
+
+    // Update vehicle check-in status
+    get().updateWorkfile(workfileId, {
+      isVehicleCheckedIn: true,
+      lastUpdatedDate: new Date().toISOString(),
+      dropDate: workfile.dropDate || new Date().toISOString()
     })
 
     return true

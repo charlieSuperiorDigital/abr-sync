@@ -25,6 +25,7 @@ import { PriorityBadge } from '../priority-badge/priority-badge'
 import * as Dialog from '@radix-ui/react-dialog'
 import { act, useState } from 'react'
 import { EditTaskModal } from '../task-modal/edit-task-modal'
+import RoundButtonWithTooltip from '@/app/[locale]/custom-components/round-button-with-tooltip'
 import { getFriendlyDate, formatDateTime, formatDate } from '@/lib/utils/date'
 
 interface TitleCellProps {
@@ -336,19 +337,17 @@ export function UploadTimeCell({ deadline }: UploadTimeCellProps) {
   )
 }
 
-export function SummaryCell() {
+export function SummaryCell({ text }: { text: string }) {
   return (
-    <>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => console.log('Summary clicked')}
-      >
-        <MessageSquareMore className="h-5 w-5" />
-      </Button>
-    </>
+    <div className="flex items-center justify-center">
+      <RoundButtonWithTooltip 
+        buttonIcon={<MessageSquareMore className="h-5 w-5" />}
+        tooltipText={text}
+      />
+    </div>
   )
 }
+
 interface DocumentCellProps {
   fileName: string
   onClick?: () => void

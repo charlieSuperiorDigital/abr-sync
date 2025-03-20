@@ -1,4 +1,11 @@
 import { ReactNode } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 type Props = {
     onClick?: (args: any) => any;
@@ -13,18 +20,41 @@ export default function RoundButtonWithTooltip({
     additionalProps,
     tooltipText,
 }: Props) {
+    // If there's no tooltip text, just render the button without the tooltip wrapper
+    if (!tooltipText) {
+        return (
+            <button
+                className="hover:bg-white hover:text-black bg-black text-white px-2 py-2 rounded-full flex items-center justify-center h-full"
+                onClick={onClick}
+                {...additionalProps}
+            >
+                {buttonIcon && <span>{buttonIcon}</span>}
+            </button>
+        );
+    }
+
+    // With tooltip text, use the Radix UI tooltip component
     return (
-        <button
-            className="relative group hover:bg-white hover:text-black bg-black text-white px-2 py-2 rounded-full flex items-center justify-center h-full"
-            onClick={onClick}
-            {...additionalProps}
-        >
-            {buttonIcon && <span className="">{buttonIcon}</span>}
-            {tooltipText && (
-                <span className="hidden group-hover:block absolute top-10 transform-translate-x-2 bg-white text-black text-xs px-2 py-1 rounded-md">
-                    {tooltipText}
-                </span>
-            )}
-        </button>
-    )
+        <TooltipProvider delayDuration={0}>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <button
+                        className="bg-white text-black hover:bg-black hover:text-white px-2 py-2 rounded-full flex items-center justify-center h-full"
+                        onClick={onClick}
+                        {...additionalProps}
+                    >
+                        {buttonIcon && <span>{buttonIcon}</span>}
+                    </button>
+                </TooltipTrigger>
+                <TooltipContent 
+                    side="top" 
+                    align="center" 
+                    sideOffset={5}
+                    className={cn("w-[400px] max-w-[400px] text-sm")}
+                >
+                    <p>{tooltipText}</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+    );
 }

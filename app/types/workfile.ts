@@ -9,6 +9,51 @@ export enum WorkfileStatus {
   Archived = "Archived" // Workfile is archived
 }
 
+// Tracks the status of quality control
+export enum QualityControlStatus {
+  AWAITING = "AWAITING", // Quality control is pending or in progress
+  COMPLETED = "COMPLETED" // Quality control has been completed
+}
+
+// Represents the type of sublet work
+export enum SubletType {
+  ALIGN = "Align",
+  AC = "A/C",
+  FIX = "Fix",
+  CALIBRATION = "Calibration"
+}
+
+// Represents the status of sublet work
+export enum SubletStatus {
+  OPEN = "Open",
+  IN_PROGRESS = "In Progress",
+  DONE = "Done"
+}
+
+// Represents a quality control checklist item
+export type QualityControlChecklistItem = {
+  title: string; // Title of the checklist item
+  completed: boolean; // Whether the checklist item has been completed
+  date?: string; // Date when the checklist item was completed (ISO format)
+};
+
+// Represents the quality control object
+export type QualityControl = {
+  status: QualityControlStatus; // Current status of quality control
+  checklist: QualityControlChecklistItem[]; // List of quality control checklist items
+  completionDate?: string; // Date when the quality control was completed (ISO format)
+  completedBy?: string; // Name of the user who completed the quality control
+  assignedTo?: string; // Name of the technician assigned to the quality control
+};
+
+// Represents a sublet for a workfile
+export type Sublet = {
+  type: SubletType[]; // Type of sublet work
+  status: SubletStatus; // Current status of the sublet
+  dropOffDate?: string; // Date when the vehicle was dropped off for sublet work (ISO format)
+  dueDate?: string; // Date when the sublet work is due to be completed (ISO format)
+};
+
 export type Workfile = {
     workfileId: string; // Unique identifier for the workfile
     opportunityId: string; // Reference to the original opportunity
@@ -16,6 +61,13 @@ export type Workfile = {
     status: WorkfileStatus; // Current status of the workfile
     createdDate: string; // Date the workfile was created (ISO format)
     lastUpdatedDate: string; // Date the workfile was last updated (ISO format)
+    dropDate?: string; // Date the vehicle was dropped off (ISO format)
+    isVehicleCheckedIn?: boolean; // Whether the vehicle has been checked in
+    technician?: {
+        id: string;
+        name: string;
+        avatar?: string;
+    }; // Technician assigned to the workfile
     vehicle: {
       vin: string; // Vehicle Identification Number
       make: string; // Vehicle make (e.g., Toyota)
@@ -90,6 +142,7 @@ export type Workfile = {
     repairInProgressDate?: string;
     repairCompletedDate?: string;
     vehicleOutDate?: string;
+    pickupDate?: string; // Date when the vehicle is scheduled to be picked up
     cycleTime?: number; // Days from In Progress to Complete
 
     // Quality control tracking
@@ -111,5 +164,7 @@ export type Workfile = {
     // Additional tracking
     isInRental?: boolean;
     uploadDeadline?: string; // 24-hour countdown after check-in
+    qualityControl?: QualityControl; // Quality control object
+    sublet?: Sublet; // Sublet information for the workfile
     tasks?: Task[]; // Array of complete tasks linked to this workfile
 };
