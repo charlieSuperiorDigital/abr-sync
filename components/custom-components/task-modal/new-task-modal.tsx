@@ -29,11 +29,17 @@ import { Task } from '@/app/types/task'
 interface NewTaskModalProps {
   children: React.ReactNode
   title: string
+  defaultRelation?: {
+    type: 'opportunity' | 'workfile' | 'vehicle' | 'customer'
+    id: string
+    title?: string
+  }
 }
 
 export function NewTaskModal({
   children,
   title,
+  defaultRelation
 }: NewTaskModalProps) {
   const [shouldShowModal, setShouldShowModal] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -108,7 +114,12 @@ export function NewTaskModal({
         createdBy: 'Current User', // TODO: Get from auth context
         createdDate: new Date().toISOString().slice(0, 10),
         dueDateTime,
-        relatedTo: '',//data.template || '',
+        relatedTo: defaultRelation ? [defaultRelation] : 
+          (data.template ? [{
+            type: data.template.split(':')[0] as 'opportunity' | 'workfile' | 'vehicle' | 'customer',
+            id: data.template.split(':')[1],
+            title: data.taskTitle // We can update this later with actual related item title
+          }] : []),
         email: '',  // TODO: Get from contact info
         phone: '',  // TODO: Get from contact info
         message: '',
