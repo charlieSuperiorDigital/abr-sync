@@ -25,6 +25,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { useTaskStore } from '@/app/stores/task-store'
 import { Task } from '@/app/types/task'
+import { OpportunityInfoCard } from '../opportunity-info-card/opportunity-info-card'
 
 interface NewTaskModalProps {
   children: React.ReactNode
@@ -194,6 +195,9 @@ export function NewTaskModal({
             </div>
 
             <div className="overflow-y-auto flex-1 p-6">
+              {defaultRelation?.type === 'opportunity' && (
+                <OpportunityInfoCard opportunityId={defaultRelation.id} />
+              )}
               <form 
                 onSubmit={(e) => {
                   e.preventDefault()
