@@ -443,3 +443,24 @@ export function ArchiveButtonCell({
     </Button>
   )
 }
+
+interface RelatedToCellProps {
+  relatedObjects: Array<{
+    type: string;
+    id: string;
+  }>;
+}
+
+export function RelatedToCell({ relatedObjects }: RelatedToCellProps) {
+  if (!relatedObjects || relatedObjects.length === 0) return null;
+  
+  return (
+    <div className="flex flex-wrap gap-2">
+      {relatedObjects.map((obj, index) => (
+        <span key={`${obj.type}-${obj.id}-${index}`} className="text-sm font-medium text-slate-700">
+          #{obj.id}
+        </span>
+      ))}
+    </div>
+  );
+}
