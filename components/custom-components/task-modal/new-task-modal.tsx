@@ -234,7 +234,7 @@ export function NewTaskModal({
                     }
                   )(e)
                 }} 
-                className="space-y-6"
+                className="space-y-6 mt-6"
               >
                 <div>
                   <label className="block mb-2 font-semibold">{t('template')}</label>
