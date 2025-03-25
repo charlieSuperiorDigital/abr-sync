@@ -10,7 +10,7 @@ import {
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { ContactData, ContactMethod } from '@/app/types/contact-info.types'
 import { ColumnDef } from '@tanstack/react-table'
-import { ClipboardPlus, Paperclip } from 'lucide-react'
+import { ClipboardPlus, Paperclip, Plus } from 'lucide-react'
 import { Opportunity, OpportunityStatus, PartsWarningStatus } from '@/app/types/opportunity'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
@@ -18,6 +18,7 @@ import { useState, useCallback } from 'react'
 import { useOpportunityStore } from '@/app/stores/opportunity-store'
 import dynamic from "next/dynamic";
 import { StatusBadge } from '@/components/custom-components/status-badge/status-badge';
+import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
 
 const PdfPreview = dynamic(() => import("@/app/[locale]/custom-components/pdf-preview"), {
   ssr: false,
@@ -222,17 +223,26 @@ export default function EstimateOpportunities() {
     },
     {
       id: 'task',
-      header: 'Create Task',
+      header: 'Task',
       cell: ({ row }) => (
-        <div 
-          data-testid="task-button" 
-          className="cursor-pointer hover:text-blue-600 transition-colors"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleTaskClick(row.original)
-          }}
+        <div
+        onClick={(e) => {
+          e.stopPropagation()
+        }}
         >
-          <ClipboardPlus size={18} />
+
+          <NewTaskModal
+            title="New Task"
+            defaultRelation={
+              {
+                id: row.original.opportunityId,
+                type: 'opportunity'
+              }
+            }
+            children={
+              <Plus className="w-5 h-5 m-auto" />
+            }
+          />
         </div>
       ),
     },

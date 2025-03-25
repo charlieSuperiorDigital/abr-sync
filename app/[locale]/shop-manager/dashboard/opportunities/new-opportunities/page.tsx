@@ -183,7 +183,7 @@ export default function NewOpportunities() {
     },
     {
       id: 'task',
-      header: '',
+      header: 'Task',
       cell: ({ row }) => (
         <div
         onClick={(e) => {

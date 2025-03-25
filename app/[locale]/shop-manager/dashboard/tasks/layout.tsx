@@ -30,7 +30,7 @@ export default function TasksLayout({
         />
       </div>
 
-      <DraggableNav navItems={_taskNavItems} />
+      <DraggableNav navItems={_taskNavItems} defaultTab="my-tasks" />
 
       <main className=" w-full">{children}</main>
     </div>
