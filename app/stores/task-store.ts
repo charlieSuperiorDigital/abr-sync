@@ -155,12 +155,16 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   // Entity-specific task functions
   getTasksByOpportunityId: (opportunityId) => {
     const state = get()
-    return state.tasks.filter((task) => task.relatedTo === `opportunity:${opportunityId}`)
+    return state.tasks.filter((task) => 
+      task.relatedTo.some(relation => relation.type === 'opportunity' && relation.id === opportunityId)
+    )
   },
 
   getTasksByWorkfileId: (workfileId) => {
     const state = get()
-    return state.tasks.filter((task) => task.relatedTo === `workfile:${workfileId}`)
+    return state.tasks.filter((task) => 
+      task.relatedTo.some(relation => relation.type === 'workfile' && relation.id === workfileId)
+    )
   },
 
   addTaskToOpportunity: (opportunityId, task) => {
@@ -168,7 +172,10 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     state.addTask({
       ...task,
       id: crypto.randomUUID(),
-      relatedTo: `opportunity:${opportunityId}`,
+      relatedTo: [{
+        type: 'opportunity',
+        id: opportunityId
+      }],
       createdDate: new Date().toISOString(),
       lastUpdatedDate: new Date().toISOString(),
     })
@@ -179,7 +186,10 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     state.addTask({
       ...task,
       id: crypto.randomUUID(),
-      relatedTo: `workfile:${workfileId}`,
+      relatedTo: [{
+        type: 'workfile',
+        id: workfileId
+      }],
       createdDate: new Date().toISOString(),
       lastUpdatedDate: new Date().toISOString(),
     })
@@ -188,10 +198,12 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   convertOpportunityTaskToWorkfile: (taskId, workfileId) => {
     const state = get()
     const task = state.getTaskById(taskId)
-    if (!task || !task.relatedTo.startsWith('opportunity:')) return
+    if (!task || !task.relatedTo.some(relation => relation.type === 'opportunity')) return
 
     state.updateTask(taskId, {
-      relatedTo: `workfile:${workfileId}`,
+      relatedTo: task.relatedTo.map(relation => 
+        relation.type === 'opportunity' ? { type: 'workfile', id: workfileId } : relation
+      ),
       lastUpdatedDate: new Date().toISOString(),
     })
   },
@@ -200,8 +212,8 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     const state = get()
     const opportunityTasks = state.getTasksByOpportunityId(opportunityId)
     return opportunityTasks.map(task => {
-      const workfileId = task.relatedTo.replace('workfile:', '')
-      const workfileTasks = state.getTasksByWorkfileId(workfileId)
+      const workfileId = task.relatedTo.find(relation => relation.type === 'workfile')?.id
+      const workfileTasks = state.getTasksByWorkfileId(workfileId || '')
       return { originalTask: task, workfileTasks }
     })
   },

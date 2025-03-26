@@ -52,7 +52,7 @@ export default function OpportunitiesLayout({
   return (
     <div className="flex flex-col w-full min-h-screen">
       <h1 className="text-3xl font-semibold tracking-tight px-5 my-7">Opportunities</h1>
-      <DraggableNav navItems={navItems} />
+      <DraggableNav navItems={navItems}  />
       <main className="w-full">{children}</main>
     </div>
   )

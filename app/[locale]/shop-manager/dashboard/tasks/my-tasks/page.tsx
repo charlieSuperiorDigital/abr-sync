@@ -14,6 +14,7 @@ import {
   DescriptionCell,
   FriendlyDateCell,
   PriorityBadgeCell,
+  RelatedToCell,
   StatusBadgeCell,
   SummaryCell,
   TitleCell,
@@ -36,7 +37,7 @@ export default function NewOpportunities() {
   // Subscribe to the store's tasks array
   const tasks = useTaskStore(state => state.tasks)
   const userTasks = tasks//.filter(task => task.assignedTo === '123456')
-  
+
   const columns: ColumnDef<Task>[] = [
     {
       accessorKey: 'id',
@@ -93,6 +94,7 @@ export default function NewOpportunities() {
     {
       accessorKey: 'relatedTo',
       header: 'Related To',
+      cell: ({ row }) => <RelatedToCell relatedObjects={row.original.relatedTo} />,
       
     },
     {
