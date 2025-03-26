@@ -45,7 +45,7 @@ export default function DraggableNav({ navItems, defaultTab }: DraggableNavProps
       setActiveTab(currentTab)
     } else if (defaultTab && items.some((item) => item.id === defaultTab)) {
       setActiveTab(defaultTab)
-      router.push(defaultTab)
+      router.push(`${pathname}/${defaultTab}`)
     }
   }, [pathname, items, defaultTab])
 
