@@ -12,10 +12,10 @@ export interface NavItem {
 
 interface DraggableNavProps {
   navItems?: NavItem[]
+  defaultTab?: string
 }
 
-
-export default function DraggableNav({ navItems }: DraggableNavProps) {
+export default function DraggableNav({ navItems, defaultTab }: DraggableNavProps) {
   const [items, setItems] = useState<NavItem[]>([])
   const [draggedItem, setDraggedItem] = useState<number | null>(null)
   const [activeTab, setActiveTab] = useState<string | null>(null)
@@ -33,17 +33,21 @@ export default function DraggableNav({ navItems }: DraggableNavProps) {
         setItems(updatedItems);
       } else {
         setItems(navItems);
-        setActiveTab(navItems[0].id);
+        // Use defaultTab if provided, otherwise use first item
+        setActiveTab(defaultTab || navItems[0].id);
       }
     }
-  }, [navItems])
+  }, [navItems, defaultTab])
 
   useEffect(() => {
     const currentTab = pathname.split('/').pop()
     if (currentTab && items.some((item) => item.id === currentTab)) {
       setActiveTab(currentTab)
+    } else if (defaultTab && items.some((item) => item.id === defaultTab)) {
+      setActiveTab(defaultTab)
+      router.push(`${pathname}/${defaultTab}`)
     }
-  }, [pathname, items])
+  }, [pathname, items, defaultTab])
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedItem(index)

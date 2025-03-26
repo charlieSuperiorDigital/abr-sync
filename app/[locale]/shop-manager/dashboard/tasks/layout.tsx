@@ -23,13 +23,14 @@ export default function TasksLayout({
         <h1 className="text-3xl font-semibold tracking-tight">Tasks</h1>
         <NewTaskModal
           title="New Task"
+          defaultRelation={undefined}
           children={
             <Plus className="w-5 h-5 m-auto" />
           }
         />
       </div>
 
-      <DraggableNav navItems={_taskNavItems} />
+      <DraggableNav navItems={_taskNavItems}defaultTab='my-tasks' />
 
       <main className=" w-full">{children}</main>
     </div>

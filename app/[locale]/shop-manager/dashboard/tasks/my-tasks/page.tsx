@@ -14,6 +14,7 @@ import {
   DescriptionCell,
   FriendlyDateCell,
   PriorityBadgeCell,
+  RelatedToCell,
   StatusBadgeCell,
   SummaryCell,
   TitleCell,
@@ -93,6 +94,7 @@ export default function NewOpportunities() {
     {
       accessorKey: 'relatedTo',
       header: 'Related To',
+      cell: ({ row }) => <RelatedToCell relatedObjects={row.original.relatedTo} />,
       
     },
     {

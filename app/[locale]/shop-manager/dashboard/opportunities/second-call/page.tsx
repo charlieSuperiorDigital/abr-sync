@@ -9,7 +9,7 @@ import {
 } from '@/components/custom-components/custom-table/table-cells'
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { ColumnDef } from '@tanstack/react-table'
-import { Archive, ClipboardPlus } from 'lucide-react'
+import { Archive, ClipboardPlus, Plus } from 'lucide-react'
 import { Opportunity, OpportunityStatus, PartsWarningStatus } from '@/app/types/opportunity'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
@@ -19,6 +19,7 @@ import DarkButton from '@/app/[locale]/custom-components/dark-button'
 import ConfirmationModal from '@/components/custom-components/confirmation-modal/confirmation-modal'
 import { StatusBadge } from '@/components/custom-components/status-badge/status-badge'
 import { showArchiveToast } from '@/app/utils/toast-utils'
+import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
 
 export default function SecondCallOpportunities() {
   const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity, archiveOpportunity } = useOpportunityStore()
@@ -206,17 +207,26 @@ export default function SecondCallOpportunities() {
     },
     {
       id: 'task',
-      header: 'TASK',
+      header: 'Task',
       cell: ({ row }) => (
         <div
-          data-testid="task-button"
-          className="cursor-pointer hover:text-blue-600 transition-colors"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleTaskClick(row.original)
-          }}
+        onClick={(e) => {
+          e.stopPropagation()
+        }}
         >
-          <ClipboardPlus size={18} />
+
+          <NewTaskModal
+            title="New Task"
+            defaultRelation={
+              {
+                id: row.original.opportunityId,
+                type: 'opportunity'
+              }
+            }
+            children={
+              <Plus className="w-5 h-5 m-auto" />
+            }
+          />
         </div>
       ),
     },

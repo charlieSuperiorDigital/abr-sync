@@ -25,15 +25,22 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { useTaskStore } from '@/app/stores/task-store'
 import { Task } from '@/app/types/task'
+import { OpportunityInfoCard } from '../opportunity-info-card/opportunity-info-card'
 
 interface NewTaskModalProps {
   children: React.ReactNode
   title: string
+  defaultRelation?: {
+    type: 'opportunity' | 'workfile' | 'vehicle' | 'customer'
+    id: string
+    title?: string
+  }
 }
 
 export function NewTaskModal({
   children,
   title,
+  defaultRelation
 }: NewTaskModalProps) {
   const [shouldShowModal, setShouldShowModal] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -108,7 +115,7 @@ export function NewTaskModal({
         createdBy: 'Current User', // TODO: Get from auth context
         createdDate: new Date().toISOString().slice(0, 10),
         dueDateTime,
-        relatedTo: '',//data.template || '',
+        relatedTo: defaultRelation ? [defaultRelation] : [],
         email: '',  // TODO: Get from contact info
         phone: '',  // TODO: Get from contact info
         message: '',
@@ -188,6 +195,9 @@ export function NewTaskModal({
             </div>
 
             <div className="overflow-y-auto flex-1 p-6">
+              {defaultRelation?.type === 'opportunity' && (
+                <OpportunityInfoCard opportunityId={defaultRelation.id} />
+              )}
               <form 
                 onSubmit={(e) => {
                   e.preventDefault()
@@ -224,7 +234,7 @@ export function NewTaskModal({
                     }
                   )(e)
                 }} 
-                className="space-y-6"
+                className="space-y-6 mt-6"
               >
                 <div>
                   <label className="block mb-2 font-semibold">{t('template')}</label>

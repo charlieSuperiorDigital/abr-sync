@@ -16,6 +16,12 @@ export interface TaskAttachment {
   uploadedDate: string
 }
 
+export interface TaskRelation {
+  type: 'opportunity' | 'workfile' | 'vehicle' | 'customer'
+  id: string
+  title?: string
+}
+
 export interface Task {
   id: string
   priority: {
@@ -27,7 +33,7 @@ export interface Task {
   createdBy: string
   createdDate?: string
   dueDateTime: string
-  relatedTo: string
+  relatedTo: TaskRelation[]
   email: string
   phone: string
   message: string

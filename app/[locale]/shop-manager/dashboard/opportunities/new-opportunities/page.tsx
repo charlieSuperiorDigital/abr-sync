@@ -9,7 +9,7 @@ import {
 } from '@/components/custom-components/custom-table/table-cells'
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { ColumnDef } from '@tanstack/react-table'
-import { ClipboardPlus, Archive } from 'lucide-react'
+import { ClipboardPlus, Archive, Plus } from 'lucide-react'
 import { Opportunity, OpportunityStatus, PartsWarningStatus } from '@/app/types/opportunity'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
@@ -18,6 +18,7 @@ import { useOpportunityStore } from '@/app/stores/opportunity-store'
 import { StatusBadge } from '@/components/custom-components/status-badge/status-badge'
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
 import ConfirmationModal from '@/components/custom-components/confirmation-modal/confirmation-modal'
+import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
 
 export default function NewOpportunities() {
   const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity, archiveOpportunity } = useOpportunityStore()
@@ -162,14 +163,14 @@ export default function NewOpportunities() {
     },
     {
       header: 'Summary',
-      cell: ({ row }) => <SummaryCell text='Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'/>,
+      cell: ({ row }) => <SummaryCell text='Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' />,
     },
     {
       id: 'contact',
       header: 'Contact',
       cell: ({ row }) => (
-        <div 
-          data-testid="contact-info" 
+        <div
+          data-testid="contact-info"
           className="cursor-pointer"
           onClick={(e) => {
             e.stopPropagation()
@@ -182,17 +183,26 @@ export default function NewOpportunities() {
     },
     {
       id: 'task',
-      header: '',
+      header: 'Task',
       cell: ({ row }) => (
-        <div 
-          data-testid="task-button" 
-          className="cursor-pointer hover:text-blue-600 transition-colors"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleTaskClick(row.original)
-          }}
+        <div
+        onClick={(e) => {
+          e.stopPropagation()
+        }}
         >
-          <ClipboardPlus size={18} />
+
+          <NewTaskModal
+            title="New Task"
+            defaultRelation={
+              {
+                id: row.original.opportunityId,
+                type: 'opportunity'
+              }
+            }
+            children={
+              <Plus className="w-5 h-5 m-auto" />
+            }
+          />
         </div>
       ),
     },
