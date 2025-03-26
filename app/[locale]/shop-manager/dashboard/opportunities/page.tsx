@@ -15,6 +15,7 @@ import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import { useState, useCallback } from 'react'
 import { useOpportunityStore } from '@/app/stores/opportunity-store'
+import DateTimePicker from '@/app/[locale]/custom-components/date-time-picker'
 
 export default function Opportunities() {
   const { opportunities, setSelectedOpportunity, selectedOpportunity } = useOpportunityStore()
@@ -83,7 +84,11 @@ export default function Opportunities() {
       accessorKey: 'dropDate',
       header: 'Drop Date',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{formatDate(row.original.dropDate)}</span>
+        <DateTimePicker
+          value={row.original.dropDate}
+          editable={!row.original.dropDate}
+          onOk={(date: Date) => console.log(date)}
+        />
       ),
     },
     {

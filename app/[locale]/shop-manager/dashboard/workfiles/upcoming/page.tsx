@@ -5,6 +5,7 @@ import {
   VehicleCell,
 } from '@/components/custom-components/custom-table/table-cells'
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
+import DateTimePicker from '@/app/[locale]/custom-components/date-time-picker'
 import { ColumnDef } from '@tanstack/react-table'
 import { ClipboardPlus, Calendar, Check, MessageSquareMore } from 'lucide-react'
 import { Workfile, WorkfileStatus } from '@/app/types/workfile'
@@ -131,10 +132,11 @@ export default function Upcoming() {
       accessorKey: 'dropDate',
       header: 'DROP DATE',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap flex items-center">
-          <Calendar size={14} className="mr-1" />
-          {formatDate(row.original.dropDate)}
-        </span>
+        <DateTimePicker
+          value={row.original.dropDate}
+          editable={!row.original.dropDate}
+          onOk={(date: Date) => console.log(date)}
+        />
       ),
     },
     {

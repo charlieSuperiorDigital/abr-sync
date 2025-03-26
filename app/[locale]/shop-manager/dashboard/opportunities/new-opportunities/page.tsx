@@ -18,7 +18,7 @@ import { useOpportunityStore } from '@/app/stores/opportunity-store'
 import { StatusBadge } from '@/components/custom-components/status-badge/status-badge'
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
 import ConfirmationModal from '@/components/custom-components/confirmation-modal/confirmation-modal'
-import { DatePicker } from 'rsuite'
+import DateTimePicker from '@/app/[locale]/custom-components/date-time-picker'
 
 export default function NewOpportunities() {
   const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity, archiveOpportunity } = useOpportunityStore()
@@ -106,40 +106,11 @@ export default function NewOpportunities() {
       accessorKey: 'dropDate',
       header: 'Drop Date',
       cell: ({ row }) => (
-        <div
-          data-testid="contact-info"
-          className="cursor-pointer"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleContactClick(row.original)
-          }}
-        >
-          {/* <span className="whitespace-nowrap">{formatDate(row.original.dropDate??'')}</span> */}
-          <DatePicker
-            format="dd/MM/yyyy hh:mm aa"
-            showMeridiem
-            appearance="subtle"
-            // disabled={row.original.isInRental}
-            placeholder="Select Date"
-            onOk={date => console.log(date)}
-            cleanable={false}
-            editable={!row.original.isInRental}
-            loading={false}
-            renderValue={date =>
-              row.original.isInRental
-                ? "in rental"
-                : date?.toLocaleString('en-US', {
-                  month: '2-digit',
-                  day: '2-digit',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  hour12: true
-                })
-            }
-           
-          />
-        </div>
+        <DateTimePicker
+          value={row.original.dropDate}
+          editable={!row.original.dropDate}
+          onOk={(date: Date) => console.log(date)}
+        />
       ),
     },
     {

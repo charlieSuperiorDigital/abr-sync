@@ -13,6 +13,7 @@ import { useWorkfileStore } from '@/app/stores/workfile-store'
 import RoundButtonWithTooltip from '@/app/[locale]/custom-components/round-button-with-tooltip'
 import { StatusBadge } from '@/components/custom-components/status-badge/status-badge'
 import { formatDate } from '@/app/utils/date-utils'
+import DateTimePicker from '@/app/[locale]/custom-components/date-time-picker'
 
 export default function Sublets() {
   const { workfiles, setSelectedWorkfile, selectedWorkfile, updateWorkfile } = useWorkfileStore()
@@ -226,9 +227,11 @@ export default function Sublets() {
       accessorKey: 'sublet.dropOffDate',
       header: 'Drop Off Date',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">
-          {formatDate(row.original.sublet?.dropOffDate) || '---'}
-        </span>
+        <DateTimePicker
+          value={row.original.sublet?.dropOffDate}
+          editable={!row.original.sublet?.dropOffDate}
+          onOk={(date: Date) => console.log(date)}
+        />
       ),
     },
     {
