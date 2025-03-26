@@ -18,6 +18,7 @@ import { useOpportunityStore } from '@/app/stores/opportunity-store'
 import { StatusBadge } from '@/components/custom-components/status-badge/status-badge'
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
 import ConfirmationModal from '@/components/custom-components/confirmation-modal/confirmation-modal'
+import { DatePicker } from 'rsuite'
 
 export default function NewOpportunities() {
   const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity, archiveOpportunity } = useOpportunityStore()
@@ -105,7 +106,40 @@ export default function NewOpportunities() {
       accessorKey: 'dropDate',
       header: 'Drop Date',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{formatDate(row.original.dropDate)}</span>
+        <div
+          data-testid="contact-info"
+          className="cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation()
+            handleContactClick(row.original)
+          }}
+        >
+          {/* <span className="whitespace-nowrap">{formatDate(row.original.dropDate??'')}</span> */}
+          <DatePicker
+            format="dd/MM/yyyy hh:mm aa"
+            showMeridiem
+            appearance="subtle"
+            // disabled={row.original.isInRental}
+            placeholder="Select Date"
+            onOk={date => console.log(date)}
+            cleanable={false}
+            editable={!row.original.isInRental}
+            loading={false}
+            renderValue={date =>
+              row.original.isInRental
+                ? "in rental"
+                : date?.toLocaleString('en-US', {
+                  month: '2-digit',
+                  day: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: true
+                })
+            }
+           
+          />
+        </div>
       ),
     },
     {
@@ -162,14 +196,14 @@ export default function NewOpportunities() {
     },
     {
       header: 'Summary',
-      cell: ({ row }) => <SummaryCell text='Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'/>,
+      cell: ({ row }) => <SummaryCell text='Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' />,
     },
     {
       id: 'contact',
       header: 'Contact',
       cell: ({ row }) => (
-        <div 
-          data-testid="contact-info" 
+        <div
+          data-testid="contact-info"
           className="cursor-pointer"
           onClick={(e) => {
             e.stopPropagation()
@@ -184,8 +218,8 @@ export default function NewOpportunities() {
       id: 'task',
       header: '',
       cell: ({ row }) => (
-        <div 
-          data-testid="task-button" 
+        <div
+          data-testid="task-button"
           className="cursor-pointer hover:text-blue-600 transition-colors"
           onClick={(e) => {
             e.stopPropagation()

@@ -7,6 +7,8 @@ import type { NextLayoutProps } from 'next'
 import type { Metadata } from 'next'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import 'rsuite/dist/rsuite-no-reset.min.css';
+import { CustomProvider } from 'rsuite';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -57,7 +59,9 @@ export default async function RootLayout({
     <html lang={locale}>
       <body className={`${inter.variable} font-sans antialiased bg-[#F0FOFO]`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
+          <CustomProvider>
           {children}
+          </CustomProvider>
           <ToastContainer
             position="bottom-right"
             autoClose={3000}

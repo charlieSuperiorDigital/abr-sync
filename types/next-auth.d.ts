@@ -4,6 +4,7 @@ declare module 'next-auth' {
   export interface Session {
     user: {
       id: string
+      token: string
       name?: string | null
       email?: string | null
       image?: string | null
@@ -16,6 +17,7 @@ declare module 'next-auth' {
     name?: string | null
     email?: string | null
     image?: string | null
+    token: string
     role: string
   }
 }
