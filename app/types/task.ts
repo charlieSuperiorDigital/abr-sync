@@ -49,6 +49,7 @@ export interface Task {
   location?: string
   type?: TaskType
   template?: string
+  recurrence?: 'Every Day' | 'Every Week' | 'Every Month' | 'Every Year' | 'Custom'
   // Recurring task properties
   recurringFrequency?: string
   recurringDays?: string[]

@@ -37,7 +37,7 @@ export default function NewOpportunities() {
   // Subscribe to the store's tasks array
   const tasks = useTaskStore(state => state.tasks)
   const userTasks = tasks//.filter(task => task.assignedTo === '123456')
-  
+
   const columns: ColumnDef<Task>[] = [
     {
       accessorKey: 'id',

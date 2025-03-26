@@ -22,11 +22,13 @@ import {
 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { PriorityBadge } from '../priority-badge/priority-badge'
-import * as Dialog from '@radix-ui/react-dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { act, useState } from 'react'
 import { EditTaskModal } from '../task-modal/edit-task-modal'
 import RoundButtonWithTooltip from '@/app/[locale]/custom-components/round-button-with-tooltip'
 import { getFriendlyDate, formatDateTime, formatDate } from '@/lib/utils/date'
+import { OpportunityInfoCard } from '../opportunity-info-card/opportunity-info-card'
 
 interface TitleCellProps {
   title: string
@@ -56,15 +58,15 @@ export function CreatedByCell({ createdBy, currentUser }: CreatedByCellProps) {
 interface StatusBadgeProps {
   status: string
   variant?:
-    | 'default'
-    | 'danger'
-    | 'warning'
-    | 'neutral'
-    | 'slate'
-    | 'info'
-    | 'success'
-    | 'forest'
-    | 'dark'
+  | 'default'
+  | 'danger'
+  | 'warning'
+  | 'neutral'
+  | 'slate'
+  | 'info'
+  | 'success'
+  | 'forest'
+  | 'dark'
 }
 
 export function StatusBadgeCell({ status, variant }: StatusBadgeProps) {
@@ -78,15 +80,15 @@ export function StatusBadgeCell({ status, variant }: StatusBadgeProps) {
 interface PriorityBadgeProps {
   priority: string
   variant?:
-    | 'default'
-    | 'danger'
-    | 'warning'
-    | 'neutral'
-    | 'slate'
-    | 'info'
-    | 'success'
-    | 'forest'
-    | 'dark'
+  | 'default'
+  | 'danger'
+  | 'warning'
+  | 'neutral'
+  | 'slate'
+  | 'info'
+  | 'success'
+  | 'forest'
+  | 'dark'
 }
 
 export function PriorityBadgeCell({ priority, variant }: PriorityBadgeProps) {
@@ -121,7 +123,7 @@ export function FriendlyDateCell({ date, variant }: FriendlyDateCellProps) {
   }
 
   const friendlyDate = getFriendlyDate(date)
-  const isUrgent = variant === 'due' && 
+  const isUrgent = variant === 'due' &&
     (friendlyDate === 'Today' || friendlyDate === 'Tomorrow')
 
   return (
@@ -241,9 +243,8 @@ export function ContactMethodCell({
             <Button
               variant="ghost"
               size="icon"
-              className={`h-8 w-8 rounded-full transition-colors hover:bg-black ${
-                !messages ? 'text-gray-400' : 'text-black'
-              } hover:text-white`}
+              className={`h-8 w-8 rounded-full transition-colors hover:bg-black ${!messages ? 'text-gray-400' : 'text-black'
+                } hover:text-white`}
               onClick={(e) => {
                 e.stopPropagation()
                 console.log('Messages clicked')
@@ -265,9 +266,8 @@ export function ContactMethodCell({
             <Button
               variant="ghost"
               size="icon"
-              className={`h-8 w-8 rounded-full transition-colors hover:bg-black ${
-                !email ? 'text-gray-400' : 'text-black'
-              } hover:text-white`}
+              className={`h-8 w-8 rounded-full transition-colors hover:bg-black ${!email ? 'text-gray-400' : 'text-black'
+                } hover:text-white`}
               onClick={(e) => {
                 e.stopPropagation()
                 console.log('Email clicked')
@@ -284,9 +284,8 @@ export function ContactMethodCell({
             <Button
               variant="ghost"
               size="icon"
-              className={`h-8 w-8 rounded-full transition-colors hover:bg-black ${
-                !phone ? 'text-gray-400' : 'text-black'
-              } hover:text-white`}
+              className={`h-8 w-8 rounded-full transition-colors hover:bg-black ${!phone ? 'text-gray-400' : 'text-black'
+                } hover:text-white`}
               onClick={(e) => {
                 e.stopPropagation()
                 console.log('Phone clicked')
@@ -340,7 +339,7 @@ export function UploadTimeCell({ deadline }: UploadTimeCellProps) {
 export function SummaryCell({ text }: { text: string }) {
   return (
     <div className="flex items-center justify-center">
-      <RoundButtonWithTooltip 
+      <RoundButtonWithTooltip
         buttonIcon={<MessageSquareMore className="h-5 w-5" />}
         tooltipText={text}
       />
@@ -380,25 +379,23 @@ interface ActionButtonCellProps {
 
 export function ActionButtonCell({ label, onClick }: ActionButtonCellProps) {
   return (
-    <Dialog.Root>
-      <Dialog.Trigger>
+    <Dialog>
+      <DialogTrigger asChild>
         <span className="bg-black text-white rounded-2xl flex items-center gap-2 w-20 h-8 justify-center hover:opacity-90 ">
           <Check className="h-4 w-4" />
           {label}
         </span>
-      </Dialog.Trigger>
-      <Dialog.Portal>
-        <Dialog.Content className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-4 rounded-lg shadow-lg">
-          <div className="dialog">
-            <Dialog.Title>Dialog</Dialog.Title>
-            <div>
-              <p>Dialog content</p>
-              <p>Dialog content</p>
-            </div>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Dialog</DialogTitle>
+        </DialogHeader>
+        <div>
+          <p>Dialog content</p>
+          <p>Dialog content</p>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -452,14 +449,38 @@ interface RelatedToCellProps {
 }
 
 export function RelatedToCell({ relatedObjects }: RelatedToCellProps) {
+
   if (!relatedObjects || relatedObjects.length === 0) return null;
-  
+
   return (
     <div className="flex flex-wrap gap-2">
       {relatedObjects.map((obj, index) => (
-        <span key={`${obj.type}-${obj.id}-${index}`} className="text-sm font-medium text-slate-700">
-          #{obj.id}
-        </span>
+        <Popover key={`${obj.type}-${obj.id}-${index}`}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              className="p-0"
+            >
+              <span className="text-sm font-semibold underline" >
+                #{obj.id}{index !== relatedObjects.length - 1 && ', '}
+              </span>
+              
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            align="start"
+            side="left"
+            sideOffset={5}
+            className="w-[750px]"
+          >
+            <div>
+              <h3 className="font-semibold mb-2">{`#${obj.id}`}</h3>
+              {obj.type.toLowerCase() === 'opportunity' && (
+                <OpportunityInfoCard opportunityId={obj.id} />
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
       ))}
     </div>
   );
