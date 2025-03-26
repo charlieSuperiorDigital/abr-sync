@@ -19,6 +19,7 @@ import { StatusBadge } from '@/components/custom-components/status-badge/status-
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
 import ConfirmationModal from '@/components/custom-components/confirmation-modal/confirmation-modal'
 import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
+import DateTimePicker from '@/app/[locale]/custom-components/date-time-picker'
 
 export default function NewOpportunities() {
   const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity, archiveOpportunity } = useOpportunityStore()
@@ -106,7 +107,11 @@ export default function NewOpportunities() {
       accessorKey: 'dropDate',
       header: 'Drop Date',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{formatDate(row.original.dropDate)}</span>
+        <DateTimePicker
+          value={row.original.dropDate}
+          editable={!row.original.dropDate}
+          onOk={(date: Date) => console.log(date)}
+        />
       ),
     },
     {

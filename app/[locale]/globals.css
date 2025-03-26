@@ -8,7 +8,8 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 94%; /* Updated to match #F0F0F0 */
+    --background: 0 0% 94%;
+    /* Updated to match #F0F0F0 */
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 3.9%;
@@ -33,7 +34,9 @@ body {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+   
   }
+
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
@@ -62,10 +65,70 @@ body {
   }
 }
 
+.rs-calendar-table-cell-selected .rs-calendar-table-cell-content {
+  background: black !important;
+  color: white !important;
+}
+
+.rs-picker-toolbar-right .rs-btn-primary {
+  background: black !important;  
+  color: white !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 8px 16px !important;
+  font-weight: 500 !important;
+  width: '100%' !important;
+}
+
+/* Hover state */
+.rs-picker-toolbar-right .rs-btn-primary:hover {
+  background: black !important;  
+}
+
+/* Active (click) state */
+.rs-picker-toolbar-right .rs-btn-primary:active {
+  background: black !important;
+}
+
+.rs-calendar-table-cell-selected .rs-calendar-table-cell-content {
+  background: black !important;  /* Purple */
+  color: white !important;
+  border-radius: 6px !important;
+  font-weight: bold !important;
+}
+
+/* Hover state for selected day */
+.rs-calendar-table-cell-selected:hover .rs-calendar-table-cell-content {
+  background: rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Today's cell (optional) */
+.rs-calendar-table-cell-is-today .rs-calendar-table-cell-content {
+  border: 2px solid black !important;
+
+}
+
+/* Selected time in the dropdown panel */
+.rs-picker-date .rs-picker-daterange-panel-show-time .rs-calendar-time-dropdown-cell-active {
+  color: #6e3bff !important;  /* Purple text */
+  font-weight: bold !important;
+}
+
+/* Hover state */
+.rs-picker-date .rs-picker-daterange-panel-show-time .rs-calendar-time-dropdown-cell:hover {
+  background: #f3f0ff !important;  /* Light purple */
+}
+
+/* Active (selected) time cell background */
+.rs-picker-date .rs-picker-daterange-panel-show-time .rs-calendar-time-dropdown-cell-active {
+  background: rgba(110, 59, 255, 0.1) !important;  /* 10% purple tint */
+}
+
 @layer base {
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
