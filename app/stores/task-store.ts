@@ -44,7 +44,7 @@ interface TaskStore {
 }
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
-  tasks: mockTasks.map(task => ({ ...task, status: 'open' as const, relatedTo: [] })),
+  tasks: mockTasks.map(task => ({ ...task, status: 'open' as const })),
   selectedTask: null,
 
   setSelectedTask: (task) => set({ selectedTask: task }),
