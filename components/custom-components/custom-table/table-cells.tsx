@@ -22,11 +22,13 @@ import {
 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { PriorityBadge } from '../priority-badge/priority-badge'
-import * as Dialog from '@radix-ui/react-dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { act, useState } from 'react'
 import { EditTaskModal } from '../task-modal/edit-task-modal'
 import RoundButtonWithTooltip from '@/app/[locale]/custom-components/round-button-with-tooltip'
 import { getFriendlyDate, formatDateTime, formatDate } from '@/lib/utils/date'
+import { OpportunityInfoCard } from '../opportunity-info-card/opportunity-info-card'
 
 interface TitleCellProps {
   title: string
@@ -380,25 +382,23 @@ interface ActionButtonCellProps {
 
 export function ActionButtonCell({ label, onClick }: ActionButtonCellProps) {
   return (
-    <Dialog.Root>
-      <Dialog.Trigger>
+    <Dialog>
+      <DialogTrigger asChild>
         <span className="bg-black text-white rounded-2xl flex items-center gap-2 w-20 h-8 justify-center hover:opacity-90 ">
           <Check className="h-4 w-4" />
           {label}
         </span>
-      </Dialog.Trigger>
-      <Dialog.Portal>
-        <Dialog.Content className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-4 rounded-lg shadow-lg">
-          <div className="dialog">
-            <Dialog.Title>Dialog</Dialog.Title>
-            <div>
-              <p>Dialog content</p>
-              <p>Dialog content</p>
-            </div>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Dialog</DialogTitle>
+        </DialogHeader>
+        <div>
+          <p>Dialog content</p>
+          <p>Dialog content</p>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -457,9 +457,29 @@ export function RelatedToCell({ relatedObjects }: RelatedToCellProps) {
   return (
     <div className="flex flex-wrap gap-2">
       {relatedObjects.map((obj, index) => (
-        <span key={`${obj.type}-${obj.id}-${index}`} className="text-sm font-medium text-slate-700">
-          #{obj.id}
-        </span>
+        <Popover key={`${obj.type}-${obj.id}-${index}`}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              className="text-sm font-medium text-slate-700 hover:text-slate-900 p-0"
+            >
+              #{obj.id}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent 
+            align="start" 
+            side="left" 
+            sideOffset={5}
+            className="w-[750px]"
+          >
+            <div>
+              <h3 className="font-semibold mb-2">{`#${obj.id}`}</h3>
+              {obj.type.toLowerCase() === 'opportunity' && (
+                <OpportunityInfoCard opportunityId={obj.id} />
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
       ))}
     </div>
   );
