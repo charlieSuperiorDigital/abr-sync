@@ -32,13 +32,12 @@ import { Task } from '@/app/types/task'
 import { EditTaskModal } from '@/components/custom-components/task-modal/edit-task-modal'
 import * as deleteTaskModal from '@/components/custom-components/task-modal/delete-task-modal'
 
-export default function MyTasks() {
+export default function CreatedByMe() {
   
   const _currentUserIdMock = '123456'
-
   // Subscribe to the store's tasks array
   const tasks = useTaskStore(state => state.tasks)
-  const userTasks = tasks.filter(task => task.assignedTo === _currentUserIdMock && task.status !== 'completed')
+  const userTasks = tasks.filter(task => task.createdBy === _currentUserIdMock && task.status !== 'completed')
 
   const columns: ColumnDef<Task>[] = [
     {
@@ -67,11 +66,11 @@ export default function MyTasks() {
       
     },
     {
-      accessorKey: 'createdBy',
-      header: 'Created By',
+      accessorKey: 'assignedTo',
+      header: 'Assigned To',
       cell: ({ row }) => 
       <CreatedByCell 
-        createdBy={row.original.createdBy} 
+        createdBy={row.original.assignedTo || ''} 
         currentUser={'123456'}//To Do: Get Current User
       />,
     },
