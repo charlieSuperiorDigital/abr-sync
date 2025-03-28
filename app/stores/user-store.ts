@@ -9,6 +9,7 @@ interface UserStore {
   getUsersByRole: (role: string) => User[]
   getActiveUsers: () => User[]
   updateUser: (updatedUser: User) => void
+  addUser: (user: User) => void
 }
 
 export const useUserStore = create<UserStore>((set, get) => ({
@@ -32,5 +33,10 @@ export const useUserStore = create<UserStore>((set, get) => ({
         user.id === updatedUser.id ? updatedUser : user
       )
     }))
-  }
+  },
+
+  addUser: (user) => 
+    set((state) => ({
+      users: [...state.users, user]
+    })),
 }))

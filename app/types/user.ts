@@ -1,111 +1,102 @@
-export type UserRole =
-  | 'BodyTech'
-  | 'PaintTech'
-  | 'CSR'
-  | 'Estimator'
-  | 'PartManager'
-  | 'ShopManager'
-  | 'ShopOwner'
-  | 'Technician'
-  | 'Admin'
+export enum UserRole {
+  Admin = 'Admin',
+  ShopOwner = 'ShopOwner',
+  ShopManager = 'ShopManager',
+  PartManager = 'PartManager',
+  Estimator = 'Estimator',
+  CSR = 'CSR',
+  BodyTech = 'BodyTech',
+  PaintTech = 'PaintTech',
+  Technician = 'Technician'
+}
 
+export enum Language {
+  English = 'English',
+  Español = 'Español'
+}
 
+export enum ModuleAccess {
+  All = 'All',
+  Opportunities = 'Opportunities',
+  Workfiles = 'Workfiles',
+  Parts = 'Parts',
+  Users = 'Users',
+  Settings = 'Settings',
+  Locations = 'Locations',
+  VehicleOwners = 'Insurance & Vehicle Owners'
+}
 
+export enum CommunicationAccess {
+  All = 'All',
+  Insurances = 'Insurances',
+  Vendors = 'Vendors',
+  VehicleOwners = 'Vehicle Owners'
+}
 
+export enum NotificationType {
+  SMS = 'SMS',
+  Email = 'Email',
+  Both = 'Both'
+}
 
-export type Language = 'English' | 'Español'
+export enum NotificationCategory {
+  All = 'All',
+  TaskAssigned = 'TaskAssigned',
+  TaskCompleted = 'TaskCompleted',
+  OpportunityCreated = 'OpportunityCreated',
+  WorkfileECD = 'WorkfileECD'
+}
 
-export type ModuleAccess =
-  | 'All'
-  | 'Opportunities'
-  | 'Workfiles'
-  | 'Parts'
-  | 'Insurance'
-  | 'VehicleOwners'
-  | 'Users'
-  | 'Locations'
-  | 'Settings'
-
-export type CommunicationAccess =
-  | 'All'
-  | 'Insurances'
-  | 'Vendors'
-  | 'VehicleOwners'
-
-export type NotificationType = 'SMS' | 'Email' | 'Both'
-
-export type NotificationCategory =
-  | 'All'
-  | 'WorkfileECD'
-  | 'TaskAssigned'
-  | 'TaskCompleted'
-  | 'OpportunityCreated'
-
-// Available locations in the system
-export const AVAILABLE_LOCATIONS = [
-  'Main Shop',
-  'Paint Shop',
-  'Body Shop',
-  'Detail Center',
-  'Parts Department',
-  'Service Center',
-  'QC Bay'
-] as const
-
-export type Location = typeof AVAILABLE_LOCATIONS[number]
+export enum Location {
+  MainShop = 'Main Shop',
+  PaintShop = 'Paint Shop',
+  BodyShop = 'Body Shop',
+  DetailCenter = 'Detail Center',
+  PartsDepartment = 'Parts Department',
+  ServiceCenter = 'Service Center',
+  QCBay = 'QC Bay'
+}
 
 export interface User {
   id: string
   fullName: string
   email: string
   phoneNumber: string
-  password: string // Note: This should be hashed in the database
+  password: string
   role: UserRole
   hourlyRate: number
   isActive: boolean
   preferredLanguage: Language
-
-  // Access Control
   moduleAccess: ModuleAccess[]
   communicationAccess: CommunicationAccess[]
-
-  // Notification Preferences
   notificationType: NotificationType
   notificationCategories: NotificationCategory[]
-
-  // Metadata
+  locations: Location[]
   createdAt: string
   updatedAt: string
-  lastLoginAt?: string
-
-  // Optional fields
-  avatar?: string
-  department?: string
-  locations: Location[]
-  notes?: string
+  avatar: string
 }
 
-// Example of creating a new user
-export const createDefaultUser = (
-  id: string,
-  fullName: string,
-  email: string,
-  role: UserRole
-): User => ({
-  id,
-  fullName,
-  email,
+// Available locations in the system
+export const AVAILABLE_LOCATIONS = Object.values(Location)
+
+// Default user object for initialization
+export const DEFAULT_USER = {
+  id: '',
+  fullName: '',
+  email: '',
   phoneNumber: '',
-  password: '', // Should be set through proper authentication flow
-  role,
+  password: '',
+  role: UserRole.Technician,
   hourlyRate: 0,
   isActive: true,
-  preferredLanguage: 'English',
+  preferredLanguage: Language.English,
   moduleAccess: [],
   communicationAccess: [],
-  notificationType: 'Email',
+  notificationType: NotificationType.Email,
   notificationCategories: [],
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-  locations: []
-})
+  locations: [],
+  createdAt: '',
+  updatedAt: '',
+  avatar: ''
+} as const

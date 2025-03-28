@@ -64,19 +64,28 @@
       "sunday": "Sunday"
     }
   },
+  "User": {
+    "full-name": "Full Name",
+    "email": "Email",
+    "phone": "Phone Number",
+    "password": "Password",
+    "role": "Role",
+    "hourly-rate": "Hourly Rate",
+    "active": "Active Access",
+    "language": "Preferred Language",
+    "modules": "Module Access",
+    "communication": "Communication Access",
+    "notifications": "Notifications",
+    "locations": "Locations",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saving": "Saving..."
+  },
   "Validation": {
-    "due-date-required": "Due date is required",
-    "errorEmail": "Please enter a valid email address",
-    "errorEmailRequired": "Email is required",
-    "errorLogin": "Invalid email or password",
-    "errorPassword": "Please enter a valid password",
-    "errorPasswordRequired": "Password is required",
-    "location-required": "Location is required",
-    "priority-required": "Priority is required",
-    "recurring-days-required": "Select at least one day for recurring tasks",
-    "recurring-fields-required": "Frequency and days are required for recurring tasks",
-    "recurring-frequency-required": "Frequency is required for recurring tasks",
-    "task-title-required": "Task title is required",
-    "task-type-required": "Task type is required"
+    "required": "This field is required",
+    "email": "Invalid email address",
+    "min-length": "Must be at least {0} characters",
+    "min-value": "Must be greater than or equal to {0}",
+    "phone": "Invalid phone number"
   }
 }
