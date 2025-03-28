@@ -105,13 +105,7 @@ export default function BodyTechs() {
         </div>
       ),
     },
-    {
-      accessorKey: 'lastLoginAt',
-      header: 'Last Login',
-      cell: ({ row }) => (
-        <FriendlyDateCell date={row.original.lastLoginAt || ''} />
-      ),
-    },
+    
   ]
 
   return (
