@@ -1,0 +1,104 @@
+'use client'
+import { DataTable } from '@/components/custom-components/custom-table/data-table'
+import { AutoCell } from '@/components/custom-components/custom-table/table-cells'
+import { ColumnDef } from '@tanstack/react-table'
+import { useUserStore } from '@/app/stores/user-store'
+import { User, AVAILABLE_LOCATIONS } from '@/app/types/user'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { UserCircle2 } from 'lucide-react'
+import { LocationSelect } from '@/app/components/custom-components/location-select'
+
+
+export default function BodyTechs() {
+  const users = useUserStore(state => state.users)
+  const updateUser = useUserStore(state => state.updateUser)
+  const bodyTechs = users.filter(user => user.role === 'BodyTech')
+
+  const columns: ColumnDef<User>[] = [
+    {
+      accessorKey: 'fullName',
+      header: 'Name',
+      cell: ({ row }) => (
+        <div className="flex items-center gap-3">
+          <Avatar className="h-[22px] w-[22px]">
+            <AvatarImage 
+              src={row.original.avatar} 
+              alt={row.original.fullName} 
+            />
+            <AvatarFallback>
+              <UserCircle2 className="h-4 w-4 text-muted-foreground" />
+            </AvatarFallback>
+          </Avatar>
+          <div className="text-base font-semibold leading-none">{row.original.fullName}</div>
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'email',
+      header: 'Email',
+      cell: ({ row }) => (
+        <div className="text-muted-foreground">{row.original.email}</div>
+      ),
+    },
+    {
+      accessorKey: 'phoneNumber',
+      header: 'Phone Number',
+      cell: ({ row }) => (
+        <div className="text-muted-foreground">{row.original.phoneNumber}</div>
+      ),
+    },
+    {
+      accessorKey: 'locations',
+      header: 'Locations',
+      cell: ({ row }) => (
+        <LocationSelect
+          selectedLocations={row.original.locations}
+          onLocationsChange={(locations) => {
+            updateUser({
+              ...row.original,
+              locations
+            })
+          }}
+        />
+      ),
+    },
+    {
+      accessorKey: 'isActive',
+      header: 'Access',
+      cell: ({ row }) => (
+        <div className="flex items-center space-x-2">
+          <Checkbox 
+            id={`active-${row.original.id}`}
+            checked={row.original.isActive}
+            disabled
+            className={cn(
+              "data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
+              "border-muted"
+            )}
+          />
+          <Label 
+            htmlFor={`active-${row.original.id}`}
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            Active Access
+          </Label>
+        </div>
+      ),
+    },
+  ]
+
+  return (
+    <div className="p-6">
+      <DataTable
+        columns={columns}
+        data={bodyTechs}
+        pageSize={10}
+        showPageSize={true}
+        pageSizeOptions={[5, 10, 20, 50]}
+      />
+    </div>
+  )
+}
