@@ -1,6 +1,5 @@
 'use client'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
-import { AutoCell, FriendlyDateCell } from '@/components/custom-components/custom-table/table-cells'
 import { ColumnDef } from '@tanstack/react-table'
 import { useUserStore } from '@/app/stores/user-store'
 import { User, AVAILABLE_LOCATIONS, Location } from '@/app/types/user'
@@ -10,12 +9,12 @@ import { cn } from '@/lib/utils'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { UserCircle2 } from 'lucide-react'
 import { LocationSelect } from '@/app/components/custom-components/location-select'
+import { FriendlyDateCell } from '@/components/custom-components/custom-table/table-cells'
 
-
-export default function BodyTechs() {
+export default function Admins() {
   const users = useUserStore(state => state.users)
   const updateUser = useUserStore(state => state.updateUser)
-  const bodyTechs = users.filter(user => user.role === 'BodyTech')
+  const admins = users.filter(user => user.role === 'Admin')
 
   const columns: ColumnDef<User>[] = [
     {
@@ -117,11 +116,10 @@ export default function BodyTechs() {
     <div className="w-full">
       <DataTable
         columns={columns}
-        data={bodyTechs}
+        data={admins}
         pageSize={10}
         showPageSize={true}
         pageSizeOptions={[5, 10, 20, 50]}
-        
       />
     </div>
   )
