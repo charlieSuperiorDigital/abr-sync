@@ -39,6 +39,9 @@ export function NewUserModal({
     }
   }
 
+  const validationMessage = useTranslations('Validation')
+  
+
   const {
     register,
     handleSubmit,
@@ -196,8 +199,6 @@ export function NewUserModal({
                     control={control}
                     render={({ field }) => (
                       <CustomSelect
-                        placeholder="Select a role"
-
                         label={t('role')}
                         options={UserRoleOptions}
                         value={field.value ? [field.value] : []}

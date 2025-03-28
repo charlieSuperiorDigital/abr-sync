@@ -5,7 +5,6 @@ import DraggableNav, {
 import type React from 'react'
 import { Plus } from 'lucide-react'
 import { NewUserModal } from '@/components/custom-components/user-modal/new-user-modal'
-import { UserRole } from '@/app/types/user'
 import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
 import { useUserStore } from '@/app/stores/user-store'
 import { UserRole } from '@/app/types/user'
@@ -63,11 +62,13 @@ export default function UsersLayout({
     <div className="flex flex-col w-full min-h-screen">
       <div className="flex items-center justify-between px-5 my-7">
         <h1 className="text-3xl font-semibold tracking-tight">Users</h1>
-        <NewTaskModal
-          title="New Task"
-          defaultRelation={undefined}
+        <NewUserModal
+          title="Add User"
           children={
-            <Plus className="w-5 h-5 m-auto" />
+            <button className="flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+              <Plus className="w-5 h-5 mr-2" />
+              Add User
+            </button>
           }
         />
       </div>
