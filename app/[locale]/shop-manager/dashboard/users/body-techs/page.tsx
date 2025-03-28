@@ -3,7 +3,7 @@ import { DataTable } from '@/components/custom-components/custom-table/data-tabl
 import { AutoCell } from '@/components/custom-components/custom-table/table-cells'
 import { ColumnDef } from '@tanstack/react-table'
 import { useUserStore } from '@/app/stores/user-store'
-import { User, AVAILABLE_LOCATIONS } from '@/app/types/user'
+import { User, AVAILABLE_LOCATIONS, Location } from '@/app/types/user'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
@@ -55,11 +55,18 @@ export default function BodyTechs() {
       header: 'Locations',
       cell: ({ row }) => (
         <LocationSelect
-          selectedLocations={row.original.locations}
+          selectedLocations={row.original.locations.filter(loc => 
+            AVAILABLE_LOCATIONS.includes(loc as Location)
+          ) as Location[]}
           onLocationsChange={(locations) => {
+            // Ensure only valid locations are saved
+            const validLocations = locations.filter(loc => 
+              AVAILABLE_LOCATIONS.includes(loc as Location)
+            ) as Location[]
+
             updateUser({
               ...row.original,
-              locations
+              locations: validLocations
             })
           }}
         />
@@ -73,7 +80,14 @@ export default function BodyTechs() {
           <Checkbox 
             id={`active-${row.original.id}`}
             checked={row.original.isActive}
-            disabled
+            onCheckedChange={(checked) => {
+              updateUser({
+                ...row.original,
+                isActive: checked as boolean,
+                // Update lastUpdatedAt when changing access
+                updatedAt: new Date().toISOString()
+              })
+            }}
             className={cn(
               "data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
               "border-muted"
