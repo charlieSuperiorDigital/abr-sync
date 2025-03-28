@@ -60,6 +60,7 @@ export default function BodyTechs() {
               AVAILABLE_LOCATIONS.includes(loc as Location)
             ) as Location[]}
             onLocationsChange={(locations) => {
+              
               // Ensure only valid locations are saved
               const validLocations = locations.filter(loc => 
                 AVAILABLE_LOCATIONS.includes(loc as Location)
