@@ -1,4 +1,3 @@
-// This file represents the received route
 'use client'
 
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
@@ -8,10 +7,10 @@ import {
 } from '@/components/custom-components/custom-table/table-cells'
 import { ColumnDef } from '@tanstack/react-table'
 import { useState } from 'react'
-import { receivedMockData } from '@/app/mocks/parts-management'
+import { backorderedMockData } from '@/app/mocks/parts-management'
 
-interface PartsReceived {
-  receivedId: string
+interface PartsBackordered {
+  backorderId: string
   roNumber: string
   vehicle: {
     make: string
@@ -23,15 +22,14 @@ interface PartsReceived {
   assignedTech: string
   status: string
   lastUpdated: string
-  receivedDate: string
-  receivedBy: string
-  vendor: string
+  backorderEta: string
+  vendorContact: string
 }
 
-export default function Received() {
-  const [data] = useState<PartsReceived[]>(receivedMockData)
+export default function Backordered() {
+  const [data] = useState<PartsBackordered[]>(backorderedMockData)
 
-  const columns: ColumnDef<PartsReceived, any>[] = [
+  const columns: ColumnDef<PartsBackordered, any>[] = [
     {
       accessorKey: 'roNumber',
       header: 'RO #',
@@ -76,21 +74,17 @@ export default function Received() {
       ),
     },
     {
-      accessorKey: 'receivedDate',
-      header: 'Received Date',
+      accessorKey: 'backorderEta',
+      header: 'Backorder ETA',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
-          {new Date(row.original.receivedDate).toLocaleDateString()}
+          {new Date(row.original.backorderEta).toLocaleDateString()}
         </span>
       ),
     },
     {
-      accessorKey: 'receivedBy',
-      header: 'Received By',
-    },
-    {
-      accessorKey: 'vendor',
-      header: 'Vendor',
+      accessorKey: 'vendorContact',
+      header: 'Vendor Contact',
     },
   ]
 
