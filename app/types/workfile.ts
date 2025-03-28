@@ -34,7 +34,10 @@ export enum SubletStatus {
 export type QualityControlChecklistItem = {
   title: string; // Title of the checklist item
   completed: boolean; // Whether the checklist item has been completed
-  date?: string; // Date when the checklist item was completed (ISO format)
+  completionDate?: string; // Date when the checklist item was completed (ISO format)
+  enabled: boolean; // Whether the checklist item is enabled and should be shown
+  isCustomField: boolean; // Whether this is a custom field added by the user
+  description?: string; // Description for custom fields
 };
 
 // Represents the quality control object

@@ -86,23 +86,33 @@ export const workfiles: Workfile[] = [
         checklist: [
           {
             title: "VOIL Check",
-            completed: false
+            completed: false,
+            enabled: true,
+            isCustomField: false
           },
           {
             title: "4 Corners Inspection",
-            completed: false
+            completed: false,
+            enabled: true,
+            isCustomField: false
           },
           {
             title: "Pre-Scan",
-            completed: false
+            completed: false,
+            enabled: true,
+            isCustomField: false
           },
           {
             title: "Post-Scan",
-            completed: false
+            completed: false,
+            enabled: true,
+            isCustomField: false
           },
           {
             title: "Final Inspection",
-            completed: false
+            completed: false,
+            enabled: true,
+            isCustomField: false
           }
         ],
         assignedTo: "John Smith"
@@ -186,7 +196,38 @@ export const workfiles: Workfile[] = [
       },
       qualityControl: {
         status: QualityControlStatus.AWAITING,
-        checklist: [],
+        checklist: [
+          {
+            title: "VOIL Check",
+            completed: false,
+            enabled: true,
+            isCustomField: false
+          },
+          {
+            title: "4 Corners Inspection",
+            completed: false,
+            enabled: true,
+            isCustomField: false
+          },
+          {
+            title: "Pre-Scan",
+            completed: false,
+            enabled: true,
+            isCustomField: false
+          },
+          {
+            title: "Post-Scan",
+            completed: false,
+            enabled: true,
+            isCustomField: false
+          },
+          {
+            title: "Final Inspection",
+            completed: false,
+            enabled: true,
+            isCustomField: false
+          }
+        ],
         assignedTo: "Michael Johnson"
       },
       sublet: {
@@ -256,14 +297,39 @@ export const workfiles: Workfile[] = [
         status: QualityControlStatus.AWAITING,
         checklist: [
           {
-            title: "Paint Match",
-            completed: true,
-            date: "2023-10-13T18:00:00Z"
+            title: "VOIL Check",
+            completed: false,
+            enabled: true,
+            isCustomField: false,
+            completionDate: "2023-10-13T14:00:00Z"
           },
           {
-            title: "Panel Alignment",
-            completed: true,
-            date: "2023-10-13T19:00:00Z"
+            title: "4 Corners Inspection",
+            completed: false,
+            enabled: true,
+            isCustomField: false,
+            completionDate: "2023-10-13T15:00:00Z"
+          },
+          {
+            title: "Pre-Scan",
+            completed: false,
+            enabled: true,
+            isCustomField: false,
+            completionDate: "2023-10-13T16:00:00Z"
+          },
+          {
+            title: "Post-Scan",
+            completed: false,
+            enabled: true,
+            isCustomField: false,
+            completionDate: "2023-10-13T17:00:00Z"
+          },
+          {
+            title: "Final Inspection",
+            completed: false,
+            enabled: true,
+            isCustomField: false,
+            completionDate: "2023-10-13T18:00:00Z"
           }
         ],
         assignedTo: "Sarah Williams"
@@ -356,19 +422,39 @@ export const workfiles: Workfile[] = [
         status: QualityControlStatus.COMPLETED,
         checklist: [
           {
-            title: "Paint Match",
-            completed: true,
-            date: "2023-10-13T14:00:00Z"
+            title: "VOIL Check",
+            completed: false,
+            enabled: true,
+            isCustomField: false,
+            completionDate: "2023-10-13T14:00:00Z"
           },
           {
-            title: "Panel Alignment",
-            completed: true,
-            date: "2023-10-13T15:00:00Z"
+            title: "4 Corners Inspection",
+            completed: false,
+            enabled: true,
+            isCustomField: false,
+            completionDate: "2023-10-13T15:00:00Z"
+          },
+          {
+            title: "Pre-Scan",
+            completed: false,
+            enabled: true,
+            isCustomField: false,
+            completionDate: "2023-10-13T16:00:00Z"
+          },
+          {
+            title: "Post-Scan",
+            completed: false,
+            enabled: true,
+            isCustomField: false,
+            completionDate: "2023-10-13T17:00:00Z"
           },
           {
             title: "Final Inspection",
-            completed: true,
-            date: "2023-10-13T16:00:00Z"
+            completed: false,
+            enabled: true,
+            isCustomField: false,
+            completionDate: "2023-10-13T18:00:00Z"
           }
         ],
         assignedTo: "Michael Johnson"
@@ -463,28 +549,38 @@ export const workfiles: Workfile[] = [
         checklist: [
           {
             title: "VOIL Check",
-            completed: true,
-            date: "2023-10-15T13:30:00Z"
+            completed: false,
+            enabled: true,
+            isCustomField: false,
+            completionDate: "2023-10-15T13:30:00Z"
           },
           {
             title: "4 Corners Inspection",
-            completed: true,
-            date: "2023-10-15T13:45:00Z"
+            completed: false,
+            enabled: true,
+            isCustomField: false,
+            completionDate: "2023-10-15T13:45:00Z"
           },
           {
             title: "Pre-Scan",
-            completed: true,
-            date: "2023-10-15T11:00:00Z"
+            completed: false,
+            enabled: true,
+            isCustomField: false,
+            completionDate: "2023-10-15T11:00:00Z"
           },
           {
             title: "Post-Scan",
-            completed: true,
-            date: "2023-10-15T16:30:00Z"
+            completed: false,
+            enabled: true,
+            isCustomField: false,
+            completionDate: "2023-10-15T16:30:00Z"
           },
           {
             title: "Final Inspection",
-            completed: true,
-            date: "2023-10-15T17:00:00Z"
+            completed: false,
+            enabled: true,
+            isCustomField: false,
+            completionDate: "2023-10-15T17:00:00Z"
           }
         ],
         completionDate: "2023-10-15T17:30:00Z",
