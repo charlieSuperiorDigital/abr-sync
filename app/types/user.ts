@@ -91,6 +91,8 @@ export interface User {
   //roles: string; // JSON string of roles array
   invitations: any[]; // Could be replaced with Invitation type if needed
   tenantRoles: any[]; // Could be replaced with TenantRole type if needed
+
+  lastLoginAt: string;
 }
 
 // Available locations in the system

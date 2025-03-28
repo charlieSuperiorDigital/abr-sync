@@ -8,6 +8,7 @@ import { NewUserModal } from '@/components/custom-components/user-modal/new-user
 import { UserRole } from '@/app/types/user'
 import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
 import { useUserStore } from '@/app/stores/user-store'
+import { UserRole } from '@/app/types/user'
 
 export default function UsersLayout({
   children,
