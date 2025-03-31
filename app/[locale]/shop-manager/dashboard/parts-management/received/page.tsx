@@ -9,6 +9,9 @@ import {
 import { ColumnDef } from '@tanstack/react-table'
 import { useState } from 'react'
 import { receivedMockData } from '@/app/mocks/parts-management'
+import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
+import { Plus } from 'lucide-react'
+import DarkButton from '@/app/[locale]/custom-components/dark-button'
 
 interface PartsReceived {
   receivedId: string
@@ -49,35 +52,8 @@ export default function Received() {
       ),
     },
     {
-      accessorKey: 'partsCount',
-      header: 'Parts Count',
-    },
-    {
-      accessorKey: 'assignedTech',
-      header: 'Assigned Tech',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.assignedTech}</span>
-      ),
-    },
-    {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => (
-        <StatusBadgeCell status={row.original.status} />
-      ),
-    },
-    {
-      accessorKey: 'lastUpdated',
-      header: 'Last Updated',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">
-          {new Date(row.original.lastUpdated).toLocaleDateString()}
-        </span>
-      ),
-    },
-    {
       accessorKey: 'receivedDate',
-      header: 'Received Date',
+      header: 'RECEIVED',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
           {new Date(row.original.receivedDate).toLocaleDateString()}
@@ -85,12 +61,64 @@ export default function Received() {
       ),
     },
     {
-      accessorKey: 'receivedBy',
-      header: 'Received By',
+      accessorKey: 'assignedTech',
+      header: 'PARTS MANAGER',
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">{row.original.assignedTech}</span>
+      ),
+    },
+    {
+      accessorKey: 'estimator',
+      header: 'ESTIMATOR',
+
+    },
+    {
+      accessorKey: 'partsCount',
+      header: 'Parts Count',
+    },
+    {
+      accessorKey: 'estimate',
+      header: 'ESTIMATE'
+    },
+    {
+      accessorKey: 'ecd',
+      header: 'ECD',
     },
     {
       accessorKey: 'vendor',
       header: 'Vendor',
+    },
+    {
+      accessorKey: 'viewParts',
+      header: 'VIEW PARTS',
+      cell: ({ row }) => (
+        <DarkButton buttonText="View Parts" onClick={() => { console.log('view parts') }} />
+      ),
+    },
+    {
+      id: 'task',
+      header: 'Task',
+      cell: ({ row }) => (
+        <div
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+        >
+
+          <NewTaskModal
+            title="New Task"
+            defaultRelation={
+              {
+                id: row.original.receivedId,
+                type: 'opportunity'
+              }
+            }
+            children={
+              <Plus className="m-auto w-5 h-5" />
+            }
+          />
+        </div>
+      ),
     },
   ]
 

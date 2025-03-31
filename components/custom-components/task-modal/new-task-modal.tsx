@@ -170,7 +170,7 @@ export function NewTaskModal({
       <div className="flex items-center h-full">
         <button
           onClick={() => handleShowModal()}
-          className="flex items-center justify-center h-8 w-8 rounded-full transition-colors duration-200 hover:bg-black hover:text-white"
+          className="flex justify-center items-center w-8 h-8 rounded-full transition-colors duration-200 hover:bg-black hover:text-white"
           aria-label="New Task"
         >
           {children}
@@ -179,7 +179,7 @@ export function NewTaskModal({
 
       {shouldShowModal && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          className="flex fixed inset-0 z-50 justify-center items-center p-4 bg-black bg-opacity-50"
           onClick={handleOverlayClick}
         >
           <div className="bg-white rounded-3xl w-full max-w-3xl max-h-[90vh] flex flex-col">
@@ -234,7 +234,7 @@ export function NewTaskModal({
                     }
                   )(e)
                 }} 
-                className="space-y-6 mt-6"
+                className="mt-6 space-y-6"
               >
                 <div>
                   <label className="block mb-2 font-semibold">{t('template')}</label>
@@ -257,12 +257,12 @@ export function NewTaskModal({
                     )}
                   />
                   {errors.template && (
-                    <p className="text-sm text-red-500 mt-1">{errors.template.message}</p>
+                    <p className="mt-1 text-sm text-red-500">{errors.template.message}</p>
                   )}
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-bold mb-4">{t('task-information')}</h3>
+                  <h3 className="mb-4 text-lg font-bold">{t('task-information')}</h3>
                   
                   <div className="mb-4">
                     <label className="block mb-2 font-semibold">{t('priority')}</label>
@@ -277,7 +277,7 @@ export function NewTaskModal({
                       )}
                     />
                     {errors.priority && (
-                      <p className="text-sm text-red-500 mt-1">{errors.priority.message}</p>
+                      <p className="mt-1 text-sm text-red-500">{errors.priority.message}</p>
                     )}
                   </div>
 
@@ -327,7 +327,7 @@ export function NewTaskModal({
                         )}
                       />
                       {errors.location && (
-                        <p className="text-sm text-red-500 mt-1">{errors.location.message}</p>
+                        <p className="mt-1 text-sm text-red-500">{errors.location.message}</p>
                       )}
                     </div>
 
@@ -344,13 +344,13 @@ export function NewTaskModal({
                         )}
                       />
                       {errors.type && (
-                        <p className="text-sm text-red-500 mt-1">{errors.type.message}</p>
+                        <p className="mt-1 text-sm text-red-500">{errors.type.message}</p>
                       )}
                     </div>
 
                     {watchType === 'Recurring' && (
                       <>
-                        <div className="flex flex-col gap-4 w-full mt-4">
+                        <div className="flex flex-col gap-4 mt-4 w-full">
                           <Controller
                             control={control}
                             name="recurringFrequency"
@@ -362,7 +362,7 @@ export function NewTaskModal({
                             )}
                           />
                           {errors.recurringFrequency && (
-                            <p className="text-sm text-red-500 mt-1">{errors.recurringFrequency.message}</p>
+                            <p className="mt-1 text-sm text-red-500">{errors.recurringFrequency.message}</p>
                           )}
                           <Controller
                             control={control}
@@ -376,7 +376,7 @@ export function NewTaskModal({
                             )}
                           />
                           {errors.recurringDays && (
-                            <p className="text-sm text-red-500 mt-1">{errors.recurringDays.message}</p>
+                            <p className="mt-1 text-sm text-red-500">{errors.recurringDays.message}</p>
                           )}
                           <Controller
                             control={control}
@@ -391,7 +391,7 @@ export function NewTaskModal({
                             )}
                           />
                           {errors.recurringEndDate && (
-                            <p className="text-sm text-red-500 mt-1">{errors.recurringEndDate.message}</p>
+                            <p className="mt-1 text-sm text-red-500">{errors.recurringEndDate.message}</p>
                           )}
                           <Controller
                             control={control}
@@ -406,7 +406,7 @@ export function NewTaskModal({
                             )}
                           />
                           {errors.recurringEndTime && (
-                            <p className="text-sm text-red-500 mt-1">{errors.recurringEndTime.message}</p>
+                            <p className="mt-1 text-sm text-red-500">{errors.recurringEndTime.message}</p>
                           )}
                         </div>
                       </>
@@ -448,10 +448,10 @@ export function NewTaskModal({
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-bold mb-4">{t('assign-to')}</h3>
+                  <h3 className="mb-4 text-lg font-bold">{t('assign-to')}</h3>
                   <div className="grid grid-cols-2 gap-6">
                     <div>
-                      <h4 className="font-semibold mb-2">{t('assign-to-roles')}</h4>
+                      <h4 className="mb-2 font-semibold">{t('assign-to-roles')}</h4>
                       <Controller
                         control={control}
                         name="assignToRoles"
@@ -480,11 +480,11 @@ export function NewTaskModal({
                         )}
                       />
                       {errors.assignToRoles && (
-                        <p className="text-sm text-red-500 mt-1">{errors.assignToRoles.message}</p>
+                        <p className="mt-1 text-sm text-red-500">{errors.assignToRoles.message}</p>
                       )}
                     </div>
                     <div>
-                      <h4 className="font-semibold mb-2">{t('assign-to-user')}</h4>
+                      <h4 className="mb-2 font-semibold">{t('assign-to-user')}</h4>
                       <Controller
                         control={control}
                         name="assignToUser"
@@ -525,24 +525,24 @@ export function NewTaskModal({
                         )}
                       />
                       {errors.assignToUser && (
-                        <p className="text-sm text-red-500 mt-1">{errors.assignToUser.message}</p>
+                        <p className="mt-1 text-sm text-red-500">{errors.assignToUser.message}</p>
                       )}
                     </div>
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-4 mt-8">
+                <div className="flex gap-4 justify-end mt-8">
                   <Button
                     type="button"
                     onClick={() => setShouldShowModal(false)}
-                    className="p-2 rounded-full transition-colors duration-200 hover:bg-black hover:text-white w-32"
+                    className="p-2 w-32 rounded-full transition-colors duration-200 hover:bg-black hover:text-white"
                     disabled={isSubmitting}
                   >
                     {t('cancel')}
                   </Button>
                   <Button
                     type="submit"
-                    className="p-2 rounded-full transition-colors duration-200 bg-black text-white hover:bg-gray-800 w-32"
+                    className="p-2 w-32 text-white bg-black rounded-full transition-colors duration-200 hover:bg-gray-800"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? t('saving') : t('save')}

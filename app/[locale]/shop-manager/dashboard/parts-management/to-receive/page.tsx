@@ -9,6 +9,9 @@ import {
 import { ColumnDef } from '@tanstack/react-table'
 import { useState } from 'react'
 import { toReceiveMockData } from '@/app/mocks/parts-management'
+import DarkButton from '@/app/[locale]/custom-components/dark-button'
+import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
+import { Plus } from 'lucide-react'
 
 interface PartsReceive {
   orderId: string
@@ -33,6 +36,10 @@ export default function ToReceive() {
 
   const columns: ColumnDef<PartsReceive, any>[] = [
     {
+      accessorKey: 'toReceive',
+      header: 'TO RECEIVE',
+    },
+    {
       accessorKey: 'roNumber',
       header: 'RO #',
     },
@@ -49,49 +56,76 @@ export default function ToReceive() {
       ),
     },
     {
-      accessorKey: 'partsCount',
-      header: 'Parts Count',
+      accessorKey: 'ordered',
+      header: 'ORDERED',
     },
     {
-      accessorKey: 'assignedTech',
-      header: 'Assigned Tech',
+      accessorKey: 'partsManager',
+      header: 'PARS MANAGER',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">{row.original.assignedTech}</span>
       ),
     },
     {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => (
-        <StatusBadgeCell status={row.original.status} />
-      ),
+      accessorKey: 'toOrder',
+      header: 'TO ORDER',
     },
     {
-      accessorKey: 'lastUpdated',
-      header: 'Last Updated',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">
-          {new Date(row.original.lastUpdated).toLocaleDateString()}
-        </span>
-      ),
+      accessorKey: 'toReceive',
+      header: 'TO RECEIVE',
+    },
+    {
+      accessorKey: 'total',
+      header: 'TOTAL',
+    },
+    {
+      accessorKey: 'estimate',
+      header: 'ESTIMATE',
+    },
+    {
+      accessorKey: 'ecd',
+      header: 'ECD',
     },
     {
       accessorKey: 'expectedDeliveryDate',
-      header: 'Expected Delivery Date',
+      header: 'EXPECTED',
+    },
+    {
+      accessorKey: 'viewParts',
+      header: 'VIEW PARTS',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">
-          {new Date(row.original.expectedDeliveryDate).toLocaleDateString()}
-        </span>
+        <DarkButton buttonText="View Parts" onClick={() => { console.log('view parts') }} />
       ),
     },
     {
-      accessorKey: 'trackingNumber',
-      header: 'Tracking #',
+      id: 'task',
+      header: 'Task',
+      cell: ({ row }) => (
+        <div
+        onClick={(e) => {
+          e.stopPropagation()
+        }}
+        >
+
+          <NewTaskModal
+            title="New Task"
+            defaultRelation={
+              {
+                id: row.original.orderId,
+                type: 'opportunity'
+              }
+            }
+            children={
+              <Plus className="m-auto w-5 h-5" />
+            }
+          />
+        </div>
+      ),
     },
-    {
-      accessorKey: 'partsManager',
-      header: 'Parts Manager',
-    },
+
+
+
+
   ]
 
   return (

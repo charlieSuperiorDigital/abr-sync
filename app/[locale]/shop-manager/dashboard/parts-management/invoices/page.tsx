@@ -8,6 +8,9 @@ import {
 import { ColumnDef } from '@tanstack/react-table'
 import { useState } from 'react'
 import { invoicesMockData } from '@/app/mocks/parts-management'
+import DarkButton from '@/app/[locale]/custom-components/dark-button'
+import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
+import { Plus } from 'lucide-react'
 
 interface PartsInvoice {
   invoiceId: string
@@ -52,44 +55,12 @@ export default function Invoices() {
       header: 'Parts Count',
     },
     {
-      accessorKey: 'assignedTech',
-      header: 'Assigned Tech',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.assignedTech}</span>
-      ),
-    },
-    {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => (
-        <StatusBadgeCell status={row.original.status} />
-      ),
-    },
-    {
-      accessorKey: 'lastUpdated',
-      header: 'Last Updated',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">
-          {new Date(row.original.lastUpdated).toLocaleDateString()}
-        </span>
-      ),
-    },
-    {
-      accessorKey: 'invoiceNumber',
-      header: 'Invoice #',
-    },
-    {
-      accessorKey: 'amount',
-      header: 'Amount',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">
-          {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(row.original.amount)}
-        </span>
-      ),
+      accessorKey: 'estimate',
+      header: 'ESTIMATE',
     },
     {
       accessorKey: 'approvalStatus',
-      header: 'Approval Status',
+      header: 'STATUS',
       cell: ({ row }) => (
         <StatusBadgeCell
           status={row.original.approvalStatus.toUpperCase()}
@@ -97,6 +68,42 @@ export default function Invoices() {
         />
       ),
     },
+    {
+      accessorKey: 'printCheck',
+      header: '',
+      cell: ({ row }) => (
+       <DarkButton buttonText="Print Check" onClick={() => { console.log('print check') }} />
+      ),
+    },
+    {
+      id: 'task',
+      header: 'Task',
+      cell: ({ row }) => (
+        <div
+        onClick={(e) => {
+          e.stopPropagation()
+        }}
+        >
+
+          <NewTaskModal
+            title="New Task"
+            defaultRelation={
+              {
+                id: row.original.invoiceId,
+                type: 'workfile'
+              }
+            }
+            children={
+              <Plus className="m-auto w-5 h-5" />
+            }
+          />
+        </div>
+      ),
+    },
+
+
+
+
   ]
 
   return (

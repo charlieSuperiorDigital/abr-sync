@@ -224,6 +224,11 @@ export const returnsMockData = [
     returnReason: 'Wrong Part Received',
     rmaNumber: 'RMA2025-789',
     refundStatus: 'pending' as RefundStatus,
+    receivedDate: '2025-03-18T10:30:00Z',
+    pickedUpDate: '2025-03-19T14:45:00Z',
+    returnedDate: '2025-03-20T09:15:00Z',
+    refundAmount: 245.75,
+    vendor: 'AutoZone Commercial',
   },
   {
     returnId: 'RET-002',
@@ -241,5 +246,153 @@ export const returnsMockData = [
     returnReason: 'Defective Part',
     rmaNumber: 'RMA2025-790',
     refundStatus: 'approved' as RefundStatus,
+    receivedDate: '2025-03-20T11:20:00Z',
+    pickedUpDate: '2025-03-21T16:30:00Z',
+    returnedDate: '2025-03-22T10:45:00Z',
+    refundAmount: 189.99,
+    vendor: 'NAPA Auto Parts',
   },
 ]
+
+// Cores tab data
+export const coresMockData = [
+  {
+    coreId: 'CORE-001',
+    roNumber: 'RO-2025-0139',
+    vehicle: {
+      make: 'Toyota',
+      model: 'Camry',
+      year: 2023,
+      imageUrl: vehicleImages.toyota,
+    },
+    description: 'Engine Control Module - Core Return Required',
+    price: 350.75,
+    updates: 'NEW',
+    lastUpdated: '2025-03-29T10:15:00Z',
+  },
+  {
+    coreId: 'CORE-002',
+    roNumber: 'RO-2025-0140',
+    vehicle: {
+      make: 'Honda',
+      model: 'Accord',
+      year: 2024,
+      imageUrl: vehicleImages.honda,
+    },
+    description: 'Transmission Assembly - Core Return Required',
+    price: 875.50,
+    updates: 'PENDING',
+    lastUpdated: '2025-03-28T14:30:00Z',
+  },
+  {
+    coreId: 'CORE-003',
+    roNumber: 'RO-2025-0141',
+    vehicle: {
+      make: 'Ford',
+      model: 'F-150',
+      year: 2022,
+      imageUrl: vehicleImages.ford,
+    },
+    description: 'Power Steering Pump - Core Return Required',
+    price: 225.25,
+    updates: 'URGENT',
+    lastUpdated: '2025-03-27T09:45:00Z',
+  },
+  {
+    coreId: 'CORE-004',
+    roNumber: 'RO-2025-0142',
+    vehicle: {
+      make: 'Chevrolet',
+      model: 'Silverado',
+      year: 2023,
+      imageUrl: vehicleImages.chevrolet,
+    },
+    description: 'Alternator - Core Return Required',
+    price: 175.00,
+    updates: 'PROCESSED',
+    lastUpdated: '2025-03-26T16:20:00Z',
+  },
+  {
+    coreId: 'CORE-005',
+    roNumber: 'RO-2025-0143',
+    vehicle: {
+      make: 'Nissan',
+      model: 'Altima',
+      year: 2024,
+      imageUrl: vehicleImages.nissan,
+    },
+    description: 'A/C Compressor - Core Return Required',
+    price: 295.50,
+    updates: 'NEW',
+    lastUpdated: '2025-03-30T11:10:00Z',
+  }
+]
+
+// Vendor details for expandable rows in To Order tab
+export interface VendorDetail {
+  vendorDetailId: string;
+  name: string;
+  representative: string;
+  toOrder: number;
+  toReceive: number;
+  toReturn: number;
+  total: number;
+  totalAmount: number;
+  lastCommunicationDate: string;
+  summary: string;
+  contactInfo: {
+    phone: string;
+    email: string;
+  };
+}
+
+export const vendorDetailsMockData: VendorDetail[] = [
+  {
+    vendorDetailId: 'VD-001',
+    name: 'AutoZone Commercial',
+    representative: 'Michael Johnson',
+    toOrder: 3,
+    toReceive: 2,
+    toReturn: 1,
+    total: 6,
+    totalAmount: 1250.75,
+    lastCommunicationDate: '2025-03-28T14:30:00Z',
+    summary: 'Primary supplier for Toyota and Honda parts. Offers same-day delivery for most items.',
+    contactInfo: {
+      phone: '(555) 123-4567',
+      email: 'mjohnson@autozone.com'
+    }
+  },
+  {
+    vendorDetailId: 'VD-002',
+    name: 'NAPA Auto Parts',
+    representative: 'Sarah Williams',
+    toOrder: 5,
+    toReceive: 3,
+    toReturn: 0,
+    total: 8,
+    totalAmount: 975.50,
+    lastCommunicationDate: '2025-03-29T10:15:00Z',
+    summary: 'Specialized in domestic vehicle parts. Provides extended warranty on all parts.',
+    contactInfo: {
+      phone: '(555) 234-5678',
+      email: 'swilliams@napa.com'
+    }
+  },
+  {
+    vendorDetailId: 'VD-003',
+    name: 'O\'Reilly Auto Parts',
+    representative: 'David Miller',
+    toOrder: 2,
+    toReceive: 4,
+    toReturn: 1,
+    total: 7,
+    totalAmount: 850.25,
+    lastCommunicationDate: '2025-03-27T09:45:00Z',
+    summary: 'Good source for aftermarket parts. Offers competitive pricing on common repair items.',
+    contactInfo: {
+      phone: '(555) 345-6789',
+      email: 'dmiller@oreilly.com'
+    }
+  }
+];
