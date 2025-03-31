@@ -11,6 +11,7 @@ import { ColumnDef } from '@tanstack/react-table'
 import { useState } from 'react'
 import { StatusBadge } from '@/components/custom-components/status-badge/status-badge'
 import { toOrderMockData } from '@/app/mocks/parts-management'
+import DarkButton from '@/app/[locale]/custom-components/dark-button'
 
 interface PartsOrder {
   orderId: string
@@ -35,6 +36,10 @@ export default function ToOrder() {
 
   const columns: ColumnDef<PartsOrder, any>[] = [
     {
+      accessorKey: 'updates',
+      header: 'UPDATES',
+    },
+    {
       accessorKey: 'roNumber',
       header: 'RO #',
     },
@@ -51,8 +56,16 @@ export default function ToOrder() {
       ),
     },
     {
-      accessorKey: 'partsCount',
-      header: 'Parts Count',
+      accessorKey: 'toOrder',
+      header: 'TO ORDER',
+    },
+    {
+      accessorKey: 'toReceive',
+      header: 'TO RECEIVE',
+    },
+    {
+      accessorKey: 'total',
+      header: 'TOTAL',
     },
     {
       accessorKey: 'assignedTech',
@@ -62,46 +75,21 @@ export default function ToOrder() {
       ),
     },
     {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => (
-        <StatusBadgeCell status={row.original.status} />
-      ),
+      accessorKey: 'estimate',
+      header: 'ESTIMATE',
     },
     {
-      accessorKey: 'lastUpdated',
-      header: 'Last Updated',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">
-          {new Date(row.original.lastUpdated).toLocaleDateString()}
-        </span>
-      ),
+      accessorKey: 'ecd',
+      header: 'ECD',
     },
     {
-      accessorKey: 'neededByDate',
-      header: 'Needed By Date',
+      accessorKey: 'viewParts',
+      header: 'VIEW PARTS',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">
-          {new Date(row.original.neededByDate).toLocaleDateString()}
-        </span>
+        <DarkButton buttonText="View Parts" onClick={() => {console.log('view parts')}} />
       ),
     },
-    {
-      accessorKey: 'vendor',
-      header: 'Vendor',
-    },
-    {
-      accessorKey: 'priority',
-      header: 'Priority',
-      cell: ({ row }) => (
-        <StatusBadge
-          variant={row.original.priority === 'high' ? 'danger' : row.original.priority === 'medium' ? 'warning' : 'success'}
-          size="sm"
-        >
-          {row.original.priority.toUpperCase()}
-        </StatusBadge>
-      ),
-    },
+   
   ]
 
   return (
