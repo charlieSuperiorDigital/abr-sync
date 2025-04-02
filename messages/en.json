@@ -2,6 +2,7 @@
   "Login": {
     "email": "Email",
     "forgot": "Forgot your password?",
+    "loading": "Signing in...",
     "password": "Password",
     "register": "Register",
     "remember": "Remember",

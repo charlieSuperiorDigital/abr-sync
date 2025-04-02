@@ -12,6 +12,8 @@ import { toReceiveMockData } from '@/app/mocks/parts-management'
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
 import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
 import { Plus } from 'lucide-react'
+import { ViewPartsModal } from '@/app/[locale]/custom-components/view-parts-modal'
+import { workfiles } from '@/app/mocks/workfiles_new'
 
 interface PartsReceive {
   orderId: string
@@ -33,6 +35,11 @@ interface PartsReceive {
 
 export default function ToReceive() {
   const [data] = useState<PartsReceive[]>(toReceiveMockData)
+
+  // Find a workfile by RO number
+  const findWorkfileByRoNumber = (roNumber: string) => {
+    return workfiles.find(workfile => workfile.roNumber === roNumber) || workfiles[0];
+  }
 
   const columns: ColumnDef<PartsReceive, any>[] = [
     {
@@ -94,7 +101,13 @@ export default function ToReceive() {
       accessorKey: 'viewParts',
       header: 'VIEW PARTS',
       cell: ({ row }) => (
-        <DarkButton buttonText="View Parts" onClick={() => { console.log('view parts') }} />
+        <div className="flex justify-center">
+          <ViewPartsModal workfile={findWorkfileByRoNumber(row.original.roNumber)}>
+            <DarkButton 
+              buttonText="View Parts" 
+            />
+          </ViewPartsModal>
+        </div>
       ),
     },
     {
@@ -122,10 +135,6 @@ export default function ToReceive() {
         </div>
       ),
     },
-
-
-
-
   ]
 
   return (

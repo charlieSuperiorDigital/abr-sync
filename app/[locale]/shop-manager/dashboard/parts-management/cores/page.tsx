@@ -12,6 +12,8 @@ import { coresMockData } from '@/app/mocks/parts-management'
 import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
 import { Plus } from 'lucide-react'
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
+import { ViewPartsModal } from '@/app/[locale]/custom-components/view-parts-modal'
+import { workfiles } from '@/app/mocks/workfiles_new'
 
 interface PartsCores {
   coreId: string
@@ -30,6 +32,11 @@ interface PartsCores {
 
 export default function Cores() {
   const [data] = useState<PartsCores[]>(coresMockData)
+
+  // Find a workfile by RO number
+  const findWorkfileByRoNumber = (roNumber: string) => {
+    return workfiles.find(workfile => workfile.roNumber === roNumber) || workfiles[0];
+  }
 
   const columns: ColumnDef<PartsCores, any>[] = [
     {
@@ -93,9 +100,15 @@ export default function Cores() {
     },
     {
       accessorKey: 'viewParts',
-      header: '',
+      header: 'VIEW PARTS',
       cell: ({ row }) => (
-        <DarkButton buttonText="View Parts" onClick={() => { console.log('view parts') }} />
+        <div className="flex justify-center">
+          <ViewPartsModal workfile={findWorkfileByRoNumber(row.original.roNumber)}>
+            <DarkButton 
+              buttonText="View Parts" 
+            />
+          </ViewPartsModal>
+        </div>
       ),
     },
     {

@@ -1,5 +1,6 @@
 'use client'
 
+import * as React from 'react'
 import {
   StatusBadgeCell,
   VehicleCell,
@@ -19,6 +20,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { ViewPartsModal } from '@/app/[locale]/custom-components/view-parts-modal'
+import { workfiles } from '@/app/mocks/workfiles_new'
 
 interface PartsOrder {
   orderId: string
@@ -59,6 +62,11 @@ export default function ToOrder() {
     return new Date(date).toLocaleDateString()
   }
 
+  // Find a workfile by RO number
+  const findWorkfileByRoNumber = (roNumber: string) => {
+    return workfiles.find(workfile => workfile.roNumber === roNumber) || workfiles[0];
+  }
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -78,7 +86,7 @@ export default function ToOrder() {
         </TableHeader>
         <TableBody>
           {data.map((order) => (
-            <>
+            <React.Fragment key={order.orderId}>
               <TableRow 
                 key={order.orderId} 
                 className="cursor-pointer hover:bg-muted/50"
@@ -101,13 +109,11 @@ export default function ToOrder() {
                 <TableCell>$0</TableCell>
                 <TableCell>{formatDate(order.neededByDate)}</TableCell>
                 <TableCell>
-                  <DarkButton 
-                    buttonText="View Parts" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      console.log('View parts for order:', order.orderId);
-                    }} 
-                  />
+                  <ViewPartsModal workfile={findWorkfileByRoNumber(order.roNumber)}>
+                    <DarkButton 
+                      buttonText="View Parts" 
+                    />
+                  </ViewPartsModal>
                 </TableCell>
               </TableRow>
               
@@ -189,7 +195,7 @@ export default function ToOrder() {
                   </TableCell>
                 </TableRow>
               )}
-            </>
+            </React.Fragment>
           ))}
         </TableBody>
       </Table>
