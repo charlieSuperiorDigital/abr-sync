@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { signIn } from 'next-auth/react'
 import * as z from 'zod'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { CustomInput } from '@/components/custom-components/inputs/custom-input'
 import { CustomButton } from '@/components/custom-components/buttons/custom-button'
 import Image from 'next/image'
@@ -14,6 +15,7 @@ import LocaleSwitcher from '@/components/custom-components/selects/locale-switch
 import { getLoginFormSchema, LoginFormData } from './schema'
 
 export default function LoginPage() {
+  const router = useRouter()
   const t = useTranslations('Login')
   const validationMessage = useTranslations('Validation')
   const [isLoading, setIsLoading] = useState(false)
@@ -37,14 +39,20 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
     try {
-      await signIn('credentials', {
+      const result = await signIn('credentials', {
         redirect: false,
         email: data.email,
         password: data.password,
       })
+      
+      if (result?.ok) {
+        // Successful login, redirect to dashboard
+        router.push(`/${window.location.pathname.split('/')[1]}/shop-manager/dashboard/opportunities/new-opportunities`)
+      } else {
+        console.error('Login failed:', result?.error)
+      }
+      
       console.log('Submitting form data:', data)
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-      console.log('Form submitted successfully:', data)
     } catch (error) {
       console.error('Login error:', error)
     } finally {
@@ -69,7 +77,7 @@ export default function LoginPage() {
         <div className="absolute top-4 right-4">
           <LocaleSwitcher />
         </div>
-        <div className="w-full max-w-md space-y-8">
+        <div className="space-y-8 w-full max-w-md">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-[#101010]">{t('title')}</h1>
           </div>
@@ -118,7 +126,7 @@ export default function LoginPage() {
               loading={isLoading || isSubmitting}
               disabled={isSubmitting}
             >
-              {t('submit')}
+              {isLoading || isSubmitting ? t('loading') : t('submit')}
             </CustomButton>
           </form>
         </div>

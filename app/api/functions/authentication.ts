@@ -50,7 +50,7 @@ export const login = async (credentials: LoginCredentials): Promise<(User & {
     }
     console.log('Login credentials:', credentials)
     try {
-        const response = await apiService.post<AuthResponse>('/authorization/login', {
+        const response = await apiService.post<AuthResponse>('/Authorization/Login', {
             email: credentials.email,
             password: credentials.password,
         })
@@ -88,7 +88,7 @@ export const register = async (credentials: RegisterCredentials): Promise<Regist
   }
 
   try {
-    const response = await apiService.post<RegisterResponse>('/authorization/register', {
+    const response = await apiService.post<RegisterResponse>('/Authorization/Register', {
       tenantId: credentials.tenantId,
       firstName: credentials.firstName,
       lastName: credentials.lastName,

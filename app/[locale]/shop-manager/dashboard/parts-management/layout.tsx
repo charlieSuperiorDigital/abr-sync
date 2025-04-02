@@ -6,8 +6,10 @@ import {
     invoicesMockData, 
     receivedMockData, 
     backorderedMockData,
-    returnsMockData 
+    returnsMockData,
+    coresMockData 
 } from '@/app/mocks/parts-management';
+import { vendorsMockData } from '@/app/mocks/vendors';
 
 export default function PartsManagementLayout({
     children,
@@ -39,7 +41,9 @@ export default function PartsManagementLayout({
                     { id: 'invoices', label: 'Invoices', count: invoicesMockData.length },
                     { id: 'received', label: 'Received', count: receivedMockData.length },
                     { id: 'backordered', label: 'Backordered', count: backorderedMockData.length },
+                    { id: 'cores', label: 'Cores', count: coresMockData.length },
                     { id: 'returns', label: 'Returns', count: returnsMockData.length },
+                    { id: 'vendors', label: 'Vendors', count: vendorsMockData.length },
                     { id: 'reports', label: 'Reports', count: 0 },
                 ]}
             />
