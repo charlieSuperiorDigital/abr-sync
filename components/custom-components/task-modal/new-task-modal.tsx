@@ -23,9 +23,11 @@ import { createLocalISOString } from '@/lib/utils/date'
 import { CustomInput } from '../inputs/custom-input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
-import { useTaskStore } from '@/app/stores/task-store'
 import { Task } from '@/app/types/task'
 import { OpportunityInfoCard } from '../opportunity-info-card/opportunity-info-card'
+import { useCreateTask } from '@/app/api/hooks/useCreateTask'
+import { TaskCreateVM } from '@/app/api/functions/tasks'
+import { toast } from 'react-toastify'
 
 interface NewTaskModalProps {
   children: React.ReactNode
@@ -46,7 +48,7 @@ export function NewTaskModal({
   const [isLoading, setIsLoading] = useState(false)
   const t = useTranslations('Task')
   const validationMessage = useTranslations('Validation')
-  const addTask = useTaskStore((state) => state.addTask)
+  const { createTask, isLoading: isCreatingTask, error: createTaskError } = useCreateTask()
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -103,52 +105,49 @@ export function NewTaskModal({
       // Combine date and time into ISO string preserving local time
       const dueDateTime = createLocalISOString(data.dueDate, data.dueTime)
       
-      // Generate 6-digit task ID starting from 000000
-      const taskId = String(Math.floor(Math.random() * 1000000)).padStart(6, '0')
-      
-      // Create task from form data
-      const newTask: Task = {
-        id: taskId,
-        priority: priorityMap[data.priority],
+      // Create API task data
+      const taskCreateData: TaskCreateVM = {
+        tenantId:"2A9B6E40-5ACB-40A0-8E2B-D559B4829FA0", // Default tenant ID
         title: data.taskTitle,
         description: data.description || '',
-        createdBy: 'Current User', // TODO: Get from auth context
-        createdDate: new Date().toISOString().slice(0, 10),
-        dueDateTime,
-        relatedTo: defaultRelation ? [defaultRelation] : [],
-        email: '',  // TODO: Get from contact info
-        phone: '',  // TODO: Get from contact info
-        message: '',
-        status: 'open', // Initial status as per requirements
-        location: data.location,
+        status: 'open',
+        assignedTo:  '341d96d2-a419-4c7a-a651-b8d54b71ace0', // Default if empty
+        workfileId: defaultRelation?.type === 'workfile' ? defaultRelation.id : '82A58EFE-7B8E-41A4-BE2A-6ABCE7A23359',
+        locationId: 'C8AF6E95-020C-4102-A5ED-EEF8CACC0093', // Default if not provided
+        dueDate: new Date(dueDateTime).toISOString(),
+        priority: data.priority,
         type: data.type,
-        template: data.template,
-        assignedTo: data.assignToUser, // TODO: Get currentUserId from auth context
-        assignedToRoles: data.assignToRoles,
-        lastUpdatedDate: new Date().toISOString(),
-        // Add recurring task properties if type is Recurring
-        ...(data.type === 'Recurring' && {
-          recurringFrequency: data.recurringFrequency,
-          recurringDays: data.recurringDays,
-          recurringEndDateTime: data.recurringEndDate && data.recurringEndTime 
-            ? createLocalISOString(data.recurringEndDate, data.recurringEndTime)
-            : undefined,
-          timezone: 'UTC' // Default to UTC until we implement location-based timezones
-        })
+        endDate: data.type === 'Recurring' && data.recurringEndDate && data.recurringEndTime
+          ? new Date(createLocalISOString(data.recurringEndDate, data.recurringEndTime)).toISOString()
+          : new Date(dueDateTime).toISOString(),
+        roles: data.assignToRoles ? data.assignToRoles.join(',') : ''
       }
       
-      // Log both raw form data and processed task object for debugging
+      // Log form data for debugging
       console.log('Form submission:', {
         rawFormData: data,
-        processedTask: newTask
+        apiTaskData: taskCreateData
       })
       
-      // Add task to store
-      addTask(newTask)
-      setShouldShowModal(false)
+      // Call the API to create the task
+      createTask(taskCreateData, {
+        onSuccess: (response) => {
+          if (response.success) {
+            toast.success("Task created successfully");
+            setShouldShowModal(false);
+          } else {
+            toast.error("Failed to create task: " + (response.error || "Unknown error"));
+          }
+        },
+        onError: (error) => {
+          console.error('Error creating task:', error);
+          toast.error("Failed to create task: " + (error instanceof Error ? error.message : "Unknown error"));
+        }
+      });
       
     } catch (error) {
       console.error('Error submitting form:', error)
+      toast.error("Failed to process form: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
       setIsLoading(false)
     }

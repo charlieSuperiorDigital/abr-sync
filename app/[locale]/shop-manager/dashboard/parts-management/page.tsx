@@ -1,13 +1,17 @@
-import Link from "next/link";
+'use client'
 
-export default function PartsManagement() {
-    return (
-        <div className="w-full min-h-screen">
-            <div className="flex flex-col min-h-screen">
-                <h1 className="text-3xl font-semibold tracking-tight px-5 my-7">Parts Management</h1>
-                <div className="flex flex-col space-y-2 px-5">
-                </div>
-            </div>
-        </div>
-    )
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+
+export default function PartsManagementPage({ params }: { params?: { locale: string } }) {
+  const router = useRouter()
+  const locale = params?.locale || 'en'
+
+  useEffect(() => {
+    // Client-side redirect to to-order
+    router.replace(`/${locale}/shop-manager/dashboard/parts-management/to-order`)
+  }, [router, locale])
+
+  // Return empty div while redirecting
+  return <div></div>
 }

@@ -1,11 +1,17 @@
-export default function Workfiles() {
-    return (
-        <div className="w-full min-h-screen">
-            <div className="flex flex-col min-h-screen">
-                <h1 className="text-xl font-semibold tracking-tight px-5 my-7">Work Files Dashboard</h1>
-                <div className="flex flex-col space-y-2 px-5">
-                </div>
-            </div>
-        </div>
-    )
+'use client'
+
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+
+export default function Workfiles({ params }: { params?: { locale: string } }) {
+  const router = useRouter()
+  const locale = params?.locale || 'en'
+
+  useEffect(() => {
+    // Client-side redirect to in-progress
+    router.replace(`/${locale}/shop-manager/dashboard/workfiles/in-progress`)
+  }, [router, locale])
+
+  // Return empty div while redirecting
+  return <div></div>
 }
