@@ -39,7 +39,25 @@ export function CustomSelect({
   const [isOpen, setIsOpen] = React.useState(false)
   const [internalSelectedValues, setInternalSelectedValues] = React.useState<string[]>(value)
   const buttonRef = React.useRef<HTMLButtonElement>(null)
+  const dropdownRef = React.useRef<HTMLDivElement>(null)
   const [dropdownStyle, setDropdownStyle] = React.useState<React.CSSProperties>({})
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isOpen &&
+        buttonRef.current &&
+        dropdownRef.current &&
+        !buttonRef.current.contains(event.target as Node) &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isOpen])
 
   React.useEffect(() => {
     if (isOpen && buttonRef.current) {
@@ -63,26 +81,12 @@ export function CustomSelect({
       }
     } else {
       newValues = [optionValue]
-      setIsOpen(false)
     }
     setInternalSelectedValues(newValues)
     onChange?.(newValues)
-  }
-  
-  const handleOptionClick = (e: React.MouseEvent, optionValue: string) => {
-    e.stopPropagation()
-    handleSelect(optionValue)
-    
-  }
-
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement
-    const isOptionClick = target.closest('[data-option]')
-    
-    if(!isOpen){
-      setIsOpen(true)
+    if (!multiSelect) {
+      setIsOpen(false)
     }
-    
   }
 
   return (
@@ -91,7 +95,9 @@ export function CustomSelect({
       <button
         ref={buttonRef}
         type="button"
-        onClick={handleOverlayClick}
+        onClick={() => {
+          setIsOpen(!isOpen)
+        }}
         className={cn(
           'w-full px-4 py-2 h-10 text-left rounded-full bg-[#E3E3E3] flex items-center justify-between',
           'focus:outline-none'
@@ -141,7 +147,8 @@ export function CustomSelect({
       {error && <p className="text-sm text-red-500">{error}</p>}
       {isOpen &&
         createPortal(
-          <div 
+          <div
+            ref={dropdownRef}
             style={dropdownStyle}
             className="fixed bg-[#E3E3E3] rounded-2xl shadow-lg z-[99999]"
           >
@@ -150,13 +157,16 @@ export function CustomSelect({
                 <div
                   key={opt.value}
                   data-option
-                  onClick={(e) => handleOptionClick(e, opt.value)}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    handleSelect(opt.value)
+                  }}
                   className={cn(
-                    'flex cursor-pointer items-center gap-2 px-4 py-2 text-sm',
+                    'flex cursor-pointer items-center gap-2 px-4 py-2 text-sm hover:opacity-80',
                     (internalSelectedValues || []).includes(opt.value) &&
                       !multiSelect &&
-                      'bg-black text-white',
-                    'hover:opacity-80'
+                      'bg-black text-white'
                   )}
                 >
                   {multiSelect && (
