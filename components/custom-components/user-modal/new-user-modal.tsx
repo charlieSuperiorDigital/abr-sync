@@ -68,15 +68,34 @@ export function NewUserModal({
     try {
       setIsLoading(true)
 
+      // Create new user object from form data
       const newUser: User = {
-        id: Math.random().toString(36).substr(2, 6),
-        ...data,
+        id: String(Math.floor(Math.random() * 1000000)).padStart(6, '0'), // Generate 6-digit ID like tasks
+        fullName: data.fullName,
+        email: data.email,
+        phoneNumber: data.phoneNumber,
+        password: data.password,
+        role: data.role,
+        hourlyRate: data.hourlyRate,
+        isActive: data.isActive,
+        preferredLanguage: data.preferredLanguage,
+        moduleAccess: data.moduleAccess as ModuleAccess[],
+        communicationAccess: data.communicationAccess as CommunicationAccess[],
+        notificationType: data.notificationType as NotificationType,
+        notificationCategories: data.notificationCategories as NotificationCategory[],
+        locations: data.locations as Location[],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName)}`,
-        locations: data.locations as Location[],
       }
 
+      // Log both raw form data and processed user object for debugging
+      console.log('Form submission:', {
+        rawFormData: data,
+        processedUser: newUser
+      })
+
+      // Add user to store
       addUser(newUser)
       reset()
       setIsOpen(false)
@@ -182,7 +201,7 @@ export function NewUserModal({
                         label={t('role')}
                         options={UserRoleOptions}
                         value={field.value ? [field.value] : []}
-                        onChange={(values) => field.onChange(values)}
+                        onChange={(values) => field.onChange(values[0])}
                         error={errors.role?.message}
                       />
                     )}
