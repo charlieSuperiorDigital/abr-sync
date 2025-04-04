@@ -27,6 +27,7 @@
     "mark-as-done": "Mark as Done",
     "mark-task-as-done": "Mark Task as Done",
     "are-you-sure-mark-done": "Are you sure you want to mark this task as done?",
+    "no-locations-available": "No locations available",
     "priority": "Priority",
     "processing": "Processing...",
     "reopen": "Reopen",

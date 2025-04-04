@@ -87,7 +87,7 @@ export function EditTaskModal({
   const [originalTask, setOriginalTask] = useState<ExtendedTask | null>(null)
   const t = useTranslations('Task')
   const validationMessage = useTranslations('Validation')
-  const { tenant, isLoading: isLoadingTenant } = useTenant()
+  const { tenant, locations: tenantLocations, isLoading: isLoadingTenant } = useTenant()
   const { usersForSelect, isLoading: isLoadingUsers, totalCount } = useUsers()
   const [locations, setLocations] = useState<{value: string, label: string}[]>([])
   const { updateTaskAsync, isLoading: isUpdating, isError, error } = useUpdateTask()
@@ -101,15 +101,14 @@ export function EditTaskModal({
 
   // Process locations for dropdown when tenant data is available
   useEffect(() => {
-    if (tenant && tenant.locations && tenant.locations.length > 0) {
-      const locationOptions = tenant.locations.map((location: Location) => ({
+    if (tenantLocations && tenantLocations.length > 0) {
+      const locationOptions = tenantLocations.map((location: Location) => ({
         value: location.id,
         label: location.address
       }))
       setLocations(locationOptions)
-      console.log('Locations loaded for dropdown:', locationOptions)
     }
-  }, [tenant])
+  }, [tenantLocations])
 
   const {
     register,
@@ -637,12 +636,12 @@ export function EditTaskModal({
                   </button>
                   <button
                     type="submit"
-                    className="p-2 w-32 text-white bg-black rounded-full transition-colors duration-200 hover:bg-gray-800 flex justify-center items-center"
+                    className="flex justify-center items-center p-2 w-32 text-white bg-black rounded-full transition-colors duration-200 hover:bg-gray-800"
                     disabled={isSubmitting || isLoading || isUpdating}
                   >
                     {isSubmitting || isLoading || isUpdating ? (
                       <>
-                        <svg className="w-5 h-5 mr-2 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <svg className="mr-2 w-5 h-5 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>

@@ -143,7 +143,7 @@ export default function Upcoming() {
       accessorKey: 'technician',
       header: 'TECHNICIAN',
       cell: ({ row }) => (
-        <div className="flex items-center gap-2">
+        <div className="flex gap-2 items-center">
           {row.original.technician?.avatar && (
             <img 
               src={row.original.technician.avatar} 
@@ -167,7 +167,7 @@ export default function Upcoming() {
           }}
         >
           {row.original.isVehicleCheckedIn ? (
-            <span className="text-green-600 flex items-center">
+            <span className="flex items-center text-green-600">
               <Check size={16} className="mr-1" />
               Checked In
             </span>
@@ -192,7 +192,7 @@ export default function Upcoming() {
       header: 'Summary',
       cell: ({ row }) => (
         <RoundButtonWithTooltip 
-          buttonIcon={<MessageSquareMore className="h-5 w-5" />}
+          buttonIcon={<MessageSquareMore className="w-5 h-5" />}
           tooltipText={row.original.lastCommunicationSummary || 'No summary available'}
         />
       ),
@@ -219,7 +219,7 @@ export default function Upcoming() {
       cell: ({ row }) => (
         <div 
           data-testid="task-button" 
-          className="cursor-pointer hover:text-blue-600 transition-colors"
+          className="transition-colors cursor-pointer hover:text-blue-600"
           onClick={(e) => {
             e.stopPropagation()
             handleTaskClick(row.original)
@@ -234,7 +234,6 @@ export default function Upcoming() {
 
   return (
     <div className="w-full">
-      <h1 className="text-2xl font-bold mb-6">Upcoming Workfiles</h1>
       <DataTable
         columns={columns}
         data={upcomingWorkfiles}

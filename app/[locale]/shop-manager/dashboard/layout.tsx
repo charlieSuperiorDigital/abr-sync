@@ -18,6 +18,8 @@ import ProtectedRoute from '@/app/components/auth/protected-route'
 import EditProfileModal from '@/app/components/custom-components/edit-profile-modal/edit-profile-modal'
 import TenantProvider from '@/app/context/TenantProvider'
 import UsersProvider from '@/app/context/UsersProvider'
+import OpportunitiesProvider from '@/app/context/OpportunitiesProvider'
+import WorkfilesProvider from '@/app/context/WorkfilesProvider'
 
 export default function DashboardLayout({
   children,
@@ -30,79 +32,81 @@ export default function DashboardLayout({
     <ProtectedRoute>
       <TenantProvider>
         <UsersProvider>
+          <OpportunitiesProvider>
+            <WorkfilesProvider>
+              <div className="flex min-h-screen">
+                <aside className="flex flex-col items-center px-2 py-5 w-16 text-white bg-black">
+                  <Image
+                    src="/auto-360-logo.png"
+                    alt="Logo"
+                    width={70}
+                    height={70}
+                    className="object-contain mt-3 mb-8"
+                  />
+                  <nav className="flex flex-col justify-between items-center h-full py-2 w-[45px]">
+                    <div className="flex flex-col space-y-4">
+                      {/* Gotta change those icons, they dont match the design */}
 
-          <div className="flex min-h-screen">
-            <aside className="flex flex-col items-center px-2 py-5 w-16 text-white bg-black">
-              <Image
-                src="/auto-360-logo.png"
-                alt="Logo"
-                width={70}
-                height={70}
-                className="object-contain mt-3 mb-8"
+                      <SideBarIconGroup
+                        link={'/shop-manager/dashboard/tasks'}
+                        icons={[{ newNotificationsQuantity: 0, Icon: ClipboardList }]}
+                      />
+                      <SideBarIconGroup
+                        link={'/shop-manager/dashboard/opportunities'}
+                        icons={[{ newNotificationsQuantity: 2, Icon: Mail }]}
+                      />
+                      <SideBarIconGroup
+                        link={'/shop-manager/dashboard/workfiles'}
+                        icons={[{ newNotificationsQuantity: 2, Icon: FolderOpen }]}
+                      />
+                      <SideBarIconGroup
+                        link={'/shop-manager/dashboard/parts-management'}
+                        icons={[
+                          { newNotificationsQuantity: 2, Icon: Settings },
+                          {
+                            newNotificationsQuantity: 2,
+                            Icon: TruckIcon,
+                            hasWarning: true,
+                          },
+                          { newNotificationsQuantity: 2, Icon: TruckIcon },
+                        ]}
+                      />
+                      <SideBarIconGroup
+                        link={'/shop-manager/dashboard/insurances-and-vehicle-owners'}
+                        icons={[{ newNotificationsQuantity: 2, Icon: SquareUser }]}
+                      />
+                      <SideBarIconGroup
+                        link={'/shop-manager/dashboard/ai'}
+                        icons={[{ newNotificationsQuantity: 2, Icon: TrendingUp }]}
+                      />
+                    </div>
+                    <div className="flex flex-col space-y-4">
+                      <SideBarIconGroup
+                        link={'/shop-manager/dashboard/search'}
+                        icons={[{ newNotificationsQuantity: 0, Icon: Search }]}
+                      />
+                      <div
+                        className="cursor-pointer"
+                        onClick={() => setIsProfileModalOpen(true)}
+                      >
+                        <SideBarIconGroup
+                          link={'/shop-manager/dashboard/user-profile'}
+                          icons={[{ newNotificationsQuantity: 0, Icon: User }]}
+                        />
+                      </div>
+                    </div>
+                  </nav>
+                </aside>
+                <main className="flex flex-col py-8 w-full min-h-screen">{children}</main>
+              </div>
+
+              <EditProfileModal
+                open={isProfileModalOpen}
+                onOpenChange={setIsProfileModalOpen}
               />
-              <nav className="flex flex-col justify-between items-center h-full py-2 w-[45px]">
-                <div className="flex flex-col space-y-4">
-                  {/* Gotta change those icons, they dont match the design */}
-
-                  <SideBarIconGroup
-                    link={'/shop-manager/dashboard/tasks'}
-                    icons={[{ newNotificationsQuantity: 0, Icon: ClipboardList }]}
-                  />
-                  <SideBarIconGroup
-                    link={'/shop-manager/dashboard/opportunities'}
-                    icons={[{ newNotificationsQuantity: 2, Icon: Mail }]}
-                  />
-                  <SideBarIconGroup
-                    link={'/shop-manager/dashboard/workfiles'}
-                    icons={[{ newNotificationsQuantity: 2, Icon: FolderOpen }]}
-                  />
-                  <SideBarIconGroup
-                    link={'/shop-manager/dashboard/parts-management'}
-                    icons={[
-                      { newNotificationsQuantity: 2, Icon: Settings },
-                      {
-                        newNotificationsQuantity: 2,
-                        Icon: TruckIcon,
-                        hasWarning: true,
-                      },
-                      { newNotificationsQuantity: 2, Icon: TruckIcon },
-                    ]}
-                  />
-                  <SideBarIconGroup
-                    link={'/shop-manager/dashboard/insurances-and-vehicle-owners'}
-                    icons={[{ newNotificationsQuantity: 2, Icon: SquareUser }]}
-                  />
-                  <SideBarIconGroup
-                    link={'/shop-manager/dashboard/ai'}
-                    icons={[{ newNotificationsQuantity: 2, Icon: TrendingUp }]}
-                  />
-                </div>
-                <div className="flex flex-col space-y-4">
-                  <SideBarIconGroup
-                    link={'/shop-manager/dashboard/search'}
-                    icons={[{ newNotificationsQuantity: 0, Icon: Search }]}
-                  />
-                  <div
-                    className="cursor-pointer"
-                    onClick={() => setIsProfileModalOpen(true)}
-                  >
-                    <SideBarIconGroup
-                      link={'/shop-manager/dashboard/user-profile'}
-                      icons={[{ newNotificationsQuantity: 0, Icon: User }]}
-                    />
-                  </div>
-                </div>
-              </nav>
-            </aside>
-            <main className="flex flex-col py-8 w-full min-h-screen">{children}</main>
-          </div>
-
-          <EditProfileModal
-            open={isProfileModalOpen}
-            onOpenChange={setIsProfileModalOpen}
-          />
+            </WorkfilesProvider>
+          </OpportunitiesProvider>
         </UsersProvider>
-
       </TenantProvider>
     </ProtectedRoute>
   )

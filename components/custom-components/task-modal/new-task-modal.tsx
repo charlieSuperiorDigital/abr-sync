@@ -53,38 +53,10 @@ export function NewTaskModal({
   const validationMessage = useTranslations('Validation')
   const { createTask, isLoading: isCreatingTask, error: createTaskError } = useCreateTask()
   const { usersForSelect, isLoading: isLoadingUsers, totalCount } = useUsers()
-  const { tenant, isLoading: isLoadingTenant } = useTenant()
+  const { tenant, locations: tenantLocations, isLoading: isLoadingTenant } = useTenant()
   const [locations, setLocations] = useState<{value: string, label: string}[]>([])
 
-  // Debug users data
-  useEffect(() => {
-    console.log('Users for select in task modal:', usersForSelect)
-    console.log('Total users available:', totalCount)
-    console.log('Is loading users:', isLoadingUsers)
-    console.log('Available users in Assign to User section:', usersForSelect)
-  }, [usersForSelect, totalCount, isLoadingUsers])
-
-  // Process locations for dropdown when tenant data is available
-  useEffect(() => {
-    if (tenant && tenant.locations && tenant.locations.length > 0) {
-      const locationOptions = tenant.locations.map((location: Location) => ({
-        value: location.id,
-        label: location.address
-      }))
-      setLocations(locationOptions)
-      console.log('Locations loaded for dropdown:', locationOptions)
-    }
-  }, [tenant])
-
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    // Prevent modal from closing when backdrop is clicked
-    e.stopPropagation();
-  }
-
-  const handleShowModal = () => {
-    setShouldShowModal(true)
-  }
-
+  // Initialize form before any effects that use form functions
   const {
     register,
     handleSubmit,
@@ -112,6 +84,61 @@ export function NewTaskModal({
       recurringEndTime: ''
     },
   })
+
+  // Debug users data
+  useEffect(() => {
+    console.log('Users for select in task modal:', usersForSelect)
+    console.log('Total users available:', totalCount)
+    console.log('Is loading users:', isLoadingUsers)
+  }, [usersForSelect, totalCount, isLoadingUsers])
+
+  // Process locations for dropdown when tenant data is available
+  useEffect(() => {
+    // This effect will run whenever tenantLocations changes
+    if (tenantLocations && tenantLocations.length > 0) {
+      console.log(`Processing ${tenantLocations.length} locations for dropdown`)
+      
+      const locationOptions = tenantLocations.map((location: Location) => ({
+        value: location.id,
+        label: location.address || location.name || 'Unknown location'
+      }))
+      
+      setLocations(locationOptions)
+      console.log('Locations processed for dropdown:', locationOptions)
+      
+      // If form has no location selected yet and we have locations, set the first one as default
+      if (locationOptions.length > 0) {
+        const formLocation = watch('location')
+        if (!formLocation) {
+          console.log('Setting default location:', locationOptions[0].value)
+          setValue('location', locationOptions[0].value)
+        }
+      }
+    } else {
+      console.log('No locations available from tenant context')
+      // Clear locations if tenant locations are empty
+      setLocations([])
+    }
+  }, [tenantLocations, setValue, watch])
+
+  // Force re-fetch locations when modal is opened
+  useEffect(() => {
+    if (shouldShowModal) {
+      console.log('Modal opened, checking for locations')
+      if (tenantLocations && tenantLocations.length > 0) {
+        console.log(`Modal has ${tenantLocations.length} locations available`)
+      }
+    }
+  }, [shouldShowModal, tenantLocations])
+
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    // Prevent modal from closing when backdrop is clicked
+    e.stopPropagation();
+  }
+
+  const handleShowModal = () => {
+    setShouldShowModal(true)
+  }
 
   const watchType = watch('type')
 
