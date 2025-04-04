@@ -28,6 +28,9 @@ import { OpportunityInfoCard } from '../opportunity-info-card/opportunity-info-c
 import { useCreateTask } from '@/app/api/hooks/useCreateTask'
 import { TaskCreateVM } from '@/app/api/functions/tasks'
 import { toast } from 'react-toastify'
+import { useUsers } from '@/app/context/UsersProvider'
+import { useTenant } from '@/app/context/TenantProvider'
+import { Location } from '@/app/types/location'
 
 interface NewTaskModalProps {
   children: React.ReactNode
@@ -49,11 +52,33 @@ export function NewTaskModal({
   const t = useTranslations('Task')
   const validationMessage = useTranslations('Validation')
   const { createTask, isLoading: isCreatingTask, error: createTaskError } = useCreateTask()
+  const { usersForSelect, isLoading: isLoadingUsers, totalCount } = useUsers()
+  const { tenant, isLoading: isLoadingTenant } = useTenant()
+  const [locations, setLocations] = useState<{value: string, label: string}[]>([])
+
+  // Debug users data
+  useEffect(() => {
+    console.log('Users for select in task modal:', usersForSelect)
+    console.log('Total users available:', totalCount)
+    console.log('Is loading users:', isLoadingUsers)
+    console.log('Available users in Assign to User section:', usersForSelect)
+  }, [usersForSelect, totalCount, isLoadingUsers])
+
+  // Process locations for dropdown when tenant data is available
+  useEffect(() => {
+    if (tenant && tenant.locations && tenant.locations.length > 0) {
+      const locationOptions = tenant.locations.map((location: Location) => ({
+        value: location.id,
+        label: location.address
+      }))
+      setLocations(locationOptions)
+      console.log('Locations loaded for dropdown:', locationOptions)
+    }
+  }, [tenant])
 
   const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      setShouldShowModal(false)
-    }
+    // Prevent modal from closing when backdrop is clicked
+    e.stopPropagation();
   }
 
   const handleShowModal = () => {
@@ -107,13 +132,13 @@ export function NewTaskModal({
       
       // Create API task data
       const taskCreateData: TaskCreateVM = {
-        tenantId:"2A9B6E40-5ACB-40A0-8E2B-D559B4829FA0", // Default tenant ID
+        tenantId: data.tenantId!, // Default tenant ID
         title: data.taskTitle,
         description: data.description || '',
         status: 'open',
-        assignedTo:  '341d96d2-a419-4c7a-a651-b8d54b71ace0', // Default if empty
+        assignedTo:  data.assignToUser!, // Default if empty
         workfileId: defaultRelation?.type === 'workfile' ? defaultRelation.id : '82A58EFE-7B8E-41A4-BE2A-6ABCE7A23359',
-        locationId: 'C8AF6E95-020C-4102-A5ED-EEF8CACC0093', // Default if not provided
+        locationId: data.location || 'C8AF6E95-020C-4102-A5ED-EEF8CACC0093', // Use selected location or default
         dueDate: new Date(dueDateTime).toISOString(),
         priority: data.priority,
         type: data.type,
@@ -314,14 +339,11 @@ export function NewTaskModal({
                         name="location"
                         render={({ field }) => (
                           <CustomSelect
-                            placeholder={t('location-placeholder')}
-                            options={[
-                              // TODO: Get from location store
-                              { value: 'location1', label: 'Location 1' },
-                              { value: 'location2', label: 'Location 2' },
-                            ]}
+                            placeholder={isLoadingTenant ? t('loading-locations') : t('location-placeholder')}
+                            options={locations.length > 0 ? locations : [{ value: '', label: t('no-locations-available') }]}
                             value={field.value ? [field.value] : []}
                             onChange={(values) => field.onChange(values[0] || '')}
+                            isDisabled={isLoadingTenant}
                           />
                         )}
                       />
@@ -482,35 +504,26 @@ export function NewTaskModal({
                         <p className="mt-1 text-sm text-red-500">{errors.assignToRoles.message}</p>
                       )}
                     </div>
-                    <div>
+                    <div className="mb-6">
                       <h4 className="mb-2 font-semibold">{t('assign-to-user')}</h4>
                       <Controller
                         control={control}
                         name="assignToUser"
                         render={({ field }) => (
                           <>
-                            <CustomSelect
-                              placeholder={t('select-user')}
-                              options={[
-                                {
-                                  value: '123456',
-                                  label: 'Alexander Walker',
-                                  avatar: '/placeholder.svg',
-                                },
-                                {
-                                  value: '12345',
-                                  label: 'Aiden Moore',
-                                  avatar: '/placeholder.svg',
-                                },
-                                {
-                                  value: '4444',
-                                  label: 'James Davis',
-                                  avatar: '/placeholder.svg',
-                                },
-                              ]}
-                              value={field.value ? [field.value] : []}
-                              onChange={(values) => field.onChange(values[0] || '')}
-                            />
+                            {isLoadingUsers ? (
+                              <div className="w-full px-4 py-2 text-left rounded-full bg-[#E3E3E3] flex items-center">
+                                <span className="text-gray-500">{t('loading-users')}</span>
+                              </div>
+                            ) : (
+                              <CustomSelect
+                                key={usersForSelect.length} // Force re-render when options change
+                                placeholder={t('select-user')}
+                                options={usersForSelect || []}
+                                value={field.value ? [field.value] : []}
+                                onChange={(values) => field.onChange(values[0] || '')}
+                              />
+                            )}
                             <button
                               type="button"
                               onClick={() => {

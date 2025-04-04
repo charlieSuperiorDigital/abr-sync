@@ -33,7 +33,12 @@ export function EditProfileModal({ open, onOpenChange }: EditProfileModalProps) 
     const response = await fetch('/api/auth/signout', {
       method: 'POST',
     })
-    router.push('/login')
+    
+    // Get the current locale from the URL
+    const locale = window.location.pathname.split('/')[1] || 'en'
+    
+    // Redirect to login page with the correct locale
+    router.push(`/${locale}/login`)
   }
 
   const handleLanguageChange = (lang: string) => {

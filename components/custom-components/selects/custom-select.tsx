@@ -20,6 +20,7 @@ interface CustomSelectProps {
   onChange?: (value: string[]) => void
   multiSelect?: boolean
   value?: string[]
+  isDisabled?: boolean
 }
 
 export function CustomSelect({
@@ -28,9 +29,37 @@ export function CustomSelect({
   onChange,
   multiSelect = false,
   value = [],
+  isDisabled = false,
 }: CustomSelectProps) {
   const [isOpen, setIsOpen] = React.useState(false)
   const [selectedValues, setSelectedValues] = React.useState<string[]>(value)
+  const dropdownRef = React.useRef<HTMLDivElement>(null)
+  const [internalOptions, setInternalOptions] = React.useState<Option[]>(options)
+
+  // Update internal options when options prop changes
+  React.useEffect(() => {
+    console.log('Options changed in CustomSelect:', options)
+    setInternalOptions(options)
+  }, [options])
+
+  // Update selected values when value prop changes
+  React.useEffect(() => {
+    setSelectedValues(value)
+  }, [value])
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   const handleSelect = (optionValue: string) => {
     let newValues: string[]
@@ -49,14 +78,16 @@ export function CustomSelect({
   }
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full" ref={dropdownRef}>
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => !isDisabled && setIsOpen(!isOpen)}
         className={cn(
           'w-full px-4 py-2 text-left rounded-full bg-[#E3E3E3] flex items-center justify-between',
-          'focus:outline-none'
+          'focus:outline-none',
+          isDisabled && 'opacity-70 cursor-not-allowed'
         )}
+        disabled={isDisabled}
       >
         <span className="flex items-center gap-2">
           {selectedValues.length > 0 ? (
@@ -64,16 +95,16 @@ export function CustomSelect({
               `${selectedValues.length} selected`
             ) : (
               <>
-                {options.find((opt) => opt.value === selectedValues[0])
+                {internalOptions.find((opt) => opt.value === selectedValues[0])
                   ?.avatar && (
                   <Avatar className="h-6 w-6  text-black">
                     <AvatarImage
                       src={
-                        options.find((opt) => opt.value === selectedValues[0])
+                        internalOptions.find((opt) => opt.value === selectedValues[0])
                           ?.avatar
                       }
                       alt={
-                        options.find((opt) => opt.value === selectedValues[0])
+                        internalOptions.find((opt) => opt.value === selectedValues[0])
                           ?.label || ''
                       }
                     />
@@ -82,7 +113,7 @@ export function CustomSelect({
                     </AvatarFallback>
                   </Avatar>
                 )}
-                {options.find((opt) => opt.value === selectedValues[0])?.label}
+                {internalOptions.find((opt) => opt.value === selectedValues[0])?.label}
               </>
             )
           ) : (
@@ -99,38 +130,42 @@ export function CustomSelect({
           )}
         />
       </button>
-      {isOpen && (
-        <div className="absolute z-10 w-full mt-1 bg-[#E3E3E3] rounded-2xl shadow-lg">
-          <div className="max-h-[280px] overflow-y-auto">
-            {options.map((option) => (
-              <div
-                key={option.value}
-                onClick={() => handleSelect(option.value)}
-                className={cn(
-                  'flex cursor-pointer items-center gap-2 px-4 py-2 text-sm',
-                  selectedValues.includes(option.value) &&
-                    !multiSelect &&
-                    'bg-black text-white',
-                  'hover:opacity-80'
-                )}
-              >
-                {multiSelect && (
-                  <Checkbox
-                    checked={selectedValues.includes(option.value)}
-                    className="h-4 w-4 border-gray-400 rounded-[4px]"
-                  />
-                )}
-                {option.avatar && (
-                  <Avatar className="h-6 w-6 text-black">
-                    <AvatarImage src={option.avatar} alt={option.label} />
-                    <AvatarFallback>
-                      <User className="h-4 w-4" />
-                    </AvatarFallback>
-                  </Avatar>
-                )}
-                {option.label}
-              </div>
-            ))}
+      {isOpen && !isDisabled && (
+        <div className="absolute z-50 w-full mt-1 bg-[#E3E3E3] rounded-2xl shadow-lg">
+          <div className="max-h-[280px] overflow-y-auto py-2">
+            {internalOptions.length === 0 ? (
+              <div className="px-4 py-2 text-sm text-gray-500">No options available</div>
+            ) : (
+              internalOptions.map((option) => (
+                <div
+                  key={option.value}
+                  onClick={() => handleSelect(option.value)}
+                  className={cn(
+                    'flex cursor-pointer items-center gap-2 px-4 py-2 text-sm',
+                    selectedValues.includes(option.value) &&
+                      !multiSelect &&
+                      'bg-black text-white',
+                    'hover:opacity-80'
+                  )}
+                >
+                  {multiSelect && (
+                    <Checkbox
+                      checked={selectedValues.includes(option.value)}
+                      className="h-4 w-4 border-gray-400 rounded-[4px]"
+                    />
+                  )}
+                  {option.avatar && (
+                    <Avatar className="h-6 w-6 text-black">
+                      <AvatarImage src={option.avatar} alt={option.label} />
+                      <AvatarFallback>
+                        <User className="h-4 w-4" />
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+                  {option.label}
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}

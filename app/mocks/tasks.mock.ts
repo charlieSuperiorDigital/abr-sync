@@ -1,13 +1,33 @@
 import { Task } from '../types/task';
+import { Location } from '../types/location';
+import { Tenant } from '../types/tenant';
 
 export function mapTasksData(data: any): Task {
+  // Convert location string to Location object if needed
+  const locationObj: Location | undefined = typeof data.location === 'string' 
+    ? { 
+        id: '', 
+        tenantId: '', 
+        tenant: createMockTenant(), 
+        name: data.location, 
+        address: '', 
+        phone: '', 
+        email: '', 
+        createdAt: '', 
+        updatedAt: '' 
+      } 
+    : data.location;
+
   return {
     id: data.id,
+    tenantId: data.tenantId || '',
     priority: data.priority,
     title: data.title,
     description: data.description,
     createdBy: data.createdBy,
-    createdDate: data.createdDate,
+    createdAt: data.createdAt || data.createdDate || '',
+    updatedAt: data.updatedAt || data.lastUpdatedDate || '',
+    dueDate: data.dueDate || data.dueDateTime || '',
     dueDateTime: data.dueDateTime,
     relatedTo: data.relatedTo || [],
     warningMessage: data.warningMessage,
@@ -15,23 +35,56 @@ export function mapTasksData(data: any): Task {
     phone: data.phone || '',
     message: data.message || '',
     status: data.status || 'open',
-    assignedTo: data.assignedTo,
+    assignedTo: data.assignedTo || '',
     assignedToRoles: data.assignedToRoles || [],
     lastUpdatedDate: data.lastUpdatedDate,
-    location: data.location,
+    location: locationObj,
     type: data.type || 'One-time',
     template: data.template
   }
 }
 
+// Helper function to create a mock Tenant object
+const createMockTenant = (): Tenant => ({
+  id: '',
+  name: '',
+  email: '',
+  phone: '',
+  address: '',
+  logoUrl: '',
+  cccApiKey: '',
+  isActive: false,
+  createdAt: '',
+  updatedAt: '',
+  users: [],
+  payments: [],
+  locations: []
+});
+
+// Helper function to create a Location object
+const createLocation = (name: string): Location => ({
+  id: '',
+  tenantId: '',
+  tenant: createMockTenant(),
+  name,
+  address: '',
+  phone: '',
+  email: '',
+  createdAt: '',
+  updatedAt: ''
+});
+
 export const mockTasks: Task[] = [
   {
     id: '000001',
+    tenantId: '',
     priority: { variant: 'danger', text: 'Urgent' },
     title: 'Review Urgent Repair Request',
     description: 'Customer reported severe damage, needs immediate attention',
     createdBy: 'John Smith',
-    createdDate: '2025-03-15',
+    createdAt: '2025-03-15',
+    updatedAt: '2025-03-15T10:00:00.000Z',
+    dueDate: '2025-03-18T14:30:00.000Z',
     dueDateTime: '2025-03-18T14:30:00.000Z',
     relatedTo: [
       {
@@ -47,15 +100,18 @@ export const mockTasks: Task[] = [
     assignedToRoles: ['CSR', 'Technician'],
     lastUpdatedDate: '2025-03-15T10:00:00.000Z',
     type: 'One-time',
-    location: 'Main Shop'
+    location: createLocation('Main Shop')
   },
   {
     id: '000002',
+    tenantId: '',
     priority: { variant: 'warning', text: 'High' },
     title: 'Schedule Customer Follow-up',
     description: 'Follow up on estimate approval and schedule repair',
     createdBy: 'Sarah Johnson',
-    createdDate: '2025-03-16',
+    createdAt: '2025-03-16',
+    updatedAt: '2025-03-16T11:30:00.000Z',
+    dueDate: '2025-03-19T16:00:00.000Z',
     dueDateTime: '2025-03-19T16:00:00.000Z',
     relatedTo: [
       {
@@ -71,15 +127,18 @@ export const mockTasks: Task[] = [
     assignedToRoles: ['CSR'],
     lastUpdatedDate: '2025-03-16T11:30:00.000Z',
     type: 'One-time',
-    location: 'Main Shop'
+    location: createLocation('Main Shop')
   },
   {
     id: '000003',
+    tenantId: '',
     priority: { variant: 'success', text: 'Normal' },
     title: 'Daily Vehicle Inspection Report',
     description: 'Complete inspection reports for vehicles in service',
     createdBy: '123456',
-    createdDate: '2025-03-16',
+    createdAt: '2025-03-16',
+    updatedAt: '2025-03-16T09:00:00.000Z',
+    dueDate: '2025-03-16T17:00:00.000Z',
     dueDateTime: '2025-03-16T17:00:00.000Z',
     relatedTo: [
       {
@@ -100,15 +159,18 @@ export const mockTasks: Task[] = [
     lastUpdatedDate: '2025-03-16T09:00:00.000Z',
     type: 'Recurring',
     recurrence: 'Every Day',
-    location: 'Service Bay'
+    location: createLocation('Service Bay')
   },
   {
     id: '000004',
+    tenantId: '',
     priority: { variant: 'slate', text: 'Low' },
     title: 'Update Customer Contact Information',
     description: 'Review and update customer database',
     createdBy: 'Emma Davis',
-    createdDate: '2025-03-17',
+    createdAt: '2025-03-17',
+    updatedAt: '2025-03-17T09:00:00.000Z',
+    dueDate: '2025-03-24T17:00:00.000Z',
     dueDateTime: '2025-03-24T17:00:00.000Z',
     relatedTo: [
       {
@@ -124,15 +186,18 @@ export const mockTasks: Task[] = [
     assignedToRoles: ['Admin'],
     lastUpdatedDate: '2025-03-17T09:00:00.000Z',
     type: 'One-time',
-    location: 'Office'
+    location: createLocation('Office')
   },
   {
     id: '000005',
+    tenantId: '',
     priority: { variant: 'danger', text: 'Urgent' },
     title: 'Parts Order Follow-up',
     description: 'Urgent parts needed for repair completion',
     createdBy: 'Tom Brown',
-    createdDate: '2025-03-17',
+    createdAt: '2025-03-17',
+    updatedAt: '2025-03-17T10:30:00.000Z',
+    dueDate: '2025-03-18T12:00:00.000Z',
     dueDateTime: '2025-03-18T12:00:00.000Z',
     relatedTo: [
       {
@@ -141,187 +206,44 @@ export const mockTasks: Task[] = [
       },
       {
         type: 'opportunity',
-        id: 'OPP456789'
+        id: 'OPP234567'
       }
     ],
     email: 'tom.b@example.com',
     phone: '555-0127',
-    message: 'Critical parts needed for customer vehicle',
+    message: 'Parts needed for customer vehicle',
     status: 'in_progress',
-    assignedTo: '123456',
+    assignedTo: 'Tom Brown',
     assignedToRoles: ['Parts Manager'],
     lastUpdatedDate: '2025-03-17T10:30:00.000Z',
     type: 'One-time',
-    location: 'Parts Department'
+    location: createLocation('Parts Department')
   },
   {
     id: '000006',
+    tenantId: '',
     priority: { variant: 'warning', text: 'High' },
     title: 'Quality Control Check',
-    description: 'Final inspection before delivery',
-    createdBy: '123456',
-    createdDate: '2025-03-17',
-    dueDateTime: '2025-03-18T15:00:00.000Z',
+    description: 'Final inspection before customer delivery',
+    createdBy: 'Alex White',
+    createdAt: '2025-03-17',
+    updatedAt: '2025-03-17T11:00:00.000Z',
+    dueDate: '2025-03-19T15:00:00.000Z',
+    dueDateTime: '2025-03-19T15:00:00.000Z',
     relatedTo: [
       {
         type: 'opportunity',
         id: 'OPP456789'
       }
     ],
-    email: 'alice.g@example.com',
+    email: 'alex.w@example.com',
     phone: '555-0128',
-    message: 'Vehicle ready for final inspection',
+    message: 'Complete QC checklist before delivery',
     status: 'open',
-    assignedTo: '123456',
+    assignedTo: 'Alex White',
     assignedToRoles: ['QC Inspector'],
     lastUpdatedDate: '2025-03-17T11:00:00.000Z',
     type: 'One-time',
-    location: 'QC Bay'
-  },
-  // {
-  //   id: '000007',
-  //   priority: { variant: 'success', text: 'Normal' },
-  //   title: 'Weekly Team Meeting',
-  //   description: 'Review ongoing projects and assignments',
-  //   createdBy: 'John Smith',
-  //   createdDate: '2025-03-17',
-  //   dueDateTime: '2025-03-22T10:00:00.000Z',
-  //   relatedTo: [
-  //     {
-  //       type: 'opportunity',
-  //       id: 'OPP123456'
-  //     },
-  //     {
-  //       type: 'opportunity',
-  //       id: 'OPP567890'
-  //     },
-  //     {
-  //       type: 'opportunity',
-  //       id: 'OPP234567'
-  //     }
-  //   ],
-  //   email: 'john.s@example.com',
-  //   phone: '555-0129',
-  //   message: 'Weekly progress review and planning',
-  //   status: 'open',
-  //   assignedTo: 'John Smith',
-  //   assignedToRoles: ['Manager', 'CSR', 'Technician'],
-  //   lastUpdatedDate: '2025-03-17T09:15:00.000Z',
-  //   type: 'Recurring',
-  //   recurrence: 'Every Week',
-  //   location: 'Conference Room'
-  // },
-  // {
-  //   id: '000008',
-  //   priority: { variant: 'slate', text: 'Low' },
-  //   title: 'Equipment Maintenance Check',
-  //   description: 'Monthly maintenance of shop equipment',
-  //   createdBy: 'Mike Wilson',
-  //   createdDate: '2025-03-17',
-  //   dueDateTime: '2025-03-31T16:00:00.000Z',
-  //   relatedTo: [
-  //     {
-  //       type: 'opportunity',
-  //       id: 'OPP901234'
-  //     }
-  //   ],
-  //   email: 'mike.w@example.com',
-  //   phone: '555-0125',
-  //   message: 'Regular equipment maintenance schedule',
-  //   status: 'open',
-  //   assignedTo: 'Mike Wilson',
-  //   assignedToRoles: ['Technician'],
-  //   lastUpdatedDate: '2025-03-17T09:30:00.000Z',
-  //   type: 'Recurring',
-  //   recurrence: 'Every Month',
-  //   location: 'Service Bay'
-  // },
-  // {
-  //   id: '000009',
-  //   priority: { variant: 'success', text: 'Normal' },
-  //   title: 'Customer Satisfaction Survey',
-  //   description: 'Send and review customer feedback',
-  //   createdBy: 'Sarah Johnson',
-  //   createdDate: '2025-03-17',
-  //   dueDateTime: '2025-03-20T17:00:00.000Z',
-  //   relatedTo: [
-  //     {
-  //       type: 'opportunity',
-  //       id: 'OPP567890'
-  //     },
-  //     {
-  //       type: 'opportunity',
-  //       id: 'OP-2025-0013'
-  //     }
-  //   ],
-  //   email: 'sarah.j@example.com',
-  //   phone: '555-0124',
-  //   message: 'Follow up on customer satisfaction',
-  //   status: 'open',
-  //   assignedTo: 'Sarah Johnson',
-  //   assignedToRoles: ['CSR'],
-  //   lastUpdatedDate: '2025-03-17T10:00:00.000Z',
-  //   type: 'One-time',
-  //   location: 'Office'
-  // },
-  // {
-  //   id: '000010',
-  //   priority: { variant: 'warning', text: 'High' },
-  //   title: 'Insurance Claim Documentation',
-  //   description: 'Complete and submit insurance documentation',
-  //   createdBy: 'Emma Davis',
-  //   createdDate: '2025-03-17',
-  //   dueDateTime: '2025-03-19T15:00:00.000Z',
-  //   relatedTo: [
-  //     {
-  //       type: 'opportunity',
-  //       id: 'OPP123456'
-  //     },
-  //     {
-  //       type: 'opportunity',
-  //       id: 'OPP234567'
-  //     }
-  //   ],
-  //   email: 'emma.d@example.com',
-  //   phone: '555-0126',
-  //   message: 'Insurance documentation needed for claim',
-  //   status: 'in_progress',
-  //   assignedTo: 'Emma Davis',
-  //   assignedToRoles: ['Admin', 'Insurance Coordinator'],
-  //   lastUpdatedDate: '2025-03-17T11:30:00.000Z',
-  //   type: 'One-time',
-  //   location: 'Office'
-  // },
-  // {
-  //   id: '000011',
-  //   priority: { variant: 'danger', text: 'Urgent' },
-  //   title: 'Safety Inspection Alert',
-  //   description: 'Critical safety issue requires immediate attention',
-  //   createdBy: 'Tom Brown',
-  //   createdDate: '2025-03-17',
-  //   dueDateTime: '2025-03-18T09:00:00.000Z',
-  //   relatedTo: [
-  //     {
-  //       type: 'opportunity',
-  //       id: 'OPP456789'
-  //     },
-  //     {
-  //       type: 'opportunity',
-  //       id: 'OPP901234'
-  //     },
-  //     {
-  //       type: 'opportunity',
-  //       id: 'OP-2025-0011'
-  //     }
-  //   ],
-  //   email: 'tom.b@example.com',
-  //   phone: '555-0127',
-  //   message: 'Immediate safety inspection required',
-  //   status: 'open',
-  //   assignedTo: 'Tom Brown',
-  //   assignedToRoles: ['Safety Inspector', 'Technician'],
-  //   lastUpdatedDate: '2025-03-17T08:00:00.000Z',
-  //   type: 'One-time',
-  //   location: 'Service Bay'
-  // }
+    location: createLocation('QC Bay')
+  }
 ];

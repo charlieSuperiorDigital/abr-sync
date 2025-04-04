@@ -10,27 +10,8 @@ import { useGetTasksByAssignedUser } from '@/app/api/hooks/useGetTasksByAssigned
 import { useGetTasksByCreator } from '@/app/api/hooks/useGetTasksByCreator'
 import { Task as ApiTask } from '@/app/api/functions/tasks'
 import { Task } from '@/app/types/task'
-import { createContext, useContext } from 'react'
+import { TasksContext, TasksContextType } from '@/app/context/tasks-context'
 
-// Create a context to share task data with child pages
-export interface TasksContextType {
-  assignedTasks: ApiTask[]
-  createdTasks: ApiTask[]
-  isLoadingAssigned: boolean
-  isLoadingCreated: boolean
-  errorAssigned: Error | null
-  errorCreated: Error | null
-}
-
-export const TasksContext = createContext<TasksContextType | undefined>(undefined)
-
-export function useTasksContext() {
-  const context = useContext(TasksContext)
-  if (context === undefined) {
-    throw new Error('useTasksContext must be used within a TasksProvider')
-  }
-  return context
-}
 
 export default function TasksLayout({
   children,
@@ -63,14 +44,22 @@ export default function TasksLayout({
 
   // Calculate counts
   const myTasksCount = assignedTasks
-    .filter(task => task.status?.toLowerCase() !== 'completed')
+    .filter(task => task.status?.toLowerCase() !== 'done' && task.status?.toLowerCase() !== 'completed')
     .length
 
-  const completedTasksCount = assignedTasks
-    .filter(task => task.status?.toLowerCase() === 'completed')
-    .length
+  const completedTasksCount = [
+    ...assignedTasks.filter(task => 
+      task.status?.toLowerCase() === 'done' || task.status?.toLowerCase() === 'completed'
+    ),
+    ...createdTasks.filter(task => 
+      (task.status?.toLowerCase() === 'done' || task.status?.toLowerCase() === 'completed') && 
+      !assignedTasks.some(assignedTask => assignedTask.id === task.id)
+    )
+  ].length
 
-  const createdByMeCount = createdTasks.length
+  const createdByMeCount = createdTasks
+    .filter(task => task.status?.toLowerCase() !== 'done' && task.status?.toLowerCase() !== 'completed')
+    .length
 
   const taskNavItems: NavItem[] = [
     { id: 'my-tasks', label: 'My Tasks', count: myTasksCount },
@@ -91,20 +80,20 @@ export default function TasksLayout({
   return (
     <TasksContext.Provider value={contextValue}>
       <div className="flex flex-col w-full min-h-screen">
-        <div className="flex items-center justify-between px-5 my-7">
+        <div className="flex justify-between items-center px-5 my-7">
           <h1 className="text-3xl font-semibold tracking-tight">Tasks</h1>
           <NewTaskModal
             title="New Task"
             defaultRelation={undefined}
             children={
-              <Plus className="w-5 h-5 m-auto" />
+              <Plus className="m-auto w-5 h-5" />
             }
           />
         </div>
         <div className="px-5">
           <DraggableNav navItems={taskNavItems} defaultTab='my-tasks' />
         </div>
-        <main className=" w-full">{children}</main>
+        <main className="w-full">{children}</main>
       </div>
     </TasksContext.Provider>
   )

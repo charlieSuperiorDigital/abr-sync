@@ -1,4 +1,5 @@
 import apiService from '@/app/utils/apiService'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 /**
  * Interface for task creation request payload
@@ -40,6 +41,8 @@ export interface Task {
   type: string
   endDate: string
   roles: string
+  createdBy: string
+  createdByUser?: any
 }
 
 /**
@@ -47,7 +50,7 @@ export interface Task {
  * @param taskData - The task data to be created
  * @returns Promise with the API response
  */
-export async function createTask(taskData: TaskCreateVM) {
+export async function createTask(taskData: TaskCreateVM): Promise<any> {
   try {
     const response = await apiService.post<any>('/Task', taskData)
     
@@ -79,7 +82,7 @@ export async function createTask(taskData: TaskCreateVM) {
  * @param tenantId - The tenant ID to fetch tasks for (optional, uses default if not provided)
  * @returns Promise with the API response containing an array of tasks
  */
-export async function getTasksByTenant(tenantId?: string) {
+export async function getTasksByTenant(tenantId?: string): Promise<any> {
   // Use the provided tenant ID or fall back to the default
   const targetTenantId = tenantId || "2A9B6E40-5ACB-40A0-8E2B-D559B4829FA0"
   
@@ -113,7 +116,7 @@ export async function getTasksByTenant(tenantId?: string) {
  * @param userId - The user ID to fetch tasks for
  * @returns Promise with the API response containing an array of tasks
  */
-export async function getTasksByAssignedUser(userId: string) {
+export async function getTasksByAssignedUser(userId: string): Promise<any> {
   try {
     console.log('Fetching tasks assigned to user:', userId)
     const response = await apiService.get<Task[]>(`/Task/ListByAssignedUser/${userId}`)
@@ -145,7 +148,7 @@ export async function getTasksByAssignedUser(userId: string) {
  * @param userId - The user ID who created the tasks
  * @returns Promise with the API response containing an array of tasks
  */
-export async function getTasksByCreator(userId: string) {
+export async function getTasksByCreator(userId: string): Promise<any> {
   try {
     const response = await apiService.get<Task[]>(`/Task/ListByCreatedBy/${userId}`)
     
@@ -176,7 +179,7 @@ export async function getTasksByCreator(userId: string) {
  * @param taskId - The ID of the task to fetch
  * @returns Promise with the API response containing a single task
  */
-export async function getTaskById(taskId: string) {
+export async function getTaskById(taskId: string): Promise<any> {
   try {
     const response = await apiService.get<Task>(`/Task/${taskId}`)
     
@@ -202,28 +205,63 @@ export async function getTaskById(taskId: string) {
   }
 }
 
-/**
- * Example usage:
- * 
- * const newTask: TaskCreateVM = {
- *   tenantId: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
- *   title: 'Complete inspection',
- *   description: 'Perform full inspection of vehicle damage',
- *   status: 'New',
- *   assignedTo: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
- *   workfileId: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
- *   locationId: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
- *   dueDate: new Date().toISOString(),
- *   priority: 'High',
- *   type: 'Inspection',
- *   endDate: new Date().toISOString(),
- *   roles: 'Technician'
- * }
- * 
- * const result = await createTask(newTask)
- * if (result.success) {
- *   console.log('Task created successfully:', result.data)
- * } else {
- *   console.error('Failed to create task:', result.error)
- * }
- */
+export async function markTaskasDone(taskId: string): Promise<any> {
+  try {
+    return await updateTask({
+      id: taskId,
+      status: 'done'
+    });
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      status: error.response?.status || 500
+    }
+  }
+}
+
+export interface UpdateTaskPayload {
+  id: string;
+  title?: string;
+  description?: string;
+  status?: string;
+  assignedTo?: string;
+  workfileId?: string;
+  locationId?: string;
+  dueDate?: string;
+  priority?: string;
+  type?: string;
+  endDate?: string;
+  roles?: string;
+  assignedToRoles?: string[];
+  recurringFrequency?: string;
+  recurringDays?: string[];
+  recurringEndDateTime?: string;
+  timezone?: string;
+}
+
+export async function updateTask(taskData: UpdateTaskPayload): Promise<any> {
+  try {
+    const response = await apiService.put(`/Task`, taskData);
+    
+    if (response.status >= 200 && response.status < 300) {
+      return {
+        success: true,
+        data: response.data,
+        status: response.status
+      };
+    } else {
+      return {
+        success: false,
+        error: response.data,
+        status: response.status
+      };
+    }
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      status: error.response?.status || 500
+    }
+  }
+}

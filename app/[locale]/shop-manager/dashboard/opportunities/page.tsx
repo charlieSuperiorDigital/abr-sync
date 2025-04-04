@@ -1,17 +1,9 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-
-export default function OpportunitiesPage({ params }: { params?: { locale: string } }) {
-  const router = useRouter()
-  const locale = params?.locale || 'en'
-
-  useEffect(() => {
-    // Client-side redirect to new-opportunities
-    router.replace(`/${locale}/shop-manager/dashboard/opportunities/new-opportunities`)
-  }, [router, locale])
-
-  // Return empty div while redirecting
-  return <div></div>
+export default function OpportunitiesPage() {
+  return (
+    <div className="w-full min-h-screen">
+      <h1 className="text-3xl font-semibold p-5">Opportunities</h1>
+    </div>
+  )
 }

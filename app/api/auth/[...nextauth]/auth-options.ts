@@ -12,6 +12,7 @@ declare module 'next-auth' {
       firstName: string
       lastName: string
       roles: string[]
+      tenant: string
       token: string
       tokenExpiration: string
       image?: string | null

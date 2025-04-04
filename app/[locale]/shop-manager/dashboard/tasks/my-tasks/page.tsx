@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { useSession } from 'next-auth/react'
 import { Task as ApiTask } from '@/app/api/functions/tasks'
-import { useTasksContext } from '../layout'
+import { useTasksContext } from '@/app/context/tasks-context'
 
 import {
   ActionButtonCell,
@@ -30,27 +30,46 @@ import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 
 import { Task } from '@/app/types/task'
 import { EditTaskModal } from '@/components/custom-components/task-modal/edit-task-modal'
+import { ConfirmTaskDoneModal } from '@/components/custom-components/task-modal/confirm-task-done-modal'
 import * as deleteTaskModal from '@/components/custom-components/task-modal/delete-task-modal'
 
 // Function to map API task format to app task format
 const mapApiTaskToAppTask = (apiTask: ApiTask): Task => {
+  // Convert priority string to object format if needed
+  const priorityObj = typeof apiTask.priority === 'string'
+    ? {
+      variant: getPriorityVariant(apiTask.priority),
+      text: apiTask.priority as 'Urgent' | 'High' | 'Normal' | 'Low'
+    }
+    : apiTask.priority;
+
   return {
     id: apiTask.id,
+    tenantId: apiTask.tenantId || '',
     title: apiTask.title,
     description: apiTask.description,
-    priority: {
-      variant: getPriorityVariant(apiTask.priority),
-      text: apiTask.priority as any
-    },
-    createdBy: apiTask.assignedUser?.name || 'Unknown',
-    createdDate: apiTask.createdAt,
-    dueDateTime: apiTask.dueDate,
+    priority: priorityObj,
+    createdBy: apiTask.createdBy || '',
+    createdByUser: apiTask.createdByUser,
+    createdAt: apiTask.createdAt,
+    updatedAt: apiTask.updatedAt,
+    dueDate: apiTask.dueDate,
+    dueDateTime: apiTask.dueDate, // For backward compatibility
+    status: apiTask.status as 'open' | 'in_progress' | 'completed' | 'archived',
+    assignedTo: apiTask.assignedTo,
+    assignedUser: apiTask.assignedUser,
+    workfileId: apiTask.workfileId,
+    workfile: apiTask.workfile,
+    locationId: apiTask.locationId,
+    location: apiTask.location,
+    type: apiTask.type || 'One-time',
+    endDate: apiTask.endDate,
+    roles: apiTask.roles,
+    // Default values for backward compatibility
     relatedTo: [],
     email: '',
     phone: '',
-    message: '',
-    status: apiTask.status as any,
-    assignedTo: apiTask.assignedTo
+    message: ''
   };
 };
 
@@ -73,12 +92,12 @@ export default function MyTasks() {
   // Get tasks data from context
   const { assignedTasks, isLoadingAssigned, errorAssigned } = useTasksContext()
   
-  // Transform API tasks to app task format and filter out completed tasks
+  // Transform API tasks to app task format and filter for non-completed tasks only
   const tasks = assignedTasks 
     ? assignedTasks
         .map(mapApiTaskToAppTask)
         .filter(task => 
-          task.status?.toLowerCase() !== 'completed'
+          task.status?.toLowerCase() !== 'done' && task.status?.toLowerCase() !== 'completed'
         )
     : []
 
@@ -91,11 +110,22 @@ export default function MyTasks() {
     {
       accessorKey: 'priority',
       header: 'Priority',
-      cell: ({ row }) => 
-        <PriorityBadgeCell 
-          variant={row.original.priority.variant}
-          priority={row.original.priority.text} 
-        />,
+      cell: ({ row }) => {
+        const priority = row.original.priority;
+        const variant = typeof priority === 'string'
+          ? getPriorityVariant(priority)
+          : priority.variant;
+        const text = typeof priority === 'string'
+          ? priority
+          : priority.text;
+        
+        return (
+          <PriorityBadgeCell 
+            variant={variant}
+            priority={text} 
+          />
+        );
+      }
     },
     {
       accessorKey: 'title',
@@ -118,10 +148,10 @@ export default function MyTasks() {
       />,
     },
     {
-      accessorKey: 'createdDate',
+      accessorKey: 'createdAt',
       header: 'Created Date',
       cell: ({ row }) => 
-      <FriendlyDateCell date={row.original.createdDate || ''} 
+      <FriendlyDateCell date={row.original.createdAt || ''} 
       />,
       
     },
@@ -135,12 +165,12 @@ export default function MyTasks() {
       />,
       
     },
-    {
-      accessorKey: 'relatedTo',
-      header: 'Related To',
-      cell: ({ row }) => <RelatedToCell relatedObjects={row.original.relatedTo} />,
+    // {
+    //   accessorKey: 'relatedTo',
+    //   header: 'Related To',
+    //   cell: ({ row }) => <RelatedToCell relatedObjects={row.original.relatedTo} />,
       
-    },
+    // },
     {
       id: 'contact',
       header: 'Contact',
@@ -165,12 +195,12 @@ export default function MyTasks() {
     {
       id: 'done',
       header: '',
-      cell: ({ row }) => 
-        <ActionButtonCell
-          label='Done'
-          onClick={() => console.log('Done Task:', row.original.id)}
+      cell: ({ row }) => (
+        <ConfirmTaskDoneModal 
+          taskId={row.original.id} 
+          taskTitle={row.original.title}
         />
-      ,
+      ),
     },
     {
       id: 'actions',
