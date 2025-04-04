@@ -9,6 +9,8 @@ import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import 'rsuite/dist/rsuite-no-reset.min.css';
 import { CustomProvider } from 'rsuite';
+import { QueryClientProvider } from '@/app/providers/query-client-provider'
+import SessionAuthProvider from '@/app/context/SessionAuthProvider'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -59,9 +61,13 @@ export default async function RootLayout({
     <html lang={locale}>
       <body className={`${inter.variable} font-sans antialiased bg-[#F0FOFO]`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <CustomProvider>
-          {children}
-          </CustomProvider>
+          <SessionAuthProvider>
+            <QueryClientProvider>
+              <CustomProvider>
+                {children}
+              </CustomProvider>
+            </QueryClientProvider>
+          </SessionAuthProvider>
           <ToastContainer
             position="bottom-right"
             autoClose={3000}

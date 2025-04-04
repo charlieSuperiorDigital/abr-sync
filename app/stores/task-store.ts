@@ -23,8 +23,8 @@ interface TaskStore {
   // Entity-specific task functions
   getTasksByOpportunityId: (opportunityId: string) => Task[]
   getTasksByWorkfileId: (workfileId: string) => Task[]
-  addTaskToOpportunity: (opportunityId: string, task: Omit<Task, 'id' | 'createdDate'>) => void
-  addTaskToWorkfile: (workfileId: string, task: Omit<Task, 'id' | 'createdDate'>) => void
+  addTaskToOpportunity: (opportunityId: string, task: Omit<Task, 'id' | 'createdAt'>) => void
+  addTaskToWorkfile: (workfileId: string, task: Omit<Task, 'id' | 'createdAt'>) => void
   
   // Workflow transition functions
   convertOpportunityTaskToWorkfile: (taskId: string, workfileId: string) => void
@@ -57,7 +57,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
           ...task,
           status: task.status || 'open',
           lastUpdatedDate: new Date().toISOString(),
-          createdDate: new Date().toISOString()
+          createdAt: new Date().toISOString()
         }
       ]
     })),
@@ -105,6 +105,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   getTasksByDueDate: (date: string) => {
     const state = get()
     return state.tasks.filter((task) => {
+      if (!task.dueDateTime) return false
       const taskDate = task.dueDateTime.split('T')[0]
       return taskDate === date
     })
@@ -113,7 +114,10 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   getTasksByPriority: (priorityText) => {
     const state = get()
     return state.tasks.filter(
-      (task) => task.priority.text.toLowerCase() === priorityText.toLowerCase()
+      (task) => {
+        if (typeof task.priority === 'string') return false
+        return task.priority.text.toLowerCase() === priorityText.toLowerCase()
+      }
     )
   },
 
@@ -126,29 +130,22 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     const state = get()
     const now = new Date()
     return state.tasks.filter((task) => {
+      if (!task.dueDateTime) return false
       const dueDate = new Date(task.dueDateTime)
-      return (
-        task.status !== 'completed' &&
-        task.status !== 'archived' &&
-        dueDate < now
-      )
+      return dueDate < now && task.status !== 'completed'
     })
   },
 
   getUpcomingTasks: (daysAhead) => {
     const state = get()
     const now = new Date()
-    const futureDate = new Date(now)
-    futureDate.setDate(now.getDate() + daysAhead)
-
+    const future = new Date()
+    future.setDate(now.getDate() + daysAhead)
+    
     return state.tasks.filter((task) => {
+      if (!task.dueDateTime) return false
       const dueDate = new Date(task.dueDateTime)
-      return (
-        task.status !== 'completed' &&
-        task.status !== 'archived' &&
-        dueDate >= now &&
-        dueDate <= futureDate
-      )
+      return dueDate >= now && dueDate <= future && task.status !== 'completed'
     })
   },
 
@@ -156,14 +153,14 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   getTasksByOpportunityId: (opportunityId) => {
     const state = get()
     return state.tasks.filter((task) => 
-      task.relatedTo.some(relation => relation.type === 'opportunity' && relation.id === opportunityId)
+      task.relatedTo?.some(relation => relation.type === 'opportunity' && relation.id === opportunityId)
     )
   },
 
   getTasksByWorkfileId: (workfileId) => {
     const state = get()
     return state.tasks.filter((task) => 
-      task.relatedTo.some(relation => relation.type === 'workfile' && relation.id === workfileId)
+      task.relatedTo?.some(relation => relation.type === 'workfile' && relation.id === workfileId)
     )
   },
 
@@ -176,7 +173,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         type: 'opportunity',
         id: opportunityId
       }],
-      createdDate: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
       lastUpdatedDate: new Date().toISOString(),
     })
   },
@@ -190,7 +187,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         type: 'workfile',
         id: workfileId
       }],
-      createdDate: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
       lastUpdatedDate: new Date().toISOString(),
     })
   },
@@ -198,10 +195,10 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   convertOpportunityTaskToWorkfile: (taskId, workfileId) => {
     const state = get()
     const task = state.getTaskById(taskId)
-    if (!task || !task.relatedTo.some(relation => relation.type === 'opportunity')) return
+    if (!task || !task.relatedTo?.some(relation => relation.type === 'opportunity')) return
 
     state.updateTask(taskId, {
-      relatedTo: task.relatedTo.map(relation => 
+      relatedTo: task.relatedTo?.map(relation => 
         relation.type === 'opportunity' ? { type: 'workfile', id: workfileId } : relation
       ),
       lastUpdatedDate: new Date().toISOString(),
@@ -212,7 +209,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     const state = get()
     const opportunityTasks = state.getTasksByOpportunityId(opportunityId)
     return opportunityTasks.map(task => {
-      const workfileId = task.relatedTo.find(relation => relation.type === 'workfile')?.id
+      const workfileId = task.relatedTo?.find(relation => relation.type === 'workfile')?.id
       const workfileTasks = state.getTasksByWorkfileId(workfileId || '')
       return { originalTask: task, workfileTasks }
     })

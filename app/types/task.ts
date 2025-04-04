@@ -1,4 +1,6 @@
 import { TaskType } from "@/components/custom-components/task-modal/schema"
+import { User } from "./user"
+import { Location } from "./location"
 
 export interface TaskComment {
   id: string
@@ -22,35 +24,57 @@ export interface TaskRelation {
   title?: string
 }
 
+export interface Workfile {
+  id: string
+  opportunityId: string
+  opportunity: any | null
+  status: string
+  dropDate: string
+  estimatedCompletionDate: string
+  createdAt: string
+  updatedAt: string
+}
+
 export interface Task {
   id: string
-  priority: {
+  tenantId: string
+  title: string
+  description: string
+  status: 'open' | 'in_progress' | 'completed' | 'archived'
+  assignedTo: string
+  assignedUser?: User
+  workfileId?: string
+  workfile?: Workfile
+  locationId?: string
+  location?: Location
+  dueDate: string
+  createdAt: string
+  updatedAt: string
+  priority: string | {
     variant: 'danger' | 'warning' | 'success' | 'slate'
     text: 'Urgent' | 'High' | 'Normal' | 'Low'
   }
-  title: string
-  description: string
+  type: string
+  endDate?: string
+  roles?: string
   createdBy: string
-  createdDate?: string
-  dueDateTime: string
-  relatedTo: TaskRelation[]
-  email: string
-  phone: string
-  message: string
+  createdByUser?: User
+  
+  // Additional fields from previous interface that might still be needed
+  dueDateTime?: string
+  relatedTo?: TaskRelation[]
+  email?: string
+  phone?: string
+  message?: string
   warningMessage?: string
-  status?: 'open' | 'in_progress' | 'completed' | 'archived'
-  assignedTo?: string
   assignedToRoles?: string[]
   lastUpdatedDate?: string
   completedDate?: string
   attachments?: TaskAttachment[]
   comments?: TaskComment[]
   estimatedHours?: number
-  location?: string
-  type?: TaskType
   template?: string
   recurrence?: 'Every Day' | 'Every Week' | 'Every Month' | 'Every Year' | 'Custom'
-  // Recurring task properties
   recurringFrequency?: string
   recurringDays?: string[]
   recurringEndDateTime?: string

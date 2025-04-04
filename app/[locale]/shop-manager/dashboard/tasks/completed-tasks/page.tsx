@@ -1,8 +1,10 @@
 'use client'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
-import { shallow } from 'zustand/shallow'
 import { useEffect, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
+import { useSession } from 'next-auth/react'
+import { Task as ApiTask } from '@/app/api/functions/tasks'
+import { useTasksContext } from '@/app/context/tasks-context'
 
 import {
   ActionButtonCell,
@@ -26,17 +28,99 @@ import { ColumnDef } from '@tanstack/react-table'
 import { MessageSquareMore, PanelTop } from 'lucide-react'
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 
-import { mockTasks } from '../../../../../mocks/tasks.mock'
-import { useTaskStore } from '@/app/stores/task-store'
 import { Task } from '@/app/types/task'
 import { EditTaskModal } from '@/components/custom-components/task-modal/edit-task-modal'
+import { ReopenTaskModal } from '@/components/custom-components/task-modal/reopen-task-modal'
+import { DuplicateTaskModal } from '@/components/custom-components/task-modal/duplicate-task-modal'
 import * as deleteTaskModal from '@/components/custom-components/task-modal/delete-task-modal'
 
+// Function to map API task format to app task format
+const mapApiTaskToAppTask = (apiTask: ApiTask): Task => {
+  // Convert priority string to object format if needed
+  const priorityObj = typeof apiTask.priority === 'string'
+    ? {
+      variant: getPriorityVariant(apiTask.priority),
+      text: apiTask.priority as 'Urgent' | 'High' | 'Normal' | 'Low'
+    }
+    : apiTask.priority;
+
+  return {
+    id: apiTask.id,
+    tenantId: apiTask.tenantId || '',
+    title: apiTask.title,
+    description: apiTask.description,
+    priority: priorityObj,
+    createdBy: apiTask.createdBy || '',
+    createdByUser: apiTask.createdByUser,
+    createdAt: apiTask.createdAt,
+    updatedAt: apiTask.updatedAt,
+    dueDate: apiTask.dueDate,
+    dueDateTime: apiTask.dueDate, // For backward compatibility
+    status: apiTask.status as 'open' | 'in_progress' | 'completed' | 'archived',
+    assignedTo: apiTask.assignedTo,
+    assignedUser: apiTask.assignedUser,
+    workfileId: apiTask.workfileId,
+    workfile: apiTask.workfile,
+    locationId: apiTask.locationId,
+    location: apiTask.location,
+    type: apiTask.type || 'One-time',
+    endDate: apiTask.endDate,
+    roles: apiTask.roles,
+    // Default values for backward compatibility
+    relatedTo: [],
+    email: '',
+    phone: '',
+    message: ''
+  };
+};
+
+// Helper function to determine priority variant
+const getPriorityVariant = (priority: string): 'danger' | 'warning' | 'success' | 'slate' => {
+  switch (priority?.toLowerCase()) {
+    case 'urgent':
+      return 'danger';
+    case 'high':
+      return 'warning';
+    case 'normal':
+      return 'success';
+    case 'low':
+    default:
+      return 'slate';
+  }
+};
+
 export default function CompletedTasks() {
+  // Get tasks data from context
+  const { assignedTasks, createdTasks, isLoadingAssigned, isLoadingCreated, errorAssigned, errorCreated } = useTasksContext()
   
-  // Subscribe to the store's tasks array
-  const tasks = useTaskStore(state => state.tasks)
-  const userTasks = tasks.filter(task => task.status === 'completed')//.filter(task => task.assignedTo === '123456')
+  // Transform API tasks to app task format and filter for completed tasks only
+  const assignedCompletedTasks = assignedTasks 
+    ? assignedTasks
+        .map(mapApiTaskToAppTask)
+        .filter(task => 
+          task.status?.toLowerCase() === 'done' || task.status?.toLowerCase() === 'completed'
+        )
+    : []
+    
+  const createdCompletedTasks = createdTasks 
+    ? createdTasks
+        .map(mapApiTaskToAppTask)
+        .filter(task => 
+          task.status?.toLowerCase() === 'done' || task.status?.toLowerCase() === 'completed'
+        )
+    : []
+    
+  // Combine both arrays and remove duplicates based on task ID
+  const combinedTasks = [...assignedCompletedTasks]
+  
+  // Add created tasks that aren't already in the assigned tasks list
+  createdCompletedTasks.forEach(createdTask => {
+    if (!combinedTasks.some(task => task.id === createdTask.id)) {
+      combinedTasks.push(createdTask)
+    }
+  })
+  
+  const tasks = combinedTasks
 
   const columns: ColumnDef<Task>[] = [
     {
@@ -47,11 +131,22 @@ export default function CompletedTasks() {
     {
       accessorKey: 'priority',
       header: 'Priority',
-      cell: ({ row }) => 
-        <PriorityBadgeCell 
-          variant={row.original.priority.variant}
-          priority={row.original.priority.text} 
-        />,
+      cell: ({ row }) => {
+        const priority = row.original.priority;
+        const variant = typeof priority === 'string'
+          ? getPriorityVariant(priority)
+          : priority.variant;
+        const text = typeof priority === 'string'
+          ? priority
+          : priority.text;
+        
+        return (
+          <PriorityBadgeCell 
+            variant={variant}
+            priority={text} 
+          />
+        );
+      }
     },
     {
       accessorKey: 'title',
@@ -70,23 +165,23 @@ export default function CompletedTasks() {
       cell: ({ row }) => 
       <CreatedByCell 
         createdBy={row.original.createdBy} 
-        currentUser={'Charlie Thompson'}//To Do: Get Current User
+        currentUser={''}
       />,
     },
     {
-      accessorKey: 'createdDate',
+      accessorKey: 'createdAt',
       header: 'Created Date',
       cell: ({ row }) => 
-      <FriendlyDateCell date={row.original.createdDate} 
+      <FriendlyDateCell date={row.original.createdAt || ''} 
       />,
       
     },
     {
-      accessorKey: 'dueDateTime',
+      accessorKey: 'dueDate',
       header: 'DUE',
       cell: ({ row }) => 
       <FriendlyDateCell   
-        date={row.original.dueDateTime} 
+        date={row.original.dueDate} 
         variant='due' 
       />,
       
@@ -94,14 +189,17 @@ export default function CompletedTasks() {
     {
       accessorKey: 'relatedTo',
       header: 'Related To',
-      cell: ({ row }) => <RelatedToCell relatedObjects={row.original.relatedTo} />,
+      cell: ({ row }) => {
+        const relatedObjects = row.original.relatedTo || [];
+        return <RelatedToCell relatedObjects={relatedObjects as any} />;
+      },
       
     },
     {
       id: 'contact',
       header: 'Contact',
       cell: ({ row }) => (
-        <div className="flex items-center justify-end space-x-2">
+        <div className="flex justify-end items-center space-x-2">
           <WarningCell
             message={row.original.warningMessage || ''}
           />
@@ -119,69 +217,42 @@ export default function CompletedTasks() {
       ),
     },
     {
-      id: 'done',
-      header: '',
-      cell: ({ row }) => 
-        <ActionButtonCell
-          label='Done'
-          onClick={() => console.log('Done Task:', row.original.id)}
-        />
-      ,
-    },
-    {
       id: 'actions',
       header: '',
-      cell: ({ row }) => 
-      <ActionsCell
-        actions={[
-          // {
-          //   label: 'Delete',
-          //   onClick: () => console.log('Delete Task:', row.original.id),
-          //   variant: 'secondary',
-          //   icon: 'delete'},
-          {
-            label: 'Delete',
-            onClick: () => console.log('Delete Task:', row.original.id),
-            variant: 'secondary',
-            icon: 'delete',
-            _component: 
-              <deleteTaskModal.DeleteTaskModal 
-              title={'Are you sure you want to delete this task?'}
-              children={undefined} 
-              />
-          },
-          {
-            label: 'Edit',
-            onClick: () => console.log('Edit Task:', row.original.id),
-            variant: 'secondary',
-            icon: 'edit',
-            _component: 
-              <EditTaskModal 
-                title={'Edit Task'}
-                taskId={row.original.id}
-                children={undefined} 
-              />
-          }
-
-        ]}
-      />,
+      cell: ({ row }) => (
+        <div className="flex space-x-2">
+          <ReopenTaskModal 
+            taskId={row.original.id}
+            taskTitle={row.original.title}
+          />
+          <DuplicateTaskModal 
+            task={row.original}
+          />
+        </div>
+      ),
     }
     
   ]
 
-
-
-
   return (
     <div className="w-full">
-      <DataTable
-        columns={columns}
-        data={userTasks}
-        // onRowClick={(row) => console.log('Row clicked:', row)}
-        pageSize={10}
-        pageSizeOptions={[5, 10, 20, 30, 40, 50]}
-        showPageSize={true}
-      />
+      {(isLoadingAssigned || isLoadingCreated) ? (
+        <div className="flex justify-center items-center h-64">
+          <p>Loading tasks...</p>
+        </div>
+      ) : (errorAssigned || errorCreated) ? (
+        <div className="flex justify-center items-center h-64">
+          <p className="text-gray-500">{errorAssigned?.message || errorCreated?.message}</p>
+        </div>
+      ) : (
+        <DataTable
+          columns={columns}
+          data={tasks}
+          pageSize={10}
+          pageSizeOptions={[5, 10, 20, 30, 40, 50]}
+          showPageSize={true}
+        />
+      )}
     </div>
   )
 }

@@ -50,6 +50,7 @@ export type DayOfWeek = typeof DaysOfWeek[number]
 export function getTaskFormSchema() {
   return z.object({
     template: z.string().optional(),
+    tenantId: z.string().optional(),
     priority: z.enum(TaskPriorities, {
       required_error: 'Priority is required',
       invalid_type_error: 'Please select a valid priority'
