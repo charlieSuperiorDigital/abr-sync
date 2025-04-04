@@ -1,28 +1,44 @@
+"use client"
 import DraggableNav from '@/components/custom-components/draggable-nav/draggable-nav';
+import { useSession } from 'next-auth/react';
+import { useWorkfiles } from '@/app/context/WorkfilesProvider';
 import React from 'react';
 
 export default function WorkfilesLayout({
-    children,
+  children,
 }: {
-    children: React.ReactNode
+  children: React.ReactNode
 }) {
-    return (
-        <div className="w-full">
-            <h1 className="text-3xl font-semibold tracking-tight px-5 my-7">Work Files</h1>
-            <DraggableNav
-                navItems={[
-                    { id: 'upcoming', label: 'Upcoming', count: 72 },
-                    { id: 'in-progress', label: 'In Progress', count: 30 },
-                    { id: 'quality-control', label: 'Quality Control', count: 2 },
-                    { id: 'ready-for-pick-up', label: 'Ready For Pick-Up', count: 3 },
-                    { id: 'sublets', label: 'Sublets', count: 6 },
-                    { id: 'labor', label: 'Labor', count: 6 },
-                    { id: 'reports', label: 'Reports', count: 6 },
-                    { id: 'archive', label: 'Archive', count: 6 },
-                ]}
-                // baseUrl='/en/shop-manager/dashboard/workfiles'
-            />
-            {children}
-        </div>
-    )
+  const { data: session } = useSession()
+  const tenantId = session?.user.tenantId
+
+  if (!tenantId) {
+    return <div>No tenant ID found</div>
+  }
+
+  const { workfilesQuantity, isLoading, error } = useWorkfiles()
+
+  if (error) {
+    return <div>Error loading workfiles: {error.message}</div>
+  }
+
+  return (
+    <div className="w-full">
+      <h1 className="px-5 my-7 text-3xl font-semibold tracking-tight">Work Files</h1>
+      <DraggableNav
+        navItems={[
+          { id: 'upcoming', label: 'Upcoming', count: workfilesQuantity.upcoming },
+          { id: 'in-progress', label: 'In Progress', count: workfilesQuantity.inProgress },
+          { id: 'quality-control', label: 'Quality Control', count: workfilesQuantity.qualityControl },
+          { id: 'ready-for-pick-up', label: 'Ready For Pick-Up', count: workfilesQuantity.readyForPickup },
+          { id: 'sublets', label: 'Sublets', count: workfilesQuantity.sublets },
+          { id: 'labor', label: 'Labor', count: workfilesQuantity.labor },
+          { id: 'reports', label: 'Reports', count: workfilesQuantity.reports },
+          { id: 'archive', label: 'Archive', count: workfilesQuantity.archive },
+        ]}
+        // baseUrl='/en/shop-manager/dashboard/workfiles'
+      />
+      {children}
+    </div>
+  )
 }

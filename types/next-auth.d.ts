@@ -3,21 +3,39 @@ import 'next-auth'
 declare module 'next-auth' {
   export interface Session {
     user: {
-      id: string
+      userId: string
       token: string
-      name?: string | null
-      email?: string | null
+      email: string
+      firstName: string
+      lastName: string
+      roles: string[]
+      tenantId: string
+      tokenExpiration: string
       image?: string | null
-      role: string
     }
   }
-
   export interface User {
-    id: string
-    name?: string | null
-    email?: string | null
-    image?: string | null
+    userId: string
     token: string
-    role: string
+    email: string
+    firstName: string
+    lastName: string
+    roles: string[]
+    tenantId: string
+    tokenExpiration: string
+    errorMessage?: string
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    userId: string
+    email: string
+    firstName: string
+    lastName: string
+    roles: string[]
+    token: string
+    tenantId: string
+    tokenExpiration: string
   }
 }

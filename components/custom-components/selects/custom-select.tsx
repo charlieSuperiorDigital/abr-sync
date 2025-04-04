@@ -38,7 +38,6 @@ export function CustomSelect({
 
   // Update internal options when options prop changes
   React.useEffect(() => {
-    console.log('Options changed in CustomSelect:', options)
     setInternalOptions(options)
   }, [options])
 
@@ -89,7 +88,7 @@ export function CustomSelect({
         )}
         disabled={isDisabled}
       >
-        <span className="flex items-center gap-2">
+        <span className="flex gap-2 items-center">
           {selectedValues.length > 0 ? (
             multiSelect ? (
               `${selectedValues.length} selected`
@@ -97,7 +96,7 @@ export function CustomSelect({
               <>
                 {internalOptions.find((opt) => opt.value === selectedValues[0])
                   ?.avatar && (
-                  <Avatar className="h-6 w-6  text-black">
+                  <Avatar className="w-6 h-6 text-black">
                     <AvatarImage
                       src={
                         internalOptions.find((opt) => opt.value === selectedValues[0])
@@ -109,7 +108,7 @@ export function CustomSelect({
                       }
                     />
                     <AvatarFallback>
-                      <User className="h-4 w-4" />
+                      <User className="w-4 h-4" />
                     </AvatarFallback>
                   </Avatar>
                 )}
@@ -155,10 +154,10 @@ export function CustomSelect({
                     />
                   )}
                   {option.avatar && (
-                    <Avatar className="h-6 w-6 text-black">
+                    <Avatar className="w-6 h-6 text-black">
                       <AvatarImage src={option.avatar} alt={option.label} />
                       <AvatarFallback>
-                        <User className="h-4 w-4" />
+                        <User className="w-4 h-4" />
                       </AvatarFallback>
                     </Avatar>
                   )}

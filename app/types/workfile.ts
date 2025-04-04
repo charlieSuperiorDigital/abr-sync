@@ -57,6 +57,79 @@ export type Sublet = {
   dueDate?: string; // Date when the sublet work is due to be completed (ISO format)
 };
 
+// Represents the API response format for workfiles
+export type WorkfileApiResponse = {
+  id: string;
+  opportunityId: string;
+  opportunity: {
+    id: string;
+    tenantId: string;
+    insuranceId: string;
+    insurance: null;
+    vehicleId: string;
+    vehicle: null;
+    locationId: string | null;
+    location: null;
+    documentId: string | null;
+    document: null;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    _1stCall: string;
+    _2ndCall: string;
+  };
+  status: string;
+  dropDate: string;
+  estimatedCompletionDate: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+// Maps API response to our Workfile type
+export const mapWorkfileApiResponseToWorkfile = (apiResponse: WorkfileApiResponse): Workfile => ({
+  workfileId: apiResponse.id,
+  opportunityId: apiResponse.opportunityId,
+  status: apiResponse.status as WorkfileStatus,
+  createdDate: apiResponse.createdAt,
+  lastUpdatedDate: apiResponse.updatedAt,
+  dropDate: apiResponse.dropDate,
+  estimatedCompletionDate: apiResponse.estimatedCompletionDate,
+  inDate: apiResponse.dropDate,
+  vehicle: {
+    vin: '',
+    make: '',
+    model: '',
+    year: 0,
+    licensePlate: '',
+    exteriorColor: '',
+    interiorColor: '',
+    mileageIn: 0,
+    vehiclePicturesUrls: []
+  },
+  owner: {
+    name: '',
+    phone: '',
+    email: '',
+    address: ''
+  },
+  insurance: {
+    company: '',
+    claimNumber: '',
+    policyNumber: '',
+    deductible: 0,
+    typeOfLoss: ''
+  },
+  parts: {
+    total: 0,
+    returns: 0,
+    returnsAmount: 0,
+    list: []
+  },
+  repairStartDate: apiResponse.createdAt,
+  uploadDeadline: new Date(new Date(apiResponse.dropDate).getTime() + 24 * 60 * 60 * 1000).toISOString(),
+  tasks: []
+});
+
 export type Workfile = {
     workfileId: string; // Unique identifier for the workfile
     opportunityId: string; // Reference to the original opportunity

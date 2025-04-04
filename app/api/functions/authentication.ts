@@ -14,6 +14,7 @@ interface AuthResponse {
   lastName: string
   roles: string[]
   errorMessage: string
+  tenantId: string
   tokenExpiration: string
 }
 
@@ -44,6 +45,7 @@ export const login = async (credentials: LoginCredentials): Promise<(User & {
     roles: string[]
     token: string
     tokenExpiration: string
+    tenantId: string
 }) | null> => {
     if (!credentials?.email || !credentials?.password) {
         return null
@@ -63,13 +65,14 @@ export const login = async (credentials: LoginCredentials): Promise<(User & {
             console.log('Login response:', response.data)
 
             return {
-                id: response.data.userId,
+                id: response.data.userId, // NextAuth User interface requires 'id'
+                userId: response.data.userId,
                 name: `${response.data.firstName} ${response.data.lastName}`,
                 email: response.data.email,
-                role: response.data.roles[0] || '',
+                roles: response.data.roles,
                 firstName: response.data.firstName,
                 lastName: response.data.lastName,
-                roles: response.data.roles,
+                tenantId: response.data.tenantId,
                 token: response.data.token,
                 tokenExpiration: response.data.tokenExpiration,
                 image: undefined

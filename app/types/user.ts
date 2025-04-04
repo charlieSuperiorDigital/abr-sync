@@ -17,7 +17,6 @@ export interface User {
   facebookSSOId: string | null;
   appleSSOId: string | null;
   roles: string; // JSON string of roles array
-  tenant: string; // Could be replaced with Tenant type if needed
   invitations: any[]; // Could be replaced with Invitation type if needed
   tenantRoles: any[]; // Could be replaced with TenantRole type if needed
 }

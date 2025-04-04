@@ -12,7 +12,7 @@ declare module 'next-auth' {
       firstName: string
       lastName: string
       roles: string[]
-      tenant: string
+      tenantId: string
       token: string
       tokenExpiration: string
       image?: string | null
@@ -20,10 +20,15 @@ declare module 'next-auth' {
   }
 
   interface User {
+    userId: string
+    token: string
+    email: string
     firstName: string
     lastName: string
     roles: string[]
+    tenantId: string
     tokenExpiration: string
+    errorMessage?: string
   }
 }
 
@@ -48,13 +53,14 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.userId = user.id
+        token.userId = user.userId
         token.email = user.email
         token.firstName = user.firstName
         token.lastName = user.lastName
         token.roles = user.roles
         token.token = user.token
         token.tokenExpiration = user.tokenExpiration
+        token.tenantId = user.tenantId
       }
       return token
     },
@@ -66,6 +72,7 @@ export const authOptions: NextAuthOptions = {
         session.user.lastName = token.lastName as string
         session.user.roles = token.roles as string[]
         session.user.token = token.token as string
+        session.user.tenantId = token.tenantId as string
         session.user.tokenExpiration = token.tokenExpiration as string
       }
       return session

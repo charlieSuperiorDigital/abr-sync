@@ -14,20 +14,25 @@ import { Opportunity, OpportunityStatus, PartsWarningStatus } from '@/app/types/
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import { useState, useCallback } from 'react'
-import { useOpportunityStore } from '@/app/stores/opportunity-store'
+import { useSession } from 'next-auth/react'
+import { useGetOpportunities } from '@/app/api/hooks/useGetOpportunities'
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
 import ConfirmationModal from '@/components/custom-components/confirmation-modal/confirmation-modal'
 import { StatusBadge } from '@/components/custom-components/status-badge/status-badge'
 import { showArchiveToast } from '@/app/utils/toast-utils'
 import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
+import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
 
 export default function SecondCallOpportunities() {
-  const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity, archiveOpportunity } = useOpportunityStore()
+  const { data: session } = useSession()
+  const tenantId = session?.user?.tenantId
+  const { secondCallOpportunities, isLoading } = useGetOpportunities({ tenantId: tenantId! })
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [archiveConfirmation, setArchiveConfirmation] = useState<{ isOpen: boolean; opportunity: Opportunity | null }>({
     isOpen: false,
     opportunity: null
   })
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null)
 
   const handleRowClick = useCallback((opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity)
@@ -46,11 +51,11 @@ export default function SecondCallOpportunities() {
 
   const handleArchiveConfirm = useCallback(() => {
     if (archiveConfirmation.opportunity) {
-      archiveOpportunity(archiveConfirmation.opportunity.opportunityId)
+      // TODO: Implement archive API call
       showArchiveToast(archiveConfirmation.opportunity)
       console.log('Archiving opportunity:', archiveConfirmation.opportunity.opportunityId)
     }
-  }, [archiveConfirmation.opportunity, archiveOpportunity])
+  }, [archiveConfirmation.opportunity])
 
   const handleArchiveClick = useCallback((opportunity: Opportunity) => {
     setArchiveConfirmation({
@@ -107,7 +112,7 @@ export default function SecondCallOpportunities() {
       accessorKey: 'firstCallDate',
       header: '1ST CALL',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap text-gray-600">
+        <span className="text-gray-600 whitespace-nowrap">
           {formatDate(row.original.firstCallDate)}
         </span>
       ),
@@ -116,7 +121,7 @@ export default function SecondCallOpportunities() {
       accessorKey: 'secondCallDate',
       header: '2ND CALL',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap text-gray-600">
+        <span className="text-gray-600 whitespace-nowrap">
           {formatDate(row.original.secondCallDate)}
         </span>
       ),
@@ -125,7 +130,7 @@ export default function SecondCallOpportunities() {
       accessorKey: 'lastUpdatedBy',
       header: 'LAST UPDATED BY',
       cell: ({ row }) => (
-        <div className="flex items-center gap-2">
+        <div className="flex gap-2 items-center">
           {row.original.lastUpdatedBy?.avatar && (
             <img 
               src={row.original.lastUpdatedBy.avatar} 
@@ -196,7 +201,7 @@ export default function SecondCallOpportunities() {
         <div className="flex justify-center">
           <DarkButton
             buttonText="Archive"
-            buttonIcon={<Archive className="w-4 h-4 mr-2" />}
+            buttonIcon={<Archive className="mr-2 w-4 h-4" />}
             onClick={(e) => {
               e.stopPropagation()
               handleArchiveClick(row.original)
@@ -210,11 +215,10 @@ export default function SecondCallOpportunities() {
       header: 'Task',
       cell: ({ row }) => (
         <div
-        onClick={(e) => {
-          e.stopPropagation()
-        }}
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
         >
-
           <NewTaskModal
             title="New Task"
             defaultRelation={
@@ -224,7 +228,7 @@ export default function SecondCallOpportunities() {
               }
             }
             children={
-              <Plus className="w-5 h-5 m-auto" />
+              <Plus className="m-auto w-5 h-5" />
             }
           />
         </div>
@@ -232,14 +236,15 @@ export default function SecondCallOpportunities() {
     },
   ]
 
-  // Get opportunities in 2nd Call status from the store
-  const opportunities = getOpportunitiesByStatus(OpportunityStatus.SecondCall)
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-64">Loading opportunities...</div>
+  }
 
   return (
     <div className="w-full">
       <DataTable<Opportunity, any>
         columns={columns}
-        data={opportunities}
+        data={secondCallOpportunities.map(mapApiResponseToOpportunity)}
         onRowClick={handleRowClick}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}

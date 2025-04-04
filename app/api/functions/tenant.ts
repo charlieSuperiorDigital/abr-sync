@@ -19,12 +19,14 @@ export async function getTenantById(id: string): Promise<TenantWithLocations> {
     console.log('Fetching tenant by ID:', id)
     try {
         const { data } = await apiService.get<TenantWithLocations>(`/Tenant/${id}`)
+        console.log('Locations:', data.locations)
         return data;
     } catch (error) {
         console.error('Error fetching tenant:', error)
         throw error
     }
 }
+
 
 /**
  * Get users by tenant ID with pagination

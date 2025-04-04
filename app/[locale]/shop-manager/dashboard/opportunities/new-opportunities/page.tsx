@@ -1,4 +1,5 @@
 'use client'
+
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import {
   AutoCell,
@@ -13,21 +14,53 @@ import { ClipboardPlus, Archive, Plus } from 'lucide-react'
 import { Opportunity, OpportunityStatus, PartsWarningStatus } from '@/app/types/opportunity'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useOpportunityStore } from '@/app/stores/opportunity-store'
 import { StatusBadge } from '@/components/custom-components/status-badge/status-badge'
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
 import ConfirmationModal from '@/components/custom-components/confirmation-modal/confirmation-modal'
 import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
 import DateTimePicker from '@/app/[locale]/custom-components/date-time-picker'
+import { useSession } from 'next-auth/react'
+import { useGetOpportunities } from '@/app/api/hooks/useGetOpportunities'
+import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
 
 export default function NewOpportunities() {
-  const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity, archiveOpportunity } = useOpportunityStore()
+  const { data: session } = useSession()
+  const tenantId = session?.user?.tenantId
+  const { newOpportunities, isLoading } = useGetOpportunities({ tenantId: tenantId! })
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null)
+
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [archiveConfirmation, setArchiveConfirmation] = useState<{ isOpen: boolean; opportunity: Opportunity | null }>({
     isOpen: false,
     opportunity: null
   })
+  const [missingFields, setMissingFields] = useState<string[]>([])
+
+  // Check for missing fields in the API response
+  useEffect(() => {
+    if (newOpportunities && newOpportunities.length > 0) {
+      const firstOpportunity = newOpportunities[0]
+      const expectedFields = [
+        'opportunityId', 'opportunityStatus', 'opportunityCreatedAt', 'opportunityUpdatedAt',
+        'insuranceName', 'insuranceProvider', 'insuranceClaimNumber', 'insurancePolicyNumber',
+        'vehicleMake', 'vehicleModel', 'vehicleYear', 'vehicleVin',
+        'ownerFirstName', 'ownerLastName', 'ownerEmail', 'ownerPhone'
+      ]
+
+      const missing = expectedFields.filter(field =>
+        !(field in firstOpportunity) ||
+        firstOpportunity[field as keyof typeof firstOpportunity] === undefined ||
+        firstOpportunity[field as keyof typeof firstOpportunity] === null
+      )
+
+      if (missing.length > 0) {
+        console.warn('Missing fields in API response:', missing)
+        setMissingFields(missing)
+      }
+    }
+  }, [newOpportunities])
 
   const handleRowClick = useCallback((opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity)
@@ -44,12 +77,12 @@ export default function NewOpportunities() {
     console.log('Task clicked for opportunity:', opportunity.opportunityId)
   }, [])
 
-  const handleArchiveConfirm = useCallback(() => {
-    if (archiveConfirmation.opportunity) {
-      archiveOpportunity(archiveConfirmation.opportunity.opportunityId)
-      console.log('Archiving opportunity:', archiveConfirmation.opportunity.opportunityId)
-    }
-  }, [archiveConfirmation.opportunity, archiveOpportunity])
+  // const handleArchiveConfirm = useCallback(() => {
+  //   if (archiveConfirmation.opportunity) {
+  //     archiveOpportunity(archiveConfirmation.opportunity.opportunityId)
+  //     console.log('Archiving opportunity:', archiveConfirmation.opportunity.opportunityId)
+  //   }
+  // }, [archiveConfirmation.opportunity, archiveOpportunity])
 
   const handleArchiveClick = useCallback((opportunity: Opportunity) => {
     setArchiveConfirmation({
@@ -63,17 +96,19 @@ export default function NewOpportunities() {
     return new Date(date).toLocaleDateString()
   }
 
-  const columns: ColumnDef<Opportunity, any>[] = [
+  const columns: ColumnDef<Opportunity>[] = [
     {
       accessorKey: 'vehicle',
       header: 'Vehicle',
       cell: ({ row }) => (
         <VehicleCell
-          make={row.original.vehicle.make}
-          model={row.original.vehicle.model}
-          year={row.original.vehicle.year}
-          imageUrl={`https://picsum.photos/seed/${row.original.opportunityId}/200/100`}
-        />
+        make={row.original.vehicle.make}
+        model={row.original.vehicle.model}
+        year={row.original.vehicle.year}
+        imageUrl={row.original.vehicle.photos && row.original.vehicle.photos.length > 0
+          ? row.original.vehicle.photos[0].url
+          : `https://picsum.photos/seed/${row.original.opportunityId}/200/100`}
+      />
       ),
     },
     {
@@ -101,7 +136,17 @@ export default function NewOpportunities() {
     {
       accessorKey: 'isInRental',
       header: 'In Rental',
-      cell: ({ row }) => (row.original.isInRental ? <AutoCell /> : null),
+      cell: ({ row }) => (
+        row.original.isInRental ? (
+          <StatusBadge variant="success" size="sm">
+            YES
+          </StatusBadge>
+        ) : (
+          <StatusBadge variant="neutral" size="sm">
+            NO
+          </StatusBadge>
+        )
+      ),
     },
     {
       accessorKey: 'dropDate',
@@ -109,34 +154,34 @@ export default function NewOpportunities() {
       cell: ({ row }) => (
         <DateTimePicker
           value={row.original.dropDate}
-          editable={!row.original.dropDate}
+          editable={false}
           onOk={(date: Date) => console.log(date)}
         />
       ),
     },
     {
-      accessorKey: 'warning',
-      header: 'Warning',
+      accessorKey: 'parts.warning',
+      header: 'Parts',
       cell: ({ row }) => {
-        const warning = row.original.warning;
-        if (!warning || !warning.message) return null;
+        const warning = row.original.parts?.warning;
+        if (!warning) return null;
 
         // Determine variant and text based on warning type
         let variant: 'warning' | 'danger';
         let text: string;
 
-        if (warning.type === 'MISSING_VOR') {
-          variant = 'danger';
-          text = 'OVERDUE';
-        } else if (warning.type === 'UPDATED_IN_CCC') {
+        if (warning === 'ORDERED') {
           variant = 'warning';
-          text = 'URGENT';
+          text = 'ORDERED';
+        } else if (warning === 'UPDATED') {
+          variant = 'danger';
+          text = 'UPDATED';
         } else {
           return null; // No warning display for other cases
         }
 
         return (
-          <div title={warning.message}>
+          <div>
             <StatusBadge
               variant={variant}
               size="sm"
@@ -168,7 +213,7 @@ export default function NewOpportunities() {
     },
     {
       header: 'Summary',
-      cell: ({ row }) => <SummaryCell text='Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' />,
+      cell: ({ row }) => <SummaryCell text={row.original.lastCommunicationSummary || 'No communication summary available.'} />,
     },
     {
       id: 'contact',
@@ -181,7 +226,7 @@ export default function NewOpportunities() {
             e.stopPropagation()
             handleContactClick(row.original)
           }}
-        >
+          >
           <ContactInfo />
         </div>
       ),
@@ -191,11 +236,10 @@ export default function NewOpportunities() {
       header: 'Task',
       cell: ({ row }) => (
         <div
-        onClick={(e) => {
-          e.stopPropagation()
-        }}
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
         >
-
           <NewTaskModal
             title="New Task"
             defaultRelation={
@@ -205,7 +249,7 @@ export default function NewOpportunities() {
               }
             }
             children={
-              <Plus className="w-5 h-5 m-auto" />
+              <Plus className="m-auto w-5 h-5" />
             }
           />
         </div>
@@ -218,7 +262,7 @@ export default function NewOpportunities() {
         <div className="flex justify-center">
           <DarkButton
             buttonText="Archive"
-            buttonIcon={<Archive className="w-4 h-4 mr-2" />}
+            buttonIcon={<Archive className="mr-2 w-4 h-4" />}
             onClick={(e) => {
               e.stopPropagation()
               handleArchiveClick(row.original)
@@ -229,14 +273,17 @@ export default function NewOpportunities() {
     },
   ]
 
-  // Get opportunities in New status from the store
-  const opportunities = getOpportunitiesByStatus(OpportunityStatus.New)
+
+
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-64">Loading opportunities...</div>
+  }
 
   return (
     <div className="w-full">
       <DataTable<Opportunity, any>
         columns={columns}
-        data={opportunities}
+        data={newOpportunities.map(mapApiResponseToOpportunity)}
         onRowClick={handleRowClick}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
@@ -253,7 +300,8 @@ export default function NewOpportunities() {
       <ConfirmationModal
         isOpen={archiveConfirmation.isOpen}
         onClose={() => setArchiveConfirmation({ isOpen: false, opportunity: null })}
-        onConfirm={handleArchiveConfirm}
+        onConfirm={() => {}}
+        // onConfirm={handleArchiveConfirm}
         title="Archive Opportunity"
         description="Are you sure you want to archive this opportunity? You can unarchive it later if needed."
         confirmText="Archive"

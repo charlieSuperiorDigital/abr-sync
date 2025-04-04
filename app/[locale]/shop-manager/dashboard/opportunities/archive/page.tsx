@@ -14,12 +14,17 @@ import { Opportunity, OpportunityStatus, RepairStage } from '@/app/types/opportu
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import { useState, useCallback } from 'react'
-import { useOpportunityStore } from '@/app/stores/opportunity-store'
+import { useSession } from 'next-auth/react'
+import { useGetOpportunities } from '@/app/api/hooks/useGetOpportunities'
 import { showUnarchiveToast } from '@/app/utils/toast-utils'
+import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
 
 export default function ArchivedOpportunities() {
-  const { getArchivedOpportunities, setSelectedOpportunity, selectedOpportunity, unarchiveOpportunity } = useOpportunityStore()
+  const { data: session } = useSession()
+  const tenantId = session?.user?.tenantId
+  const { archivedOpportunities, isLoading } = useGetOpportunities({ tenantId: tenantId! })
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null)
 
   const handleRowClick = useCallback((opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity)
@@ -37,10 +42,10 @@ export default function ArchivedOpportunities() {
   }, [])
 
   const handleUnarchive = useCallback((opportunity: Opportunity) => {
-    unarchiveOpportunity(opportunity.opportunityId)
+    // TODO: Implement unarchive API call
     showUnarchiveToast(opportunity)
     console.log('Unarchiving opportunity:', opportunity.opportunityId)
-  }, [unarchiveOpportunity])
+  }, [])
 
   const formatDate = (date: string | undefined) => {
     if (!date) return '---'
@@ -90,7 +95,7 @@ export default function ArchivedOpportunities() {
       accessorKey: 'firstCallDate',
       header: '1ST CALL',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap text-gray-600">
+        <span className="text-gray-600 whitespace-nowrap">
           {formatDate(row.original.firstCallDate)}
         </span>
       ),
@@ -99,7 +104,7 @@ export default function ArchivedOpportunities() {
       accessorKey: 'secondCallDate',
       header: '2ND CALL',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap text-gray-600">
+        <span className="text-gray-600 whitespace-nowrap">
           {formatDate(row.original.secondCallDate)}
         </span>
       ),
@@ -108,7 +113,7 @@ export default function ArchivedOpportunities() {
       accessorKey: 'lastUpdatedBy',
       header: 'LAST UPDATED BY',
       cell: ({ row }) => (
-        <div className="flex items-center gap-2">
+        <div className="flex gap-2 items-center">
           {row.original.lastUpdatedBy?.avatar && (
             <img
               src={row.original.lastUpdatedBy.avatar}
@@ -137,13 +142,12 @@ export default function ArchivedOpportunities() {
       header: 'SUMMARY',
       cell: ({ row }) => <SummaryCell text='Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' />,
     },
-   
-    {
+   {
       id: 'unarchive',
       header: 'Unarchive',
       cell: ({ row }) => (
         <button
-          className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
+          className="px-4 py-2 text-white bg-black rounded-md transition-colors hover:bg-gray-800"
           onClick={(e) => {
             e.stopPropagation()
             handleUnarchive(row.original)
@@ -155,14 +159,15 @@ export default function ArchivedOpportunities() {
     },
   ]
 
-  // Get archived opportunities from the store
-  const opportunities = getArchivedOpportunities()
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-64">Loading opportunities...</div>
+  }
 
   return (
     <div className="w-full">
       <DataTable<Opportunity, any>
         columns={columns}
-        data={opportunities}
+        data={archivedOpportunities.map(mapApiResponseToOpportunity)}
         onRowClick={handleRowClick}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}

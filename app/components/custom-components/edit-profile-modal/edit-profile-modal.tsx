@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Pencil } from 'lucide-react'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 
 interface EditProfileModalProps {
@@ -17,6 +17,7 @@ export function EditProfileModal({ open, onOpenChange }: EditProfileModalProps) 
   const { data: session } = useSession()
   const router = useRouter()
   const [language, setLanguage] = useState('English') // Default language
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   // Mock user data - replace with actual user data from session when available
   const userData = {
@@ -29,16 +30,31 @@ export function EditProfileModal({ open, onOpenChange }: EditProfileModalProps) 
   }
 
   const handleLogout = async () => {
-    // Sign out and redirect to login page
-    const response = await fetch('/api/auth/signout', {
-      method: 'POST',
-    })
-    
-    // Get the current locale from the URL
-    const locale = window.location.pathname.split('/')[1] || 'en'
-    
-    // Redirect to login page with the correct locale
-    router.push(`/${locale}/login`)
+    try {
+      setIsLoggingOut(true)
+      
+      // Close the modal
+      onOpenChange(false)
+      
+      // Get the current locale from the URL for redirection after logout
+      const locale = window.location.pathname.split('/')[1] || 'en'
+      
+      // Clear any local storage items that might contain sensitive information
+      localStorage.removeItem('user-preferences')
+      
+      // Use NextAuth's signOut function with redirect: false to handle the redirect ourselves
+      await signOut({ 
+        redirect: false,
+        callbackUrl: `/${locale}/login`
+      })
+      
+      // Redirect to login page with the correct locale
+      router.push(`/${locale}/login`)
+    } catch (error) {
+      console.error('Logout error:', error)
+    } finally {
+      setIsLoggingOut(false)
+    }
   }
 
   const handleLanguageChange = (lang: string) => {
@@ -115,8 +131,9 @@ export function EditProfileModal({ open, onOpenChange }: EditProfileModalProps) 
             variant="ghost" 
             className="text-red-500 hover:text-red-700 hover:bg-red-50 justify-start"
             onClick={handleLogout}
+            disabled={isLoggingOut}
           >
-            <span className="text-xs">Log out</span>
+            <span className="text-xs">{isLoggingOut ? 'Logging out...' : 'Log out'}</span>
           </Button>
         </div>
       </DialogContent>

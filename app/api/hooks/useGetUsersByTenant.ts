@@ -14,7 +14,7 @@ export interface UseGetUsersByTenantOptions {
  * @returns Query result with users data
  */
 export function useGetUsersByTenant({ 
-  tenantId = '2A9B6E40-5ACB-40A0-8E2B-D559B4829FA0', 
+  tenantId , 
   page = 1, 
   perPage = 10 
 }: UseGetUsersByTenantOptions) {
