@@ -75,6 +75,22 @@ export interface User {
   createdAt: string
   updatedAt: string
   avatar: string
+  
+  firstName: string;
+  lastName: string;
+  
+  passwordHash: string;
+  isVerified: boolean;
+  verificationCode: string | null;
+  tenantId: string;
+  passwordResetValidity: string;
+  tempPasswordResetCode: string;
+  googleSSOId: string | null;
+  facebookSSOId: string | null;
+  appleSSOId: string | null;
+  //roles: string; // JSON string of roles array
+  invitations: any[]; // Could be replaced with Invitation type if needed
+  tenantRoles: any[]; // Could be replaced with TenantRole type if needed
 }
 
 // Available locations in the system
@@ -100,3 +116,10 @@ export const DEFAULT_USER = {
   updatedAt: '',
   avatar: ''
 } as const
+
+
+
+// Helper function to get full name
+export function getUserFullName(user: User): string {
+  return `${user.firstName} ${user.lastName}`.trim();
+}
