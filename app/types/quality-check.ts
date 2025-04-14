@@ -1,4 +1,4 @@
-interface Workfile {
+export interface Workfile {
   id: string
   opportunityId: string
   opportunity: null | any
@@ -9,7 +9,7 @@ interface Workfile {
   updatedAt: string
 }
 
-interface QualityCheckItem {
+export interface QualityCheckItem {
   id: string
   qualityCheckId: string
   name: string
@@ -22,7 +22,7 @@ interface QualityCheckItem {
   updatedAt: string | null
 }
 
-interface QualityCheck {
+export interface QualityCheck {
   id: string
   workfileId: string
   workfile: Workfile

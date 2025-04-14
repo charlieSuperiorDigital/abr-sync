@@ -4,16 +4,19 @@ import * as React from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
-import { QualityControlChecklistItem, QualityControlStatus } from '@/app/types/workfile'
+import { QualityControlStatus } from '@/app/types/workfile'
 import { useWorkfileStore } from '@/app/stores/workfile-store'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import QCFieldEditModal from './qc-field-edit-modal'
+import { QualityCheckItem } from '@/app/types/quality-check'
+import { useCustomCheckMutations } from '@/app/api/hooks/useQualityCheck'
 
 interface QCChecklistSettingsModalProps {
   open: boolean
   onClose: () => void
   workfileId: string
-  checklist: QualityControlChecklistItem[]
+  qualityCheckId: string
+  checklist: QualityCheckItem[]
   status: QualityControlStatus
 }
 
@@ -21,18 +24,24 @@ export default function QCChecklistSettingsModal({
   open,
   onClose,
   workfileId,
+  qualityCheckId,
   checklist,
   status,
 }: QCChecklistSettingsModalProps) {
   const { updateWorkfile } = useWorkfileStore()
-  const [localChecklist, setLocalChecklist] = React.useState<QualityControlChecklistItem[]>(checklist)
+  const { addCustomCheck, isAddingCheck } = useCustomCheckMutations();
+  const [localChecklist, setLocalChecklist] = React.useState<QualityCheckItem[]>(checklist)
   const [editModalOpen, setEditModalOpen] = React.useState(false)
   const [isEditing, setIsEditing] = React.useState(false)
-  const [editingItem, setEditingItem] = React.useState<QualityControlChecklistItem | null>(null)
+  const [editingItem, setEditingItem] = React.useState<QualityCheckItem | null>(null)
+  const [pendingAdd, setPendingAdd] = React.useState(false);
 
   // Split checklist into standard and custom fields
-  const standardFields = localChecklist.filter(item => !item.isCustomField)
-  const customFields = localChecklist.filter(item => item.isCustomField)
+  // const standardFields = localChecklist.filter(item => !item.isCustomField)
+  // const customFields = localChecklist.filter(item => item.isCustomField)
+  // For now, list all items as standard fields
+  const standardFields = localChecklist;
+  // const customFields: QualityCheckItem[] = [];
 
   // Handle toggling a checklist item's enabled state
   const handleToggleEnabled = (index: number) => {
@@ -46,7 +55,7 @@ export default function QCChecklistSettingsModal({
 
   // Handle create custom field
   const handleCreateCustomField = (data: { title: string; description: string }) => {
-    const newField: QualityControlChecklistItem = {
+    const newField: QualityCheckItem = {
       title: data.title,
       description: data.description,
       completed: false,
@@ -113,7 +122,7 @@ export default function QCChecklistSettingsModal({
   }
 
   // Handle delete custom field
-  const handleDeleteCustomField = (item: QualityControlChecklistItem) => {
+  const handleDeleteCustomField = (item: QualityCheckItem) => {
     const newChecklist = localChecklist.filter(field => field !== item)
     setLocalChecklist(newChecklist)
 
@@ -166,7 +175,7 @@ export default function QCChecklistSettingsModal({
     onClose()
   }
 
-  const handleEditClick = (item: QualityControlChecklistItem) => {
+  const handleEditClick = (item: QualityCheckItem) => {
     setEditingItem(item)
     setIsEditing(true)
     setEditModalOpen(true)
@@ -184,60 +193,25 @@ export default function QCChecklistSettingsModal({
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <h3 className="font-medium">Standard Fields</h3>
-              {standardFields.map((item, index) => (
-                <div key={index} className="flex items-center space-x-4">
-                  <Checkbox
-                    id={`standard-${index}`}
-                    checked={item.enabled}
-                    onCheckedChange={() => handleToggleEnabled(localChecklist.indexOf(item))}
-                  />
-                  <label
-                    htmlFor={`standard-${index}`}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {item.title}
-                  </label>
-                </div>
-              ))}
-            </div>
-
-            <div className="grid gap-2">
-              <h3 className="font-medium">Custom Fields</h3>
-              {customFields.map((item, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
+            <div className="mb-6">
+              <h3 className="mb-2 font-semibold text-md">Standard Fields</h3>
+              <ul className="space-y-2">
+                {standardFields.map((item, idx) => (
+                  <li key={item.id} className="flex gap-2 items-center">
                     <Checkbox
-                      id={`custom-${index}`}
+                      id={`standard-${idx}`}
                       checked={item.enabled}
                       onCheckedChange={() => handleToggleEnabled(localChecklist.indexOf(item))}
                     />
                     <label
-                      htmlFor={`custom-${index}`}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      htmlFor={`standard-${idx}`}
+                      className="text-xs font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     >
-                      {item.title}
+                      {item.name}
                     </label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEditClick(item)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteCustomField(item)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
 
@@ -246,15 +220,18 @@ export default function QCChecklistSettingsModal({
               Cancel
             </Button>
             <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setIsEditing(false)
-                setEditModalOpen(true)
-              }}
+              onClick={() => setEditModalOpen(true)}
+              disabled={isAddingCheck}
             >
-              <Plus className="h-4 w-4 mr-1" />
-              Add New
+              <Plus className="mr-1 w-4 h-4" />
+              {isAddingCheck ? (
+                <svg className="w-4 h-4 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+              ) : (
+                'Add New'
+              )}
             </Button>
             <Button onClick={handleSaveQcChanges}>
               Save Changes
@@ -265,13 +242,37 @@ export default function QCChecklistSettingsModal({
 
       <QCFieldEditModal
         open={editModalOpen}
-        onOpenChange={setEditModalOpen}
-        title={isEditing ? "Edit Area" : "Add New Area"}
-        initialData={editingItem ? { 
-          title: editingItem.title, 
-          description: editingItem.description || '' 
-        } : undefined}
-        onSave={isEditing ? handleEditCustomField : handleCreateCustomField}
+        onOpenChange={open => {
+          if (!isAddingCheck) setEditModalOpen(open);
+        }}
+        title={isEditing ? "Edit Field" : "Add Field"}
+        initialData={isEditing && editingItem ? { title: editingItem.name, description: editingItem.description || '' } : undefined}
+        onSave={data => {
+          if (!isEditing) {
+            const body = {
+              qualityCheckId: qualityCheckId,
+              name: data.title,
+              description: data.description,
+              okStatus: false,
+              type: 0,
+              notes: "string",
+              performedBy: ""
+            };
+            console.log('addCustomCheck body:', body);
+            setPendingAdd(true);
+            addCustomCheck(body, {
+              onSuccess: () => {
+                setPendingAdd(false);
+                setEditModalOpen(false);
+              },
+              onError: () => {
+                setPendingAdd(false);
+              }
+            });
+          } else {
+            handleEditCustomField(data);
+          }
+        }}
       />
     </>
   )
