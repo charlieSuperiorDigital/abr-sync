@@ -22,6 +22,10 @@ export default function WorkfilesLayout({
     return <div>Error loading workfiles: {error.message}</div>
   }
 
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
+
   return (
     <div className="w-full">
       <h1 className="px-5 my-7 text-3xl font-semibold tracking-tight">Work Files</h1>

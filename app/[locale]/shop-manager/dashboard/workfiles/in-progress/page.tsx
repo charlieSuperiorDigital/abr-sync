@@ -65,7 +65,7 @@ export default function InProgress() {
         <VehicleCell
           make={row.original.vehicle.make}
           model={row.original.vehicle.model}
-          year={row.original.vehicle.year}
+          year={row.original.vehicle.year.toString()}
           imageUrl={row.original.vehicle.vehiclePicturesUrls[0] || `https://picsum.photos/seed/${row.original.workfileId}/200/100`}
         />
       ),
@@ -139,7 +139,7 @@ export default function InProgress() {
       header: 'Summary',
       cell: ({ row }) => (
         <RoundButtonWithTooltip 
-          buttonIcon={<MessageSquareMore className="h-5 w-5" />}
+          buttonIcon={<MessageSquareMore className="w-5 h-5" />}
           tooltipText={row.original.lastCommunicationSummary || 'No summary available'}
         />
       ),
@@ -166,7 +166,7 @@ export default function InProgress() {
       cell: ({ row }) => (
         <div 
           data-testid="task-button" 
-          className="cursor-pointer hover:text-blue-600 transition-colors"
+          className="transition-colors cursor-pointer hover:text-blue-600"
           onClick={(e) => {
             e.stopPropagation()
             handleTaskClick(row.original)

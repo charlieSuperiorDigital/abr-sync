@@ -20,6 +20,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useSession } from 'next-auth/react'
+import { useGetTenantPartOrders } from '@/app/api/hooks/useGetTenantPartOrders'
 
 interface PartsReturn {
   returnId: string
@@ -39,9 +41,16 @@ interface PartsReturn {
 }
 
 export default function Returns() {
-  const [data, setData] = useState<PartsReturn[]>(returnsMockData)
+  const { data: session } = useSession();
+  const { ordersWithPartsToBeReturned: data, isLoading } = useGetTenantPartOrders({
+    tenantId: session?.user?.tenantId || ''
+  });
+
+  if (isLoading) return <div>Loading...</div>;
+  
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
-  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({})
+
   const [vendorDetails] = useState<VendorDetail[]>(vendorDetailsMockData)
 
   // Close dropdown when clicking outside
@@ -117,18 +126,18 @@ export default function Returns() {
         </TableHeader>
         <TableBody>
           {data.map((item) => (
-            <React.Fragment key={item.returnId}>
+            <React.Fragment key={item.opportunityId}>
               <TableRow 
                 className="cursor-pointer hover:bg-gray-50"
-                onClick={() => toggleRow(item.returnId)}
+                onClick={() => toggleRow(item.opportunityId)}
               >
                 <TableCell className="font-medium">{item.roNumber || '---'}</TableCell>
                 <TableCell>
                   <VehicleCell
                     make={item.vehicle.make}
                     model={item.vehicle.model}
-                    year={item.vehicle.year}
-                    imageUrl={item.vehicle.imageUrl}
+                    year={parseInt(item.vehicle.year)}
+                    // imageUrl={item.vehicle.imageUrl}
                   />
                 </TableCell>
                 <TableCell className="whitespace-nowrap">
@@ -156,7 +165,7 @@ export default function Returns() {
                   <div className="relative dropdown-container" onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
-                      className="inline-flex justify-between items-center px-4 py-2 w-full text-sm font-medium bg-white rounded-md border border-gray-300 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500"
+                      className="inline-flex items-center justify-between w-full px-4 py-2 text-sm font-medium bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500"
                       onClick={(e) => {
                         e.stopPropagation();
                         setOpenDropdownId(openDropdownId === item.returnId ? null : item.returnId);
@@ -165,15 +174,15 @@ export default function Returns() {
                       <span className={item.refundStatus === 'pending' ? 'text-amber-600' : 'text-green-600'}>
                         {item.refundStatus === 'pending' ? 'Pending Refund' : 'Refund Complete'}
                       </span>
-                      <ChevronDown className="ml-2 w-4 h-4" />
+                      <ChevronDown className="w-4 h-4 ml-2" />
                     </button>
                     
                     {/* Dropdown Menu */}
                     {openDropdownId === item.returnId && (
-                      <div className="absolute right-0 z-50 mt-2 w-full bg-white rounded-md ring-1 ring-black ring-opacity-5 shadow-lg origin-top-right focus:outline-none">
+                      <div className="absolute right-0 z-50 w-full mt-2 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                         <div className="py-1" role="menu" aria-orientation="vertical">
                           <button
-                            className="block px-4 py-2 w-full text-sm text-left text-amber-600 hover:bg-gray-100"
+                            className="block w-full px-4 py-2 text-sm text-left text-amber-600 hover:bg-gray-100"
                             role="menuitem"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -183,7 +192,7 @@ export default function Returns() {
                             Pending Refund
                           </button>
                           <button
-                            className="block px-4 py-2 w-full text-sm text-left text-green-600 hover:bg-gray-100"
+                            className="block w-full px-4 py-2 text-sm text-left text-green-600 hover:bg-gray-100"
                             role="menuitem"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -227,7 +236,7 @@ export default function Returns() {
                         }
                       }
                       children={
-                        <Plus className="m-auto w-5 h-5" />
+                        <Plus className="w-5 h-5 m-auto" />
                       }
                     />
                   </div>
@@ -257,34 +266,34 @@ export default function Returns() {
                           <tbody className="bg-gray-100 divide-y divide-gray-200">
                             {vendorDetails.map((vendor) => (
                               <tr key={vendor.vendorDetailId}>
-                                <td className="py-4 text-sm font-medium whitespace-nowrap bg-gray-300">
+                                <td className="py-4 text-sm font-medium bg-gray-300 whitespace-nowrap">
                                   {vendor.name}
                                 </td>
-                                <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
+                                <td className="py-4 text-sm text-gray-700 bg-gray-300 whitespace-nowrap">
                                   {vendor.representative}
                                 </td>
-                                <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
+                                <td className="py-4 text-sm text-gray-700 bg-gray-300 whitespace-nowrap">
                                   {vendor.toOrder}
                                 </td>
-                                <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
+                                <td className="py-4 text-sm text-gray-700 bg-gray-300 whitespace-nowrap">
                                   {vendor.toReceive}
                                 </td>
-                                <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
+                                <td className="py-4 text-sm text-gray-700 bg-gray-300 whitespace-nowrap">
                                   {vendor.toReturn}
                                 </td>
-                                <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
+                                <td className="py-4 text-sm text-gray-700 bg-gray-300 whitespace-nowrap">
                                   {vendor.total}
                                 </td>
-                                <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
+                                <td className="py-4 text-sm text-gray-700 bg-gray-300 whitespace-nowrap">
                                   {formatCurrency(vendor.totalAmount)}
                                 </td>
-                                <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
+                                <td className="py-4 text-sm text-gray-700 bg-gray-300 whitespace-nowrap">
                                   {formatDate(vendor.lastCommunicationDate)}
                                 </td>
                                 <td className="py-4 text-sm text-gray-700 bg-gray-300">
                                   <SummaryCell text={vendor.summary} />
                                 </td>
-                                <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
+                                <td className="py-4 text-sm text-gray-700 bg-gray-300 whitespace-nowrap">
                                   <div className="flex space-x-2">
                                     <a 
                                       href={`tel:${vendor.contactInfo.phone}`} 

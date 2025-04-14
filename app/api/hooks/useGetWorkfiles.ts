@@ -45,6 +45,18 @@ export function useGetWorkfiles({ tenantId, enabled = true }: UseGetWorkfilesOpt
   const reports = data?.filter(w => w.status.toLowerCase() === 'reports') || []
   const archive = data?.filter(w => w.status.toLowerCase() === 'archive') || []
 
+  const workfilesQuantity = {
+    upcoming: upcoming.length,
+    inProgress: inProgress.length,
+    qualityControl: qualityControl.length,
+    readyForPickup: readyForPickup.length,
+    sublets: sublets.length,
+    labor: labor.length,
+    reports: reports.length,
+    archive: archive.length,
+    total: (data || []).length
+  }
+
   return {
     upcoming,
     inProgress,
@@ -56,6 +68,7 @@ export function useGetWorkfiles({ tenantId, enabled = true }: UseGetWorkfilesOpt
     archive,
     workfiles: data,
     isLoading,
-    error
+    error,
+    workfilesQuantity
   }
 }

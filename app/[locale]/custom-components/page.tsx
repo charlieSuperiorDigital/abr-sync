@@ -185,7 +185,7 @@ const columns: ColumnDef<Vehicle>[] = [
       <VehicleCell
         make={row.original.make}
         model={row.original.model}
-        year={row.original.year}
+        year={row.original.year.toString()}
         imageUrl={row.original.imageUrl}
       />
     ),

@@ -16,15 +16,9 @@ export interface OpportunityLog {
   id: string;
   opportunityId: string;
   type: string;
+  date: string;
+  user: string;
   summary: string;
-  createdAt: string;
-  createdBy: string;
-  createdByUser?: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
 }
 
 /**

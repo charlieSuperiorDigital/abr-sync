@@ -4,6 +4,7 @@ import * as React from 'react'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import QCChecklistModal from './qc-checklist-modal'
 import { Workfile } from '@/app/types/workfile'
+import { useGetQualityCheck } from '@/app/api/hooks/useQualityCheck'
 
 interface QCChecklistBottomSheetProps {
   workfile: Workfile | null
@@ -18,6 +19,11 @@ export default function QCChecklistBottomSheet({
 }: QCChecklistBottomSheetProps) {
   if (!workfile) return null
   
+  const { qualityCheck, checks, isLoading, error } = useGetQualityCheck({
+    workfileId: workfile.workfileId,
+    enabled: isOpen
+  })
+  
   const handleClose = () => {
     onOpenChange(false)
   }
@@ -28,7 +34,14 @@ export default function QCChecklistBottomSheet({
       onOpenChange={onOpenChange}
       title={`QC Checklist - ${workfile.vehicle.make} ${workfile.vehicle.model}`}
     >
-      <QCChecklistModal workfile={workfile} onClose={handleClose} />
+      <QCChecklistModal 
+        workfile={workfile} 
+        onClose={handleClose}
+        qualityCheck={qualityCheck}
+        checks={checks}
+        isLoading={isLoading}
+        error={error}
+      />
     </BottomSheetModal>
   )
 }

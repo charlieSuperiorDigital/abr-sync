@@ -22,27 +22,25 @@ import {
 } from '@/components/ui/table'
 import { ViewPartsModal } from '@/app/[locale]/custom-components/view-parts-modal'
 import { workfiles } from '@/app/mocks/workfiles_new'
+import { useGetTenantPartOrders } from '@/app/api/hooks/useGetTenantPartOrders';
+import { useSession } from 'next-auth/react';
+import { TenantPartOrder as PartsOrder, TenantPartOrder } from '@/app/api/functions/parts'
 
-interface PartsOrder {
-  orderId: string
-  roNumber: string
-  vehicle: {
-    make: string
-    model: string
-    year: number
-    imageUrl?: string
-  }
-  partsCount: number
-  assignedTech: string
-  status: string
-  lastUpdated: string
-  neededByDate: string
-  vendor: string
-  priority: 'high' | 'medium' | 'low'
-}
 
 export default function ToOrder() {
-  const [data] = useState<PartsOrder[]>(toOrderMockData)
+  const { data: session } = useSession();
+  const {
+    ordersWithPartsToBeOrdered: data,
+    isLoading,
+    calculateOrderTotalParts,
+    calculateOrderToOrderParts,
+    calculateOrderToReceiveParts,
+    calculateOrderToReturnParts } = useGetTenantPartOrders({
+      tenantId: session?.user?.tenantId || ''
+    });
+
+  if (isLoading) return <div>Loading...</div>;
+
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({})
   const [vendorDetails] = useState<VendorDetail[]>(vendorDetailsMockData)
 
@@ -67,6 +65,14 @@ export default function ToOrder() {
     return workfiles.find(workfile => workfile.roNumber === roNumber) || workfiles[0];
   }
 
+
+
+
+  const getTotalEstimatedAmount = (partOrders: PartsOrder['partsOrders']) => {
+    return partOrders.reduce((sum, order) => sum + order.totalAmount, 0)
+  }
+
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -85,41 +91,44 @@ export default function ToOrder() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((order) => (
-            <React.Fragment key={order.orderId}>
-              <TableRow 
-                key={order.orderId} 
+          {data.map((opportunity: TenantPartOrder) => (
+            <React.Fragment key={opportunity.opportunityId}>
+              <TableRow
+                key={opportunity.opportunityId}
                 className="cursor-pointer hover:bg-muted/50"
-                onClick={() => toggleRow(order.orderId)}
+                onClick={() => toggleRow(opportunity.opportunityId)}
               >
                 <TableCell></TableCell>
-                <TableCell>{order.roNumber}</TableCell>
+                <TableCell>{opportunity.roNumber}</TableCell>
                 <TableCell>
                   <VehicleCell
-                    make={order.vehicle.make}
-                    model={order.vehicle.model}
-                    year={order.vehicle.year}
-                    imageUrl={order.vehicle.imageUrl}
+                    make={opportunity.vehicle.make}
+                    model={opportunity.vehicle.model}
+                    year={opportunity.vehicle.year}
+                    // imageUrl={}
                   />
                 </TableCell>
-                <TableCell>{order.partsCount}</TableCell>
-                <TableCell>0</TableCell>
-                <TableCell>{order.partsCount}</TableCell>
-                <TableCell>{order.assignedTech}</TableCell>
-                <TableCell>$0</TableCell>
-                <TableCell>{formatDate(order.neededByDate)}</TableCell>
+                <TableCell>{calculateOrderToOrderParts(opportunity)}</TableCell>
+                <TableCell>{calculateOrderToReceiveParts(opportunity)}</TableCell>
+                <TableCell>{calculateOrderTotalParts(opportunity)}</TableCell>
                 <TableCell>
-                  <ViewPartsModal workfile={findWorkfileByRoNumber(order.roNumber)}>
-                    <DarkButton 
-                      buttonText="View Parts" 
-                    />
+                  {opportunity.assignedTech?.name || '---'}
+                </TableCell>
+                <TableCell>
+                  {formatCurrency((opportunity.estimateAmount))}
+                </TableCell>
+                <TableCell>
+                  {formatDate(opportunity.estimatedCompletionDate)}
+                </TableCell>
+                <TableCell>
+                  <ViewPartsModal workfile={findWorkfileByRoNumber(opportunity.roNumber)}>
+                    <DarkButton buttonText="View Parts" />
                   </ViewPartsModal>
                 </TableCell>
               </TableRow>
-              
-              {/* Expanded vendor details */}
-              {expandedRows[order.orderId] && (
-                <TableRow key={`expanded-${order.orderId}`}>
+
+              {expandedRows[opportunity.opportunityId] && (
+                <TableRow key={`expanded-${opportunity.opportunityId}`}>
                   <TableCell colSpan={10} className="p-0 border-0">
                     <div className="bg-gray-100 rounded-md">
                       <div className="overflow-x-auto">
@@ -139,46 +148,46 @@ export default function ToOrder() {
                             </tr>
                           </thead>
                           <tbody className="bg-gray-100 divide-y divide-gray-200">
-                            {vendorDetails.map((vendor) => (
-                              <tr key={vendor.vendorDetailId}>
+                            {opportunity.partsOrders.map((order) => (
+                              <tr key={order.partsOrderId}>
                                 <td className="py-4 text-sm font-medium whitespace-nowrap bg-gray-300">
-                                  {vendor.name}
+                                  {order.vendor.name}
                                 </td>
                                 <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
-                                  {vendor.representative}
+                                  {order.vendor.contactName}
                                 </td>
                                 <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
-                                  {vendor.toOrder}
+                                  {order.partsToOrderCount}
                                 </td>
                                 <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
-                                  {vendor.toReceive}
+                                  {order.partsToReceiveCount}
                                 </td>
                                 <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
-                                  {vendor.toReturn}
+                                  {order.partsToReturnCount}
                                 </td>
                                 <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
-                                  {vendor.total}
+                                  {order.partsToOrderCount + order.partsToReceiveCount + order.partsToReturnCount}
                                 </td>
                                 <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
-                                  {formatCurrency(vendor.totalAmount)}
+                                  {formatCurrency(order.totalAmount)}
                                 </td>
                                 <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
-                                  {formatDate(vendor.lastCommunicationDate)}
+                                  {formatDate(order.lastCommunicationDate)}
                                 </td>
                                 <td className="py-4 text-sm text-gray-700 bg-gray-300">
-                                  <SummaryCell text={vendor.summary} />
+                                  <SummaryCell text="N/A" />
                                 </td>
                                 <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
                                   <div className="flex space-x-2">
-                                    <a 
-                                      href={`tel:${vendor.contactInfo.phone}`} 
+                                    <a
+                                      href={`tel:${'123-123-1234'}`}
                                       className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"
                                       onClick={(e) => e.stopPropagation()}
                                     >
                                       <Phone className="w-4 h-4" />
                                     </a>
-                                    <a 
-                                      href={`mailto:${vendor.contactInfo.email}`} 
+                                    <a
+                                      href={`mailto:${'vendor@mail.com'}`}
                                       className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"
                                       onClick={(e) => e.stopPropagation()}
                                     >

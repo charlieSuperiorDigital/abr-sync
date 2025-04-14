@@ -64,7 +64,7 @@ export default function ArchivedOpportunities() {
         <VehicleCell
           make={row.original.vehicle.make}
           model={row.original.vehicle.model}
-          year={row.original.vehicle.year}
+          year={row.original.vehicle.year.toString()}
           imageUrl={`https://picsum.photos/seed/${row.original.opportunityId}/200/100`}
         />
       ),

@@ -6,10 +6,11 @@ import { X, ChevronDown, ChevronUp } from 'lucide-react'
 import { Workfile } from '@/app/types/workfile'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import { ColumnDef } from '@tanstack/react-table'
+import { TenantPartOrder } from '@/app/api/functions/parts'
 
 interface ViewPartsModalProps {
   children: React.ReactNode
-  workfile: Workfile
+  partOrder: TenantPartOrder
 }
 
 // Sample data types for the tables
@@ -42,7 +43,7 @@ interface VendorInfo {
 
 export function ViewPartsModal({
   children,
-  workfile
+  partOrder
 }: ViewPartsModalProps) {
   const [shouldShowModal, setShouldShowModal] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
@@ -53,33 +54,11 @@ export function ViewPartsModal({
   })
 
   // Sample data for tables
-  const overviewData: OverviewPart[] = [
-    { partNumber: 'PN-1000', description: 'Front Bumper Assembly', quantity: 1, unitPrice: 120, vendor: 'Superior Auto Parts', status: 'In Stock' },
-    { partNumber: 'PN-1001', description: 'Headlight Assembly (Left)', quantity: 2, unitPrice: 135, vendor: 'Superior Auto Parts', status: 'On Order' },
-    { partNumber: 'PN-1002', description: 'Fender Panel (Right)', quantity: 3, unitPrice: 150, vendor: 'AutoZone', status: 'Backordered' },
-    { partNumber: 'PN-1003', description: 'Hood Latch', quantity: 4, unitPrice: 165, vendor: 'NAPA Auto Parts', status: 'Shipped' },
-    { partNumber: 'PN-1004', description: 'Radiator Support', quantity: 5, unitPrice: 180, vendor: 'O\'Reilly', status: 'Delivered' }
-  ]
 
-  const partsData: DetailedPart[] = [
-    { partId: 'ID-2000', manufacturer: 'Toyota', category: 'Engine', weight: '2.5 kg', dimensions: '10″ × 8″ × 4″', warranty: '1 year' },
-    { partId: 'ID-2001', manufacturer: 'Honda', category: 'Body', weight: '3.7 kg', dimensions: '11″ × 9″ × 5″', warranty: '2 years' },
-    { partId: 'ID-2002', manufacturer: 'Ford', category: 'Electrical', weight: '4.9 kg', dimensions: '12″ × 10″ × 6″', warranty: '3 years' },
-    { partId: 'ID-2003', manufacturer: 'BMW', category: 'Suspension', weight: '6.1 kg', dimensions: '13″ × 11″ × 7″', warranty: '4 years' },
-    { partId: 'ID-2004', manufacturer: 'Mercedes', category: 'Interior', weight: '7.3 kg', dimensions: '14″ × 12″ × 8″', warranty: '5 years' },
-    { partId: 'ID-2005', manufacturer: 'Audi', category: 'Brakes', weight: '8.5 kg', dimensions: '15″ × 13″ × 9″', warranty: '6 years' }
-  ]
-
-  const vendorData: VendorInfo[] = [
-    { vendorName: 'AutoZone', contact: 'John Smith', leadTime: '2 days', discount: '0%', rating: '★★★★★', lastOrder: 'Yesterday' },
-    { vendorName: 'NAPA Auto Parts', contact: 'Sarah Johnson', leadTime: '3 days', discount: '5%', rating: '★★★★☆', lastOrder: 'Last week' },
-    { vendorName: 'O\'Reilly', contact: 'Mike Williams', leadTime: '4 days', discount: '10%', rating: '★★★☆☆', lastOrder: '2 weeks ago' },
-    { vendorName: 'Advance Auto', contact: 'Lisa Brown', leadTime: '5 days', discount: '15%', rating: '★★☆☆☆', lastOrder: 'Last month' }
-  ]
 
   // Column definitions for tables
   const overviewColumns: ColumnDef<OverviewPart, any>[] = [
-    { accessorKey: 'partNumber', header: 'Part Number' },
+    { accessorKey: 'type', header: 'TYPE' },
     { accessorKey: 'description', header: 'Description' },
     { accessorKey: 'quantity', header: 'Quantity' },
     { 

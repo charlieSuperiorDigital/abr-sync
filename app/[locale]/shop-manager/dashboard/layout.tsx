@@ -34,7 +34,7 @@ export default function DashboardLayout({
         <UsersProvider>
           <OpportunitiesProvider>
             <WorkfilesProvider>
-              <div className="flex min-h-screen">
+              <div className="flex max-h-screen">
                 <aside className="flex flex-col items-center px-2 py-5 w-16 text-white bg-black">
                   <Image
                     src="/auto-360-logo.png"

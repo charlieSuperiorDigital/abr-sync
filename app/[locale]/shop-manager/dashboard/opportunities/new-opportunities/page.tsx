@@ -104,7 +104,7 @@ export default function NewOpportunities() {
         <VehicleCell
         make={row.original.vehicle.make}
         model={row.original.vehicle.model}
-        year={row.original.vehicle.year}
+        year={row.original.vehicle.year.toString()}
         imageUrl={row.original.vehicle.photos && row.original.vehicle.photos.length > 0
           ? row.original.vehicle.photos[0].url
           : `https://picsum.photos/seed/${row.original.opportunityId}/200/100`}
