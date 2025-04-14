@@ -101,7 +101,7 @@ export default function SecondCallOpportunities() {
     },
     {
       accessorKey: 'owner.name',
-      header: 'CUSTOMER',
+      header: 'Owner',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
           {row.original.owner.name}

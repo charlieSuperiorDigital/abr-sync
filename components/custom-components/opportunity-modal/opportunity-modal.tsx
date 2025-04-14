@@ -10,8 +10,25 @@ interface OpportunityModalProps {
   opportunity: Opportunity
 }
 
+// Types for logs
+interface LogUser {
+  id: string;
+  name: string;
+  profilePicture?: string;
+}
+
+interface LogEntry {
+  type: string;
+  date: string;
+  user: string | LogUser;
+  // ...other fields as needed
+}
+
 const OpportunityModal = ({ opportunity }: OpportunityModalProps) => {
   const { logs, isLoading } = useGetOpportunityLogs(opportunity.opportunityId)
+
+  // Ensure logs is always an array
+  const safeLogs: LogEntry[] = Array.isArray(logs) ? logs : [];
 
   const qcItems: { label: string; checked: boolean }[] = [
     { label: 'SIGNATURE', checked: opportunity.status === 'Estimate' },
@@ -40,6 +57,12 @@ const OpportunityModal = ({ opportunity }: OpportunityModalProps) => {
       hour12: true
     })
   }
+
+  // Helper to safely get owner properties
+  const getOwnerProp = (owner: any, prop: string, fallback = '') => {
+    if (typeof owner === 'object' && owner !== null) return owner[prop] ?? fallback;
+    return prop === 'name' ? owner || fallback : fallback;
+  };
 
   return (
     <div className="overflow-y-auto">
@@ -152,14 +175,14 @@ const OpportunityModal = ({ opportunity }: OpportunityModalProps) => {
                       </tr>
                     </thead>
                     <tbody>
-                      {logs.map((log, index) => (
+                      {safeLogs.map((log, index) => (
                         <tr key={index} className="border-b border-gray-200">
                           <td className="py-2">{log.type}</td>
                           <td className="py-2">{new Date(log.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</td>
-                          <td className="py-2">{log.user}</td>
+                          <td className="py-2">{typeof log.user === 'object' && log.user !== null ? log.user.name : log.user || 'Unknown'}</td>
                         </tr>
                       ))}
-                      {logs.length === 0 && (
+                      {safeLogs.length === 0 && (
                         <tr>
                           <td colSpan={3} className="py-2 text-center text-gray-500">No logs available</td>
                         </tr>
@@ -180,16 +203,16 @@ const OpportunityModal = ({ opportunity }: OpportunityModalProps) => {
                 <div className="flex flex-col gap-2">
                   <div className="flex gap-4 items-center">
                     <h3 className="font-semibold">
-                      {opportunity.owner.name}, Vehicle Owner
+                      {getOwnerProp(opportunity.owner, 'name', 'Unknown')}, Vehicle Owner
                     </h3>
                     <ContactInfo
                       preferredContactMethod={ContactMethod.phone}
                       contactData={{
                         person: {
-                          name: opportunity.owner.name || '',
+                          name: getOwnerProp(opportunity.owner, 'name', ''),
                           role: 'Vehicle Owner',
                           address: '',
-                          company: opportunity.owner.company || '',
+                          company: getOwnerProp(opportunity.owner, 'company', ''),
                           preferredContactType: 'phone'
                         },
                         insurance: {
@@ -201,7 +224,7 @@ const OpportunityModal = ({ opportunity }: OpportunityModalProps) => {
                         },
                         communicationLogs: [],
                         emailContacts: [{
-                          email: opportunity.owner.email || '',
+                          email: getOwnerProp(opportunity.owner, 'email', ''),
                           isPrimary: true
                         }],
                         attachmentOptions: []
@@ -209,11 +232,11 @@ const OpportunityModal = ({ opportunity }: OpportunityModalProps) => {
                     />
                   </div>
                   <p className="text-sm text-gray-600">
-                    {opportunity.owner.phone}
-                    {opportunity.owner.secondaryPhone && ` / ${opportunity.owner.secondaryPhone}`}
+                    {getOwnerProp(opportunity.owner, 'phone', '')}
+                    {getOwnerProp(opportunity.owner, 'secondaryPhone', '') && ` / ${getOwnerProp(opportunity.owner, 'secondaryPhone', '')}`}
                     <br />
-                    {opportunity.owner.email}
-                    {opportunity.owner.company && <><br />Company: {opportunity.owner.company}</>}
+                    {getOwnerProp(opportunity.owner, 'email', '')}
+                    {getOwnerProp(opportunity.owner, 'company', '') && <><br />Company: {getOwnerProp(opportunity.owner, 'company', '')}</>}
                   </p>
                 </div>
               </div>
