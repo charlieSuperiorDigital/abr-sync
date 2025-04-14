@@ -15,7 +15,7 @@ import {
 } from '@/components/custom-components/selects/custom-select'
 import { StatusBadge } from '@/components/custom-components/status-badge/status-badge'
 import { Button } from '@/components/ui/button'
-import { useState } from 'react'
+import { SyntheticEvent, useState } from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
 import {
   ActionsCell,
@@ -31,6 +31,9 @@ import DarkButton from './dark-button'
 import { Apple, Archive, Mail, Phone } from 'lucide-react'
 import RoundButtonWithTooltip from './round-button-with-tooltip'
 import Section from './section'
+import { DatePicker, Button as RsuiteButton } from 'rsuite'
+import PartsSummaryBar from './parts-summary-bar'
+
 
 const technicians: Option[] = [
   { value: 'alexander', label: 'Alexander Walker', avatar: '/placeholder.svg' },
@@ -93,17 +96,18 @@ export interface Vehicle {
   }
 
   status:
-    | 'incoming'
-    | 'in_shop'
-    | 'waiting_for_parts'
-    | 'in_progress'
-    | 'ready_for_pickup'
-    | 'delivered'
+  | 'incoming'
+  | 'in_shop'
+  | 'waiting_for_parts'
+  | 'in_progress'
+  | 'ready_for_pickup'
+  | 'delivered'
   incomingDate: string
   estimatedCompletionDate: string
   actualCompletionDate: string | null
   lastUpdated: string
 }
+
 
 const data: Vehicle[] = Array.from({ length: 50 }, (_, i) => ({
   id: `${i + 1}`,
@@ -181,7 +185,7 @@ const columns: ColumnDef<Vehicle>[] = [
       <VehicleCell
         make={row.original.make}
         model={row.original.model}
-        year={row.original.year}
+        year={row.original.year.toString()}
         imageUrl={row.original.imageUrl}
       />
     ),
@@ -228,8 +232,28 @@ const columns: ColumnDef<Vehicle>[] = [
 
 export default function Home() {
   const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false);
+
+
+
+
+
+
+  const handleOk = (date: Date|null) => {
+    setLoading(true); // Show loading indicator
+
+    // Simulate an async task (e.g., API call)
+    setTimeout(() => {
+      console.log("Selected Date:", date);
+      setLoading(false); // Hide loading after task is complete
+    }, 2000);
+  };
+
+
+
+
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="p-8 mx-auto max-w-4xl">
       <div className="space-y-2">
         <h1 className="text-h1">Components</h1>
         <CustomCheckbox id="unchecked" />
@@ -248,6 +272,29 @@ export default function Home() {
         <ContactInfo />
       </Section>
 
+      <Section title="Parts Summary Bar">
+        <PartsSummaryBar 
+          draftInvoices={125}
+          backorders={4}
+          pending={1291}
+          changes={76}
+          missed={1}
+          inToday={58}
+          returns={3}
+        />
+      </Section>
+
+      <Section title="Date Picker" >
+        <DatePicker
+          format="MM/dd/yyyy hh:mm"
+          // appearance='subtle'
+          showMeridiem
+          onOk={handleOk}
+          renderValue={date => date?.toLocaleString()}
+
+        />
+      </Section>
+
       <Section title="User picture + text">
         <UserImageAndName image="https://picsum.photos/200" name="John Doe" />
       </Section>
@@ -258,25 +305,25 @@ export default function Home() {
 
       <Section title="Dark Button" description='Pass the onClick function as a prop. The icon is an option prop.'>
         <DarkButton
-        buttonText='Click me!'
-        onClick={() => console.log('Clicked!')}
-        buttonIcon={<Archive className=" text-purple-600" />}
+          buttonText='Click me!'
+          onClick={() => console.log('Clicked!')}
+          buttonIcon={<Archive className="text-purple-600" />}
         />
         <DarkButton
-        buttonText='Click me!'
-        onClick={() => console.log('Clicked!')}
+          buttonText='Click me!'
+          onClick={() => console.log('Clicked!')}
         />
       </Section>
 
       <Section title="Round Button With Tooltip">
         <RoundButtonWithTooltip
-            onClick={() => console.log('Clicked!')}
-            buttonIcon={<Archive className=" text-purple-600" />}
-            tooltipText="This is a tooltip"
+          onClick={() => console.log('Clicked!')}
+          buttonIcon={<Archive className="text-purple-600" />}
+          tooltipText="This is a tooltip"
         />
       </Section>
 
-      <div className="p-8 max-w-4xl mx-auto ">
+      <div className="p-8 mx-auto max-w-4xl">
         <div className="grid gap-8 md:grid-cols-2">
           {/* Single Select with Avatars */}
           <div className="space-y-2">
@@ -327,7 +374,7 @@ export default function Home() {
           }}
         />
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex gap-4 items-center">
         <CustomRadioGroup defaultValue="default">
           <CustomRadioGroupItem value="" />
         </CustomRadioGroup>
@@ -344,12 +391,12 @@ export default function Home() {
           <CustomRadioGroupItem value="error" variant="error" />
         </CustomRadioGroup>
       </div>
-      <div className=" w-full mx-auto max-w-4xl p-8">
+      <div className="p-8 mx-auto w-full max-w-4xl">
         <Button onClick={() => setOpen(true)}>Open Modal</Button>
         <BottomSheetModal title="Example" isOpen={open} onOpenChange={setOpen}>
           <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="h-16 w-16 rounded-lg bg-blue-200" />
+            <div className="flex gap-4 items-center">
+              <div className="w-16 h-16 bg-blue-200 rounded-lg" />
               <div className="space-y-2">
                 <h3 className="text-lg font-semibold">Vehicles </h3>
                 <p className="text-sm text-gray-500">Expand</p>
@@ -360,7 +407,7 @@ export default function Home() {
               {Array.from({ length: 10 }).map((_, i) => (
                 <div
                   key={i}
-                  className="h-20 rounded-lg bg-gray-100 flex items-center justify-center"
+                  className="flex justify-center items-center h-20 bg-gray-100 rounded-lg"
                 >
                   Content {i + 1}
                 </div>

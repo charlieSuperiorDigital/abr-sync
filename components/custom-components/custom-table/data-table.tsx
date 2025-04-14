@@ -31,6 +31,10 @@ interface DataTableProps<TData, TValue> {
   pageSize?: number
   pageSizeOptions?: number[]
   showPageSize?: boolean
+  getSubRows?: (row: TData) => {
+    id: string;
+    details: React.ReactNode;
+  }[]
 }
 
 export function DataTable<TData, TValue>({
@@ -41,6 +45,7 @@ export function DataTable<TData, TValue>({
   pageSize: initialPageSize = 10,
   pageSizeOptions,
   showPageSize,
+  getSubRows,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [pageIndex, setPageIndex] = React.useState(0)
@@ -101,23 +106,42 @@ export function DataTable<TData, TValue>({
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
-                  className={cn(
-                    onRowClick && 'cursor-pointer hover:bg-muted/50'
-                  )}
-                  onClick={() => onRowClick?.(row.original)}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
+                <React.Fragment key={row.id}>
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && 'selected'}
+                    className={cn(
+                      onRowClick && 'cursor-pointer hover:bg-muted/50'
+                    )}
+                    onClick={(e) => {
+                      // Check if the click was on a button or link
+                      const target = e.target as HTMLElement
+                      const isButton = target.tagName === 'BUTTON' || 
+                        target.closest('button') || 
+                        target.closest('a')
+                      
+                      if (!isButton) {
+                        onRowClick?.(row.original)
+                      }
+                    }}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  {getSubRows && getSubRows(row.original).map((subRow) => (
+                    <TableRow key={subRow.id} className="bg-gray-50">
+                      <TableCell colSpan={columns.length}>
+                        {subRow.details}
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </TableRow>
+                </React.Fragment>
               ))
             ) : (
               <TableRow>

@@ -1,6 +1,36 @@
 import NextAuth from 'next-auth'
 import type { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import { login } from '../../functions/authentication'
+
+// Extend the built-in session and user types
+declare module 'next-auth' {
+  interface Session {
+    user: {
+      userId: string
+      email: string
+      firstName: string
+      lastName: string
+      roles: string[]
+      tenantId: string
+      token: string
+      tokenExpiration: string
+      image?: string | null
+    }
+  }
+
+  interface User {
+    userId: string
+    token: string
+    email: string
+    firstName: string
+    lastName: string
+    roles: string[]
+    tenantId: string
+    tokenExpiration: string
+    errorMessage?: string
+  }
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -15,49 +45,35 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        const users = [
-          {
-            id: '1',
-            name: 'John Admin',
-            email: 'admin@example.com',
-            password: 'adminpass',
-            role: 'admin',
-          },
-          {
-            id: '2',
-            name: 'Jane User',
-            email: 'user@example.com',
-            password: 'userpass',
-            role: 'user',
-          },
-        ]
-
-        const user = users.find((user) => user.email === credentials?.email)
-
-        if (user && user.password === credentials?.password) {
-          return {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-          }
-        } else {
-          return null
-        }
+        if (!credentials) return null
+        return await login(credentials)
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role
+        token.userId = user.userId
+        token.email = user.email
+        token.firstName = user.firstName
+        token.lastName = user.lastName
+        token.roles = user.roles
+        token.token = user.token
+        token.tokenExpiration = user.tokenExpiration
+        token.tenantId = user.tenantId
       }
       return token
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.role = token.role as string
-        session.user.id = token.sub as string
+        session.user.userId = token.userId as string
+        session.user.email = token.email as string
+        session.user.firstName = token.firstName as string
+        session.user.lastName = token.lastName as string
+        session.user.roles = token.roles as string[]
+        session.user.token = token.token as string
+        session.user.tenantId = token.tenantId as string
+        session.user.tokenExpiration = token.tokenExpiration as string
       }
       return session
     },

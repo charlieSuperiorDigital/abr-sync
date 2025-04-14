@@ -23,8 +23,8 @@ interface TaskStore {
   // Entity-specific task functions
   getTasksByOpportunityId: (opportunityId: string) => Task[]
   getTasksByWorkfileId: (workfileId: string) => Task[]
-  addTaskToOpportunity: (opportunityId: string, task: Omit<Task, 'id' | 'createdDate'>) => void
-  addTaskToWorkfile: (workfileId: string, task: Omit<Task, 'id' | 'createdDate'>) => void
+  addTaskToOpportunity: (opportunityId: string, task: Omit<Task, 'id' | 'createdAt'>) => void
+  addTaskToWorkfile: (workfileId: string, task: Omit<Task, 'id' | 'createdAt'>) => void
   
   // Workflow transition functions
   convertOpportunityTaskToWorkfile: (taskId: string, workfileId: string) => void
@@ -35,6 +35,7 @@ interface TaskStore {
   startTask: (taskId: string) => void
   completeTask: (taskId: string) => void
   archiveTask: (taskId: string) => void
+  reopenTask: (taskId: string) => void
   addComment: (taskId: string, comment: Omit<TaskComment, 'id' | 'createdDate'>) => void
   addAttachment: (taskId: string, attachment: Omit<TaskAttachment, 'uploadedDate'>) => void
   
@@ -43,10 +44,23 @@ interface TaskStore {
 }
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
-  tasks: mockTasks.map(task => ({ ...task, status: 'open' as const })),
+  tasks: mockTasks.map(task => ({ ...task })),
   selectedTask: null,
 
   setSelectedTask: (task) => set({ selectedTask: task }),
+
+  addTask: (task) =>
+    set((state) => ({
+      tasks: [
+        ...state.tasks,
+        {
+          ...task,
+          status: task.status || 'open',
+          lastUpdatedDate: new Date().toISOString(),
+          createdAt: new Date().toISOString()
+        }
+      ]
+    })),
 
   updateTask: (taskId, updates) =>
     set((state) => ({
@@ -55,7 +69,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
           ? {
               ...task,
               ...updates,
-              lastUpdatedDate: new Date().toISOString(),
+              lastUpdatedDate: new Date().toISOString()
             }
           : task
       ),
@@ -64,22 +78,9 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
           ? {
               ...state.selectedTask,
               ...updates,
-              lastUpdatedDate: new Date().toISOString(),
+              lastUpdatedDate: new Date().toISOString()
             }
           : state.selectedTask,
-    })),
-
-  addTask: (task) =>
-    set((state) => ({
-      tasks: [
-        ...state.tasks,
-        {
-          ...task,
-          status: 'open',
-          createdDate: new Date().toISOString(),
-          lastUpdatedDate: new Date().toISOString(),
-        },
-      ],
     })),
 
   removeTask: (taskId) =>
@@ -101,10 +102,22 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       : state.tasks
   },
 
+  getTasksByDueDate: (date: string) => {
+    const state = get()
+    return state.tasks.filter((task) => {
+      if (!task.dueDateTime) return false
+      const taskDate = task.dueDateTime.split('T')[0]
+      return taskDate === date
+    })
+  },
+
   getTasksByPriority: (priorityText) => {
     const state = get()
     return state.tasks.filter(
-      (task) => task.priority.text.toLowerCase() === priorityText.toLowerCase()
+      (task) => {
+        if (typeof task.priority === 'string') return false
+        return task.priority.text.toLowerCase() === priorityText.toLowerCase()
+      }
     )
   },
 
@@ -117,41 +130,38 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     const state = get()
     const now = new Date()
     return state.tasks.filter((task) => {
-      const dueDate = new Date(task.due)
-      return (
-        task.status !== 'completed' &&
-        task.status !== 'archived' &&
-        dueDate < now
-      )
+      if (!task.dueDateTime) return false
+      const dueDate = new Date(task.dueDateTime)
+      return dueDate < now && task.status !== 'completed'
     })
   },
 
   getUpcomingTasks: (daysAhead) => {
     const state = get()
     const now = new Date()
-    const futureDate = new Date(now)
-    futureDate.setDate(now.getDate() + daysAhead)
-
+    const future = new Date()
+    future.setDate(now.getDate() + daysAhead)
+    
     return state.tasks.filter((task) => {
-      const dueDate = new Date(task.due)
-      return (
-        task.status !== 'completed' &&
-        task.status !== 'archived' &&
-        dueDate >= now &&
-        dueDate <= futureDate
-      )
+      if (!task.dueDateTime) return false
+      const dueDate = new Date(task.dueDateTime)
+      return dueDate >= now && dueDate <= future && task.status !== 'completed'
     })
   },
 
   // Entity-specific task functions
   getTasksByOpportunityId: (opportunityId) => {
     const state = get()
-    return state.tasks.filter((task) => task.relatedTo === `opportunity:${opportunityId}`)
+    return state.tasks.filter((task) => 
+      task.relatedTo?.some(relation => relation.type === 'opportunity' && relation.id === opportunityId)
+    )
   },
 
   getTasksByWorkfileId: (workfileId) => {
     const state = get()
-    return state.tasks.filter((task) => task.relatedTo === `workfile:${workfileId}`)
+    return state.tasks.filter((task) => 
+      task.relatedTo?.some(relation => relation.type === 'workfile' && relation.id === workfileId)
+    )
   },
 
   addTaskToOpportunity: (opportunityId, task) => {
@@ -159,8 +169,11 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     state.addTask({
       ...task,
       id: crypto.randomUUID(),
-      relatedTo: `opportunity:${opportunityId}`,
-      createdDate: new Date().toISOString(),
+      relatedTo: [{
+        type: 'opportunity',
+        id: opportunityId
+      }],
+      createdAt: new Date().toISOString(),
       lastUpdatedDate: new Date().toISOString(),
     })
   },
@@ -170,8 +183,11 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     state.addTask({
       ...task,
       id: crypto.randomUUID(),
-      relatedTo: `workfile:${workfileId}`,
-      createdDate: new Date().toISOString(),
+      relatedTo: [{
+        type: 'workfile',
+        id: workfileId
+      }],
+      createdAt: new Date().toISOString(),
       lastUpdatedDate: new Date().toISOString(),
     })
   },
@@ -179,10 +195,12 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   convertOpportunityTaskToWorkfile: (taskId, workfileId) => {
     const state = get()
     const task = state.getTaskById(taskId)
-    if (!task || !task.relatedTo.startsWith('opportunity:')) return
+    if (!task || !task.relatedTo?.some(relation => relation.type === 'opportunity')) return
 
     state.updateTask(taskId, {
-      relatedTo: `workfile:${workfileId}`,
+      relatedTo: task.relatedTo?.map(relation => 
+        relation.type === 'opportunity' ? { type: 'workfile', id: workfileId } : relation
+      ),
       lastUpdatedDate: new Date().toISOString(),
     })
   },
@@ -191,8 +209,8 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     const state = get()
     const opportunityTasks = state.getTasksByOpportunityId(opportunityId)
     return opportunityTasks.map(task => {
-      const workfileId = task.relatedTo.replace('workfile:', '')
-      const workfileTasks = state.getTasksByWorkfileId(workfileId)
+      const workfileId = task.relatedTo?.find(relation => relation.type === 'workfile')?.id
+      const workfileTasks = state.getTasksByWorkfileId(workfileId || '')
       return { originalTask: task, workfileTasks }
     })
   },
@@ -208,6 +226,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     const state = get()
     state.updateTask(taskId, {
       status: 'in_progress',
+      lastUpdatedDate: new Date().toISOString(),
     })
   },
 
@@ -216,6 +235,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     state.updateTask(taskId, {
       status: 'completed',
       completedDate: new Date().toISOString(),
+      lastUpdatedDate: new Date().toISOString(),
     })
   },
 
@@ -223,6 +243,16 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     const state = get()
     state.updateTask(taskId, {
       status: 'archived',
+      lastUpdatedDate: new Date().toISOString(),
+    })
+  },
+
+  reopenTask: (taskId) => {
+    const state = get()
+    state.updateTask(taskId, {
+      status: 'open',
+      completedDate: undefined,
+      lastUpdatedDate: new Date().toISOString(),
     })
   },
 
@@ -263,40 +293,14 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     const state = get()
     const tasks = state.getTasksByOpportunityId(opportunityId)
     
-    // Auto-complete or archive existing tasks
     tasks.forEach(task => {
-      if (task.status === 'completed') {
-        state.archiveTask(task.id)
-      } else {
-        state.updateTask(task.id, {
-          status: 'completed',
-          completedDate: new Date().toISOString(),
-          lastUpdatedDate: new Date().toISOString(),
-          comments: [
-            ...(task.comments || []),
-            {
-              id: crypto.randomUUID(),
-              text: 'Task auto-completed due to Total Loss status',
-              createdBy: 'system',
-              createdDate: new Date().toISOString(),
-            }
-          ]
-        })
-      }
-    })
-
-    // Create a new task for total loss documentation
-    state.addTaskToOpportunity(opportunityId, {
-      title: 'Process Total Loss Documentation',
-      description: 'Complete and submit all required documentation for total loss claim',
-      priority: { variant: 'danger', text: 'High' },
-      due: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
-      relatedTo: `opportunity:${opportunityId}`,
-      email: '',
-      phone: '',
-      message: 'Vehicle declared total loss - documentation required',
-      status: 'open',
-      createdBy: 'system'
+      state.updateTask(task.id, {
+        priority: {
+          variant: 'danger',
+          text: 'Urgent'
+        },
+        warningMessage: 'Total Loss - Requires immediate attention'
+      })
     })
   },
 }))

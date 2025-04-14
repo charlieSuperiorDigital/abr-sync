@@ -22,9 +22,13 @@ import {
 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { PriorityBadge } from '../priority-badge/priority-badge'
-import * as Dialog from '@radix-ui/react-dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { act, useState } from 'react'
-import TaskModal from '../task-modal/edit-task-modal'
+import { EditTaskModal } from '../task-modal/edit-task-modal'
+import RoundButtonWithTooltip from '@/app/[locale]/custom-components/round-button-with-tooltip'
+import { getFriendlyDate, formatDateTime, formatDate } from '@/lib/utils/date'
+import { OpportunityInfoCard } from '../opportunity-info-card/opportunity-info-card'
 
 interface TitleCellProps {
   title: string
@@ -39,7 +43,7 @@ interface DescriptionCellProps {
 }
 
 export function DescriptionCell({ description }: DescriptionCellProps) {
-  return <span className=" max-w-96 line-clamp-2">{description}</span>
+  return <span className="max-w-96 line-clamp-2">{description}</span>
 }
 
 interface CreatedByCellProps {
@@ -54,15 +58,15 @@ export function CreatedByCell({ createdBy, currentUser }: CreatedByCellProps) {
 interface StatusBadgeProps {
   status: string
   variant?:
-    | 'default'
-    | 'danger'
-    | 'warning'
-    | 'neutral'
-    | 'slate'
-    | 'info'
-    | 'success'
-    | 'forest'
-    | 'dark'
+  | 'default'
+  | 'danger'
+  | 'warning'
+  | 'neutral'
+  | 'slate'
+  | 'info'
+  | 'success'
+  | 'forest'
+  | 'dark'
 }
 
 export function StatusBadgeCell({ status, variant }: StatusBadgeProps) {
@@ -76,15 +80,15 @@ export function StatusBadgeCell({ status, variant }: StatusBadgeProps) {
 interface PriorityBadgeProps {
   priority: string
   variant?:
-    | 'default'
-    | 'danger'
-    | 'warning'
-    | 'neutral'
-    | 'slate'
-    | 'info'
-    | 'success'
-    | 'forest'
-    | 'dark'
+  | 'default'
+  | 'danger'
+  | 'warning'
+  | 'neutral'
+  | 'slate'
+  | 'info'
+  | 'success'
+  | 'forest'
+  | 'dark'
 }
 
 export function PriorityBadgeCell({ priority, variant }: PriorityBadgeProps) {
@@ -97,65 +101,42 @@ export function PriorityBadgeCell({ priority, variant }: PriorityBadgeProps) {
 
 interface DateCellProps {
   date: string | Date
-  format?: Intl.DateTimeFormatOptions
+  showTime?: boolean
 }
 
-export function DateCell({
-  date,
-  format = {
-    month: 'numeric',
-    day: 'numeric',
-    year: '2-digit',
-  },
-}: DateCellProps) {
-  const formattedDate = new Date(date).toLocaleDateString('en-US', format)
-  return <span className="whitespace-nowrap">{formattedDate}</span>
+export function DateCell({ date, showTime = false }: DateCellProps) {
+  return (
+    <span className="whitespace-nowrap">
+      {showTime ? formatDateTime(date) : formatDate(date)}
+    </span>
+  )
 }
 
 interface FriendlyDateCellProps {
-  date: string | Date
+  date: string | undefined
   variant?: 'due' | 'created'
 }
 
 export function FriendlyDateCell({ date, variant }: FriendlyDateCellProps) {
-  const dateObj = new Date(date + 'T00:00:00')
-  const today = new Date()
-  const differenceInDays = Math.floor(
-    (today.getTime() - dateObj.getTime()) / (1000 * 60 * 60 * 24)
-  )
-
-  let formattedDate
-  if (differenceInDays === 0) {
-    formattedDate = 'Today'
-  } else if (differenceInDays === 1) {
-    formattedDate = 'Yesterday'
-  } else if (differenceInDays === -1) {
-    formattedDate = 'Tomorrow'
-  } else if (differenceInDays > 1 && differenceInDays <= 5) {
-    formattedDate = `${differenceInDays} days ago`
-  } else if (differenceInDays < -1 && differenceInDays >= -5) {
-    formattedDate = `${Math.abs(differenceInDays)} days`
-  } else {
-    formattedDate = format(dateObj, 'MMM d')
+  if (!date) {
+    return <span className="whitespace-nowrap">-</span>
   }
 
-  const textVariant =
-    variant === 'due' &&
-    (formattedDate === 'Today' ||
-      formattedDate === 'Tomorrow' ||
-      formattedDate === '2 days')
-      ? 'text-red-500 font-semibold'
-      : ''
+  const friendlyDate = getFriendlyDate(date)
+  const isUrgent = variant === 'due' &&
+    (friendlyDate === 'Today' || friendlyDate === 'Tomorrow')
 
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className={`whitespace-nowrap ${textVariant}`}>
-            {formattedDate}
+          <span className={`whitespace-nowrap ${isUrgent ? 'font-semibold text-red-500' : ''}`}>
+            {friendlyDate}
           </span>
         </TooltipTrigger>
-        <TooltipContent>{format(dateObj, 'MMM dd yyyy')}</TooltipContent>
+        <TooltipContent>
+          {formatDateTime(date)}
+        </TooltipContent>
       </Tooltip>
     </TooltipProvider>
   )
@@ -164,23 +145,23 @@ export function FriendlyDateCell({ date, variant }: FriendlyDateCellProps) {
 interface VehicleCellProps {
   make: string
   model: string
-  year: number
+  year: string
   imageUrl?: string
 }
 
 export function VehicleCell({ make, model, year, imageUrl }: VehicleCellProps) {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex gap-3 items-center">
       {imageUrl && (
         <img
-          src={imageUrl || '/placeholder.svg'}
+          src={imageUrl || '/public/placeholder_image_car_icon.png'}
           alt={`${year} ${make} ${model}`}
-          className="h-10 w-10 rounded-md object-cover"
+          className="object-cover w-10 h-10 rounded-md"
         />
       )}
-      <span className="whitespace-nowrap">
-        {year} {make} {model}
-      </span>
+        <span className="whitespace-nowrap">
+          {year} {make} {model}
+        </span>
     </div>
   )
 }
@@ -197,7 +178,7 @@ interface ActionsCellProps {
 
 export function ActionsCell({ actions }: ActionsCellProps) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex gap-2 items-center">
       {actions.map((action, index) => (
         <div key={index}>
           <>{action._component}</>
@@ -207,7 +188,7 @@ export function ActionsCell({ actions }: ActionsCellProps) {
         //   key={index}
         //   variant={action.variant || 'secondary'}
         //   size="sm"
-        //   className="center h-8 w-8 rounded-full transition-colors hover:bg-black hover:text-white"
+        //   className="w-8 h-8 rounded-full transition-colors center hover:bg-black hover:text-white"
         //   onClick={(e) => {
         //     e.stopPropagation()
         //     action.onClick()
@@ -232,9 +213,9 @@ export function WarningCell({ message }: WarningCellProps) {
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <CircleAlert className="bg-red-600 text-white rounded-full border-0" />
+            <CircleAlert className="text-white bg-red-600 rounded-full border-0" />
           </TooltipTrigger>
-          <TooltipContent align="start" className="bg-red-600 text-white">
+          <TooltipContent align="start" className="text-white bg-red-600">
             {message}
           </TooltipContent>
         </Tooltip>
@@ -256,21 +237,20 @@ export function ContactMethodCell({
 }: ContactMethodCellProps) {
   return (
     <TooltipProvider>
-      <div className="flex items-center gap-2">
+      <div className="flex gap-2 items-center">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              className={`h-8 w-8 rounded-full transition-colors hover:bg-black ${
-                !messages ? 'text-gray-400' : 'text-black'
-              } hover:text-white`}
+              className={`h-8 w-8 rounded-full transition-colors hover:bg-black ${!messages ? 'text-gray-400' : 'text-black'
+                } hover:text-white`}
               onClick={(e) => {
                 e.stopPropagation()
                 console.log('Messages clicked')
               }}
             >
-              <MessagesSquare className="h-4 w-4" />
+              <MessagesSquare className="w-4 h-4" />
               {/* {messages && (
                 <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-purple-500 text-[10px] text-white">
                   27
@@ -286,15 +266,14 @@ export function ContactMethodCell({
             <Button
               variant="ghost"
               size="icon"
-              className={`h-8 w-8 rounded-full transition-colors hover:bg-black ${
-                !email ? 'text-gray-400' : 'text-black'
-              } hover:text-white`}
+              className={`h-8 w-8 rounded-full transition-colors hover:bg-black ${!email ? 'text-gray-400' : 'text-black'
+                } hover:text-white`}
               onClick={(e) => {
                 e.stopPropagation()
                 console.log('Email clicked')
               }}
             >
-              <Mail className="h-4 w-4" />
+              <Mail className="w-4 h-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>Send Email</TooltipContent>
@@ -305,15 +284,14 @@ export function ContactMethodCell({
             <Button
               variant="ghost"
               size="icon"
-              className={`h-8 w-8 rounded-full transition-colors hover:bg-black ${
-                !phone ? 'text-gray-400' : 'text-black'
-              } hover:text-white`}
+              className={`h-8 w-8 rounded-full transition-colors hover:bg-black ${!phone ? 'text-gray-400' : 'text-black'
+                } hover:text-white`}
               onClick={(e) => {
                 e.stopPropagation()
                 console.log('Phone clicked')
               }}
             >
-              <Phone className="h-4 w-4" />
+              <Phone className="w-4 h-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>Call</TooltipContent>
@@ -325,8 +303,8 @@ export function ContactMethodCell({
 
 export function AutoCell() {
   return (
-    <div className="flex ">
-      <Car className="h-5 w-5 text-green-500" />
+    <div className="flex">
+      <Car className="w-5 h-5 text-green-500" />
     </div>
   )
 }
@@ -358,19 +336,17 @@ export function UploadTimeCell({ deadline }: UploadTimeCellProps) {
   )
 }
 
-export function SummaryCell() {
+export function SummaryCell({ text }: { text: string }) {
   return (
-    <>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => console.log('Summary clicked')}
-      >
-        <MessageSquareMore className="h-5 w-5" />
-      </Button>
-    </>
+    <div className="flex justify-center items-center">
+      <RoundButtonWithTooltip
+        buttonIcon={<MessageSquareMore className="w-5 h-5" />}
+        tooltipText={text}
+      />
+    </div>
   )
 }
+
 interface DocumentCellProps {
   fileName: string
   onClick?: () => void
@@ -379,16 +355,16 @@ interface DocumentCellProps {
 export function DocumentCell({ fileName, onClick }: DocumentCellProps) {
   return (
     <TooltipProvider>
-      <div className="flex items-center gap-2">
+      <div className="flex gap-2 items-center">
         <Button
           variant="ghost"
-          className="h-8 flex items-center gap-2 px-3 hover:bg-black hover:text-white rounded-full"
+          className="flex gap-2 items-center px-3 h-8 rounded-full hover:bg-black hover:text-white"
           onClick={(e) => {
             e.stopPropagation()
             onClick?.()
           }}
         >
-          <FileText className="h-4 w-4" />
+          <FileText className="w-4 h-4" />
           <span className="text-sm font-medium">{fileName}</span>
         </Button>
       </div>
@@ -403,25 +379,23 @@ interface ActionButtonCellProps {
 
 export function ActionButtonCell({ label, onClick }: ActionButtonCellProps) {
   return (
-    <Dialog.Root>
-      <Dialog.Trigger>
-        <span className="bg-black text-white rounded-2xl flex items-center gap-2 w-20 h-8 justify-center hover:opacity-90 ">
-          <Check className="h-4 w-4" />
+    <Dialog>
+      <DialogTrigger asChild>
+        <span className="flex gap-2 justify-center items-center w-20 h-8 text-white bg-black rounded-2xl hover:opacity-90">
+          <Check className="w-4 h-4" />
           {label}
         </span>
-      </Dialog.Trigger>
-      <Dialog.Portal>
-        <Dialog.Content className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-4 rounded-lg shadow-lg">
-          <div className="dialog">
-            <Dialog.Title>Dialog</Dialog.Title>
-            <div>
-              <p>Dialog content</p>
-              <p>Dialog content</p>
-            </div>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Dialog</DialogTitle>
+        </DialogHeader>
+        <div>
+          <p>Dialog content</p>
+          <p>Dialog content</p>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -432,8 +406,8 @@ interface UserAvatarCellProps {
 
 export function UserAvatarCell({ name, avatarUrl }: UserAvatarCellProps) {
   return (
-    <div className="flex items-center gap-2">
-      <Avatar className="h-6 w-6">
+    <div className="flex gap-2 items-center">
+      <Avatar className="w-6 h-6">
         <AvatarImage src={avatarUrl} alt={name} />
         <AvatarFallback>{name.charAt(0)}</AvatarFallback>
       </Avatar>
@@ -455,14 +429,59 @@ export function ArchiveButtonCell({
     <Button
       variant="default"
       size="sm"
-      className="bg-black hover:bg-black/90 text-white rounded-full flex items-center gap-2"
+      className="flex gap-2 items-center text-white bg-black rounded-full hover:bg-black/90"
       onClick={(e) => {
         e.stopPropagation()
         onClick()
       }}
     >
-      <Archive className="h-4 w-4" />
+      <Archive className="w-4 h-4" />
       <span>{archive ? 'Archive ' : 'Unarchive'}</span>
     </Button>
   )
+}
+
+interface RelatedToCellProps {
+  relatedObjects: Array<{
+    type: string;
+    id: string;
+  }>;
+}
+
+export function RelatedToCell({ relatedObjects }: RelatedToCellProps) {
+
+  if (!relatedObjects || relatedObjects.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {relatedObjects.map((obj, index) => (
+        <Popover key={`${obj.type}-${obj.id}-${index}`}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              className="p-0"
+            >
+              <span className="text-sm font-semibold underline" >
+                #{obj.id}{index !== relatedObjects.length - 1 && ', '}
+              </span>
+              
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            align="start"
+            side="left"
+            sideOffset={5}
+            className="w-[750px]"
+          >
+            <div>
+              <h3 className="mb-2 font-semibold">{`#${obj.id}`}</h3>
+              {obj.type.toLowerCase() === 'opportunity' && (
+                <OpportunityInfoCard opportunityId={obj.id} />
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
+      ))}
+    </div>
+  );
 }

@@ -10,22 +10,28 @@ import {
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { ContactData, ContactMethod } from '@/app/types/contact-info.types'
 import { ColumnDef } from '@tanstack/react-table'
-import { ClipboardPlus, Paperclip } from 'lucide-react'
+import { ClipboardPlus, Paperclip, Plus } from 'lucide-react'
 import { Opportunity, OpportunityStatus, PartsWarningStatus } from '@/app/types/opportunity'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import { useState, useCallback } from 'react'
-import { useOpportunityStore } from '@/app/stores/opportunity-store'
+import { useSession } from 'next-auth/react'
+import { useGetOpportunities } from '@/app/api/hooks/useGetOpportunities'
 import dynamic from "next/dynamic";
 import { StatusBadge } from '@/components/custom-components/status-badge/status-badge';
+import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
+import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
 
 const PdfPreview = dynamic(() => import("@/app/[locale]/custom-components/pdf-preview"), {
   ssr: false,
 });
 
 export default function EstimateOpportunities() {
-  const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity } = useOpportunityStore()
+  const { data: session } = useSession()
+  const tenantId = session?.user?.tenantId
+  const { estimateOpportunities, isLoading } = useGetOpportunities({ tenantId: tenantId! })
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null)
 
   const handleRowClick = useCallback((opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity)
@@ -73,7 +79,6 @@ export default function EstimateOpportunities() {
       cell: ({ row }) => (
         <PdfPreview  />
       )
-    
     },
     {
       accessorKey: 'parts',
@@ -83,7 +88,7 @@ export default function EstimateOpportunities() {
         if (!parts) return '---'
         
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex gap-2 items-center">
             <span>{parts.count}</span>
             {parts.warning && (
               <StatusBadge
@@ -105,19 +110,45 @@ export default function EstimateOpportunities() {
     {
       accessorKey: 'priority',
       header: 'PRIORITY'
-    
     },
-    
+    {
+      header: 'Summary',
+      cell: ({ row }) => <SummaryCell text='Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' />,
+    },
     {
       accessorKey: 'warning',
       header: 'Warning',
-      cell: ({ row }) =>
-        row.original.warning ? (
-          <StatusBadgeCell
-            variant="danger"
-            status="danger"
-          />
-        ) : null,
+      cell: ({ row }) => {
+        const warning = row.original.warning;
+        if (!warning || !warning.message) return null;
+
+        // Determine variant and text based on warning type
+        let variant: 'warning' | 'danger' | 'pending';
+        let text: string;
+
+        if (warning.type === 'MISSING_VOR') {
+          variant = 'danger';
+          text = 'OVERDUE';
+        } else if (warning.type === 'UPDATED_IN_CCC') {
+          variant = 'warning';
+          text = 'URGENT';
+        } else {
+          variant = 'pending';
+          text = 'PENDING';
+        }
+
+        return (
+          <div title={warning.message}>
+            <StatusBadge
+              variant={variant}
+              size="sm"
+              className="whitespace-nowrap"
+            >
+              {text}
+            </StatusBadge>
+          </div>
+        );
+      },
     },
     {
       accessorKey: 'insuranceApproval',
@@ -141,7 +172,6 @@ export default function EstimateOpportunities() {
         );
       }
     },
-   
     {
       id: 'contact',
       header: 'Contact',
@@ -219,30 +249,39 @@ export default function EstimateOpportunities() {
     },
     {
       id: 'task',
-      header: 'Create Task',
+      header: 'Task',
       cell: ({ row }) => (
-        <div 
-          data-testid="task-button" 
-          className="cursor-pointer hover:text-blue-600 transition-colors"
+        <div
           onClick={(e) => {
             e.stopPropagation()
-            handleTaskClick(row.original)
           }}
         >
-          <ClipboardPlus size={18} />
+          <NewTaskModal
+            title="New Task"
+            defaultRelation={
+              {
+                id: row.original.opportunityId,
+                type: 'opportunity'
+              }
+            }
+            children={
+              <Plus className="m-auto w-5 h-5" />
+            }
+          />
         </div>
       ),
     },
   ]
 
-  // Get opportunities in Estimate status from the store
-  const opportunities = getOpportunitiesByStatus(OpportunityStatus.Estimate)
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-64">Loading opportunities...</div>
+  }
 
   return (
     <div className="w-full">
       <DataTable<Opportunity, any>
         columns={columns}
-        data={opportunities}
+        data={estimateOpportunities.map(mapApiResponseToOpportunity)}
         onRowClick={handleRowClick}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}

@@ -9,23 +9,29 @@ import {
 } from '@/components/custom-components/custom-table/table-cells'
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { ColumnDef } from '@tanstack/react-table'
-import { ClipboardPlus, Car } from 'lucide-react'
+import { ClipboardPlus, Car, Plus } from 'lucide-react'
 import { Opportunity, OpportunityStatus } from '@/app/types/opportunity'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import { useState, useCallback } from 'react'
-import { useOpportunityStore } from '@/app/stores/opportunity-store'
+import { useSession } from 'next-auth/react'
+import { useGetOpportunities } from '@/app/api/hooks/useGetOpportunities'
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
 import ConfirmationModal from '@/components/custom-components/confirmation-modal/confirmation-modal'
 import { showPickupToast } from '@/app/utils/toast-utils'
+import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
+import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
 
 export default function TotalLossOpportunities() {
-  const { getOpportunitiesByStatus, setSelectedOpportunity, selectedOpportunity, archiveOpportunity, updateOpportunity } = useOpportunityStore()
+  const { data: session } = useSession()
+  const tenantId = session?.user?.tenantId
+  const { totalLossOpportunities, isLoading } = useGetOpportunities({ tenantId: tenantId! })
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [pickupConfirmation, setPickupConfirmation] = useState<{ isOpen: boolean; opportunity: Opportunity | null }>({
     isOpen: false,
     opportunity: null
   })
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null)
 
   const handleRowClick = useCallback((opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity)
@@ -34,16 +40,11 @@ export default function TotalLossOpportunities() {
 
   const handlePickupConfirm = useCallback(() => {
     if (pickupConfirmation.opportunity) {
-      // First update the pickup date
-      updateOpportunity(pickupConfirmation.opportunity.opportunityId, {
-        pickedUpDate: new Date().toISOString()
-      })
-      // Then archive the opportunity
-      archiveOpportunity(pickupConfirmation.opportunity.opportunityId)
+      // TODO: Implement pickup API call
       showPickupToast(pickupConfirmation.opportunity)
       console.log('Marking opportunity as picked up:', pickupConfirmation.opportunity.opportunityId)
     }
-  }, [pickupConfirmation.opportunity, updateOpportunity, archiveOpportunity])
+  }, [pickupConfirmation.opportunity])
 
   const handlePickupClick = useCallback((opportunity: Opportunity) => {
     setPickupConfirmation({
@@ -126,8 +127,8 @@ export default function TotalLossOpportunities() {
       }
     },
     {
-      header: 'LAST UPDATE',
-      cell: ({ row }) => <SummaryCell />,
+      header: 'Summary',
+      cell: ({ row }) => <SummaryCell text='Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' />,
     },
     {
       id: 'pickup',
@@ -163,22 +164,39 @@ export default function TotalLossOpportunities() {
     },
     {
       id: 'task',
-      header: 'TASK',
+      header: 'Task',
       cell: ({ row }) => (
-        <div className="cursor-pointer hover:text-blue-600 transition-colors">
-          <ClipboardPlus size={18} />
+        <div
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+        >
+          <NewTaskModal
+            title="New Task"
+            defaultRelation={
+              {
+                id: row.original.opportunityId,
+                type: 'opportunity'
+              }
+            }
+            children={
+              <Plus className="w-5 h-5 m-auto" />
+            }
+          />
         </div>
       ),
     },
   ]
 
-  const opportunities = getOpportunitiesByStatus(OpportunityStatus.TotalLoss)
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-64">Loading opportunities...</div>
+  }
 
   return (
     <div className="w-full">
       <DataTable<Opportunity, any>
         columns={columns}
-        data={opportunities}
+        data={totalLossOpportunities.map(mapApiResponseToOpportunity)}
         onRowClick={handleRowClick}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}

@@ -1,5 +1,10 @@
 'use client'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
+import { useEffect, useState } from 'react'
+import { Badge } from '@/components/ui/badge'
+import { useSession } from 'next-auth/react'
+import { Task as ApiTask } from '@/app/api/functions/tasks'
+import { useTasksContext } from '@/app/context/tasks-context'
 
 import {
   ActionButtonCell,
@@ -11,6 +16,7 @@ import {
   DescriptionCell,
   FriendlyDateCell,
   PriorityBadgeCell,
+  RelatedToCell,
   StatusBadgeCell,
   SummaryCell,
   TitleCell,
@@ -22,17 +28,79 @@ import { ColumnDef } from '@tanstack/react-table'
 import { MessageSquareMore, PanelTop } from 'lucide-react'
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 
-import { mockTasks } from '../../../../../mocks/tasks.mock'
-import { useTaskStore } from '@/app/stores/task-store'
 import { Task } from '@/app/types/task'
-import EditTaskModal from '@/components/custom-components/task-modal/edit-task-modal'
-import DeleteTaskModal from '@/components/custom-components/task-modal/delete-task-modal'
+import { EditTaskModal } from '@/components/custom-components/task-modal/edit-task-modal'
+import { ConfirmTaskDoneModal } from '@/components/custom-components/task-modal/confirm-task-done-modal'
+import * as deleteTaskModal from '@/components/custom-components/task-modal/delete-task-modal'
 
-export default function NewOpportunities() {
+// Function to map API task format to app task format
+const mapApiTaskToAppTask = (apiTask: ApiTask): Task => {
+  // Convert priority string to object format if needed
+  const priorityObj = typeof apiTask.priority === 'string'
+    ? {
+      variant: getPriorityVariant(apiTask.priority),
+      text: apiTask.priority as 'Urgent' | 'High' | 'Normal' | 'Low'
+    }
+    : apiTask.priority;
+
+  return {
+    id: apiTask.id,
+    tenantId: apiTask.tenantId || '',
+    title: apiTask.title,
+    description: apiTask.description,
+    priority: priorityObj,
+    createdBy: apiTask.createdBy || '',
+    createdByUser: apiTask.createdByUser,
+    createdAt: apiTask.createdAt,
+    updatedAt: apiTask.updatedAt,
+    dueDate: apiTask.dueDate,
+    dueDateTime: apiTask.dueDate, // For backward compatibility
+    status: apiTask.status as 'open' | 'in_progress' | 'completed' | 'archived',
+    assignedTo: apiTask.assignedTo,
+    assignedUser: apiTask.assignedUser,
+    workfileId: apiTask.workfileId,
+    workfile: apiTask.workfile,
+    locationId: apiTask.locationId,
+    location: apiTask.location,
+    type: apiTask.type || 'One-time',
+    endDate: apiTask.endDate,
+    roles: apiTask.roles,
+    // Default values for backward compatibility
+    relatedTo: [],
+    email: '',
+    phone: '',
+    message: ''
+  };
+};
+
+// Helper function to determine priority variant
+const getPriorityVariant = (priority: string): 'danger' | 'warning' | 'success' | 'slate' => {
+  switch (priority?.toLowerCase()) {
+    case 'urgent':
+      return 'danger';
+    case 'high':
+      return 'warning';
+    case 'normal':
+      return 'success';
+    case 'low':
+    default:
+      return 'slate';
+  }
+};
+
+export default function MyTasks() {
+  // Get tasks data from context
+  const { assignedTasks, isLoadingAssigned, errorAssigned } = useTasksContext()
   
-  const { getTasksByAssignee } = useTaskStore()
-  
-  
+  // Transform API tasks to app task format and filter for non-completed tasks only
+  const tasks = assignedTasks 
+    ? assignedTasks
+        .map(mapApiTaskToAppTask)
+        .filter(task => 
+          task.status?.toLowerCase() !== 'done' && task.status?.toLowerCase() !== 'completed'
+        )
+    : []
+
   const columns: ColumnDef<Task>[] = [
     {
       accessorKey: 'id',
@@ -42,11 +110,22 @@ export default function NewOpportunities() {
     {
       accessorKey: 'priority',
       header: 'Priority',
-      cell: ({ row }) => 
-      <PriorityBadgeCell 
-        variant={row.original.priority.variant}
-        priority={row.original.priority.text} 
-      />,
+      cell: ({ row }) => {
+        const priority = row.original.priority;
+        const variant = typeof priority === 'string'
+          ? getPriorityVariant(priority)
+          : priority.variant;
+        const text = typeof priority === 'string'
+          ? priority
+          : priority.text;
+        
+        return (
+          <PriorityBadgeCell 
+            variant={variant}
+            priority={text} 
+          />
+        );
+      }
     },
     {
       accessorKey: 'title',
@@ -65,37 +144,38 @@ export default function NewOpportunities() {
       cell: ({ row }) => 
       <CreatedByCell 
         createdBy={row.original.createdBy} 
-        currentUser={'Charlie Thompson'}//To Do: Get Current User
+        currentUser={''}
       />,
     },
     {
-      accessorKey: 'createdDate',
+      accessorKey: 'createdAt',
       header: 'Created Date',
       cell: ({ row }) => 
-      <FriendlyDateCell date={row.original.createdDate} 
+      <FriendlyDateCell date={row.original.createdAt || ''} 
       />,
       
     },
     {
-      accessorKey: 'due',
+      accessorKey: 'dueDateTime',
       header: 'DUE',
       cell: ({ row }) => 
       <FriendlyDateCell   
-        date={row.original.due} 
+        date={row.original.dueDateTime} 
         variant='due' 
       />,
       
     },
-    {
-      accessorKey: 'relatedTo',
-      header: 'Related To',
+    // {
+    //   accessorKey: 'relatedTo',
+    //   header: 'Related To',
+    //   cell: ({ row }) => <RelatedToCell relatedObjects={row.original.relatedTo} />,
       
-    },
+    // },
     {
       id: 'contact',
       header: 'Contact',
       cell: ({ row }) => (
-        <div className="flex items-center justify-end space-x-2">
+        <div className="flex justify-end items-center space-x-2">
           <WarningCell
             message={row.original.warningMessage || ''}
           />
@@ -115,13 +195,12 @@ export default function NewOpportunities() {
     {
       id: 'done',
       header: '',
-      cell: ({ row }) => 
-        <ActionButtonCell
-        label='Done'
-        onClick={() => console.log('Done Task:', row.original.id)}
+      cell: ({ row }) => (
+        <ConfirmTaskDoneModal 
+          taskId={row.original.id} 
+          taskTitle={row.original.title}
         />
-      
-      ,
+      ),
     },
     {
       id: 'actions',
@@ -129,24 +208,16 @@ export default function NewOpportunities() {
       cell: ({ row }) => 
       <ActionsCell
         actions={[
-          // {
-          //   label: 'Delete',
-          //   onClick: () => console.log('Delete Task:', row.original.id),
-          //   variant: 'secondary',
-          //   icon: 'delete'},
           {
             label: 'Delete',
             onClick: () => console.log('Delete Task:', row.original.id),
             variant: 'secondary',
             icon: 'delete',
             _component: 
-              <DeleteTaskModal 
+              <deleteTaskModal.DeleteTaskModal 
               title={'Are you sure you want to delete this task?'}
               children={undefined} 
-              isOpen={false} 
-              onOpenChange={function (open: boolean): void {
-              throw new Error('Function not implemented.')
-            } }/>
+              />
           },
           {
             label: 'Edit',
@@ -155,12 +226,10 @@ export default function NewOpportunities() {
             icon: 'edit',
             _component: 
               <EditTaskModal 
-              title={'Edit Task'}
-              children={undefined} 
-              isOpen={false} 
-              onOpenChange={function (open: boolean): void {
-              throw new Error('Function not implemented.')
-            } }/>
+                title={'Edit Task'}
+                taskId={row.original.id}
+                children={undefined} 
+              />
           }
 
         ]}
@@ -169,22 +238,25 @@ export default function NewOpportunities() {
     
   ]
 
-
-
-
-  //get tasks from the store
-  const tasks = getTasksByAssignee('123456');
-
   return (
     <div className="w-full">
-      <DataTable
-        columns={columns}
-        data={tasks}
-        onRowClick={(row) => console.log('Row clicked:', row)}
-        pageSize={10}
-        pageSizeOptions={[5, 10, 20, 30, 40, 50]}
-        showPageSize={true}
-      />
+      {isLoadingAssigned ? (
+        <div className="flex justify-center items-center h-64">
+          <p>Loading tasks...</p>
+        </div>
+      ) : errorAssigned ? (
+        <div className="flex justify-center items-center h-64">
+          <p className="text-gray-500">{errorAssigned.message}</p>
+        </div>
+      ) : (
+        <DataTable
+          columns={columns}
+          data={tasks}
+          pageSize={10}
+          pageSizeOptions={[5, 10, 20, 30, 40, 50]}
+          showPageSize={true}
+        />
+      )}
     </div>
   )
 }

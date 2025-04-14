@@ -24,6 +24,8 @@
 .DS_Store
 *.pem
 
+srs.pdf
+
 # debug
 npm-debug.log*
 yarn-debug.log*
@@ -68,3 +70,5 @@ amplifytools.xcconfig
 .secret-*
 **.sample
 #amplify-do-not-edit-end
+
+*storybook.log
