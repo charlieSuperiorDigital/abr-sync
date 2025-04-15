@@ -59,7 +59,15 @@ class ApiService {
     this.api.interceptors.response.use(
       (response) => response,
       (error) => {
-        console.error('API Error:', error.response?.data || error.message)
+        // Enhanced error logging for better debugging
+        console.error('API Error:', {
+          data: error.response?.data,
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          message: error.message,
+          config: error.config,
+          ...(typeof error.toJSON === 'function' ? { errorJSON: error.toJSON() } : {}),
+        });
         return Promise.reject(error)
       }
     )

@@ -1,4 +1,4 @@
-interface Workfile {
+export interface Workfile {
   id: string
   opportunityId: string
   opportunity: null | any
@@ -9,11 +9,13 @@ interface Workfile {
   updatedAt: string
 }
 
-interface QualityCheckItem {
+export interface QualityCheckItem {
   id: string
   qualityCheckId: string
   name: string
   type: number
+  enabled: boolean
+  defaultCheck: boolean
   okStatus: boolean
   description: string
   notes: string
@@ -22,7 +24,7 @@ interface QualityCheckItem {
   updatedAt: string | null
 }
 
-interface QualityCheck {
+export interface QualityCheck {
   id: string
   workfileId: string
   workfile: Workfile
@@ -44,7 +46,9 @@ export interface UpdateQualityCheckRequest {
 export interface UpdateQualityCheckItemRequest {
   id: string
   name: string
+  enabled: boolean
   okStatus: boolean
+  // defaultCheck: boolean //should we send this?
   type: number
   description: string
   notes: string
@@ -53,11 +57,12 @@ export interface UpdateQualityCheckItemRequest {
 export interface AddCustomCheckRequest {
   qualityCheckId: string
   name: string
+  enabled: boolean
   okStatus: boolean
   type: number
   description: string
   notes: string
-  performedBy: string
+  defaultCheck: boolean
 }
 
 export interface DeleteImageParams {

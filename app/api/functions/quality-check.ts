@@ -12,12 +12,14 @@ export const createQualityCheck = async (workfileId: string) => {
 
 export const getQualityCheck = async (workfileId: string) => {
   try {
+    console.log('Fetching quality check for workfile:', workfileId)
     return await apiService.get<GetQualityCheckResponse>(`/QualityCheck/${workfileId}`)
   } catch (error) {
     console.error('Error getting quality check:', error)
     throw error
   }
 }
+
 
 export const updateQualityCheck = async (data: UpdateQualityCheckRequest) => {
   try {

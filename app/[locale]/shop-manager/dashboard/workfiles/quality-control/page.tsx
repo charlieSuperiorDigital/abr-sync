@@ -11,7 +11,6 @@ import { ColumnDef } from '@tanstack/react-table'
 import { ClipboardPlus, Calendar, Check, MessageSquareMore, ClipboardCheck } from 'lucide-react'
 import { Workfile, WorkfileStatus, QualityControlStatus } from '@/app/types/workfile'
 import { useState, useCallback, useEffect } from 'react'
-import { useWorkfileStore } from '@/app/stores/workfile-store'
 import { useOpportunityStore } from '@/app/stores/opportunity-store'
 import RoundButtonWithTooltip from '@/app/[locale]/custom-components/round-button-with-tooltip'
 import { StatusBadge } from '@/components/custom-components/status-badge/status-badge'
@@ -20,30 +19,40 @@ import { formatDate } from '@/app/utils/date-utils'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import QCChecklistBottomSheet from '@/components/custom-components/qc-checklist-modal'
+import { useSession } from 'next-auth/react'
+import { useGetWorkfiles } from '@/app/api/hooks/useGetWorkfiles'
+import { useGetOpportunities } from '@/app/api/hooks/useGetOpportunities'
+import { Opportunity } from '@/app/types/opportunity'
+import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
 
 export default function QualityControl() {
-  const { getWorkfilesByStatus, setSelectedWorkfile, selectedWorkfile } = useWorkfileStore()
-  const { getOpportunityById, setSelectedOpportunity, selectedOpportunity } = useOpportunityStore()
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isQCChecklistOpen, setIsQCChecklistOpen] = useState(false)
-  const [selectedQCWorkfile, setSelectedQCWorkfile] = useState<Workfile | null>(null)
+  const { data: session } = useSession();
+  const tenantId = session?.user?.tenantId;
 
-  const qcWorkfiles = getWorkfilesByStatus(WorkfileStatus.QC)
+  // Fetch opportunities for this tenant
+  const { opportunities: allOpportunities, isLoading: isOpportunitiesLoading } = useGetOpportunities({ tenantId: tenantId || '' });
 
-  // When a workfile is selected, find the related opportunity
-  useEffect(() => {
-    if (selectedWorkfile) {
-      const relatedOpportunity = getOpportunityById(selectedWorkfile.opportunityId)
-      if (relatedOpportunity) {
-        setSelectedOpportunity(relatedOpportunity)
-      }
-    }
-  }, [selectedWorkfile, getOpportunityById, setSelectedOpportunity])
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isQCChecklistOpen, setIsQCChecklistOpen] = useState(false);
+  const [selectedQCWorkfile, setSelectedQCWorkfile] = useState<Workfile | null>(null);
+  const [selectedWorkfile, setSelectedWorkfile] = useState<Workfile | null>(null);
+
+  // Use real data from API
+  const { qualityControl: qcWorkfiles, isLoading, error } = useGetWorkfiles({ tenantId: tenantId || '' });
 
   const handleRowClick = useCallback((workfile: Workfile) => {
-    setSelectedWorkfile(workfile)
-    setIsModalOpen(true)
-  }, [setSelectedWorkfile])
+    setSelectedWorkfile(workfile);
+    // Find the matching opportunity by opportunityId
+    if (allOpportunities && workfile.opportunityId) {
+      const foundRaw = allOpportunities.find((opp) => opp.opportunityId === workfile.opportunityId);
+      setSelectedOpportunity(foundRaw ? mapApiResponseToOpportunity(foundRaw) : null);
+    } else {
+      setSelectedOpportunity(null);
+    }
+    setIsModalOpen(true);
+  }, [allOpportunities]);
 
   const handleContactClick = useCallback((workfile: Workfile) => {
     // Handle contact info click
@@ -70,24 +79,24 @@ export default function QualityControl() {
         <span className="font-medium">{row.original.roNumber || '---'}</span>
       ),
     },
-    {
-      accessorKey: 'vehicle',
-      header: 'Vehicle',
-      cell: ({ row }) => (
-        <VehicleCell
-          make={row.original.vehicle.make}
-          model={row.original.vehicle.model}
-          year={row.original.vehicle.year.toString()}
-          imageUrl={row.original.vehicle.vehiclePicturesUrls[0] || `https://picsum.photos/seed/${row.original.workfileId}/200/100`}
-        />
-      ),
-    },
+    // {
+    //   accessorKey: 'vehicle',
+    //   header: 'Vehicle',
+    //   cell: ({ row }) => (
+    //     <VehicleCell
+    //       make={row.original.vehicle.make || 'No Make'}
+    //       model={row.original.vehicle.model || 'No Model'}
+    //       year={row.original.vehicle.year.toString() || 'No Year'}
+    //       imageUrl={row.original.vehicle.vehiclePicturesUrls[0] || `https://picsum.photos/seed/${row.original.workfileId}/200/100`}
+    //     />
+    //   ),
+    // },
     {
       accessorKey: 'owner.name',
       header: 'Owner',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
-          {row.original.owner.name}
+          {row.original.owner?.name || '---'}
         </span>
       ),
     },
@@ -97,7 +106,7 @@ export default function QualityControl() {
       cell: ({ row }) => {
         const status = row.original.qualityControl?.status || QualityControlStatus.AWAITING;
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex gap-2 items-center">
             <StatusBadge 
               variant={status === QualityControlStatus.COMPLETED ? 'success' : 'warning'} 
               size="sm"
@@ -192,6 +201,14 @@ export default function QualityControl() {
     },
   ]
 
+  if (isLoading || isOpportunitiesLoading) {
+    return <div className="flex justify-center items-center h-64">Loading workfiles...</div>;
+  }
+
+  if (error) {
+    return <div className="flex justify-center items-center h-64">Error loading workfiles: {error.message}</div>;
+  }
+
   return (
     <div className="w-full">
       <DataTable
@@ -206,7 +223,7 @@ export default function QualityControl() {
       <BottomSheetModal
         isOpen={isModalOpen}
         onOpenChange={setIsModalOpen}
-        title={selectedWorkfile ? `${selectedWorkfile.vehicle.year} ${selectedWorkfile.vehicle.make} ${selectedWorkfile.vehicle.model}` : ''}
+        title={selectedOpportunity ? `${selectedOpportunity.vehicle?.year || ''} ${selectedOpportunity.vehicle?.make || ''} ${selectedOpportunity.vehicle?.model || ''}` : ''}
       >
         {selectedOpportunity && <OpportunityModal opportunity={selectedOpportunity} />}
       </BottomSheetModal>

@@ -19,6 +19,9 @@ export default function QCChecklistBottomSheet({
 }: QCChecklistBottomSheetProps) {
   if (!workfile) return null
   
+  // Defensive: fallback for missing vehicle
+  const safeVehicle = workfile.vehicle || { make: '---', model: '---' };
+
   const { qualityCheck, checks, isLoading, error } = useGetQualityCheck({
     workfileId: workfile.workfileId,
     enabled: isOpen
@@ -32,7 +35,7 @@ export default function QCChecklistBottomSheet({
     <BottomSheetModal
       isOpen={isOpen}
       onOpenChange={onOpenChange}
-      title={`QC Checklist - ${workfile.vehicle.make} ${workfile.vehicle.model}`}
+      title={`QC Checklist - ${safeVehicle.make} ${safeVehicle.model}`}
     >
       <QCChecklistModal 
         workfile={workfile} 
