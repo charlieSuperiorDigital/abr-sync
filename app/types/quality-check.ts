@@ -14,6 +14,8 @@ export interface QualityCheckItem {
   qualityCheckId: string
   name: string
   type: number
+  enabled: boolean
+  defaultCheck: boolean
   okStatus: boolean
   description: string
   notes: string
@@ -44,7 +46,9 @@ export interface UpdateQualityCheckRequest {
 export interface UpdateQualityCheckItemRequest {
   id: string
   name: string
+  enabled: boolean
   okStatus: boolean
+  // defaultCheck: boolean //should we send this?
   type: number
   description: string
   notes: string
@@ -53,11 +57,12 @@ export interface UpdateQualityCheckItemRequest {
 export interface AddCustomCheckRequest {
   qualityCheckId: string
   name: string
+  enabled: boolean
   okStatus: boolean
   type: number
   description: string
   notes: string
-  performedBy: string
+  defaultCheck: boolean
 }
 
 export interface DeleteImageParams {

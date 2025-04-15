@@ -31,6 +31,8 @@ export default function QCChecklistModal({ workfile, onClose }: QCChecklistModal
     console.log('Current workfile ID:', workfile.id)
   }, [workfile.id])
 
+  // Only show enabled items
+  const enabledChecks = checks.filter(item => item.enabled);
 
   if (isLoading) {
     return (
@@ -49,7 +51,7 @@ export default function QCChecklistModal({ workfile, onClose }: QCChecklistModal
   }
 
   // Determine if all checks are completed
-  const allItemsCompleted = checks.length > 0 && checks.every(item => item.okStatus)
+  const allItemsCompleted = enabledChecks.length > 0 && enabledChecks.every(item => item.okStatus)
 
   // Handle marking QC as complete
   const handleMarkQCComplete = () => {
@@ -73,6 +75,7 @@ export default function QCChecklistModal({ workfile, onClose }: QCChecklistModal
     updateItem({
       id: item.id,
       name: item.name,
+      enabled: item.enabled,
       okStatus,
       type: item.type,
       description: item.description,
@@ -117,7 +120,7 @@ export default function QCChecklistModal({ workfile, onClose }: QCChecklistModal
           <div
             className="h-2 bg-green-600 rounded-full"
             style={{
-              width: `${(checks.filter(item => item.okStatus).length / (checks.length || 1)) * 100}%`
+              width: `${(enabledChecks.filter(item => item.okStatus).length / (enabledChecks.length || 1)) * 100}%`
             }}
           ></div>
         </div>
@@ -126,7 +129,7 @@ export default function QCChecklistModal({ workfile, onClose }: QCChecklistModal
       {/* Checklist items in two columns */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div className="space-y-6">
-          {checks.slice(0, Math.ceil(checks.length / 2)).map((item, index) => (
+          {enabledChecks.slice(0, Math.ceil(enabledChecks.length / 2)).map((item, index) => (
             <div key={item.id} className="flex relative justify-between items-center">
               <div className="flex gap-3 items-center">
                 <div className="flex justify-center items-center w-8 h-8">
@@ -175,7 +178,7 @@ export default function QCChecklistModal({ workfile, onClose }: QCChecklistModal
           ))}
         </div>
         <div className="space-y-6">
-          {checks.slice(Math.ceil(checks.length / 2)).map((item, index) => (
+          {enabledChecks.slice(Math.ceil(enabledChecks.length / 2)).map((item, index) => (
             <div key={item.id} className="flex relative justify-between items-center">
               <div className="flex gap-3 items-center">
                 <div className="flex justify-center items-center w-8 h-8">
@@ -233,7 +236,7 @@ export default function QCChecklistModal({ workfile, onClose }: QCChecklistModal
           workfileId={workfile.id}
           qualityCheckId={qualityCheck?.id || ''}
           checklist={checks}
-          status={qualityCheck?.status || QualityControlStatus.AWAITING}
+          status={qualityCheck?.status as QualityControlStatus}
         />
       )}
     </div>

@@ -9,7 +9,7 @@ import { useWorkfileStore } from '@/app/stores/workfile-store'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import QCFieldEditModal from './qc-field-edit-modal'
 import { QualityCheckItem } from '@/app/types/quality-check'
-import { useCustomCheckMutations } from '@/app/api/hooks/useQualityCheck'
+import { useCustomCheckMutations, useUpdateQualityCheckItem } from '@/app/api/hooks/useQualityCheck'
 
 interface QCChecklistSettingsModalProps {
   open: boolean
@@ -30,27 +30,39 @@ export default function QCChecklistSettingsModal({
 }: QCChecklistSettingsModalProps) {
   const { updateWorkfile } = useWorkfileStore()
   const { addCustomCheck, isAddingCheck } = useCustomCheckMutations();
+  const { updateItem, isLoading: isUpdatingItem } = useUpdateQualityCheckItem();
   const [localChecklist, setLocalChecklist] = React.useState<QualityCheckItem[]>(checklist)
   const [editModalOpen, setEditModalOpen] = React.useState(false)
   const [isEditing, setIsEditing] = React.useState(false)
   const [editingItem, setEditingItem] = React.useState<QualityCheckItem | null>(null)
   const [pendingAdd, setPendingAdd] = React.useState(false);
+  const [loadingItemId, setLoadingItemId] = React.useState<string | null>(null);
+  const [showLoadingOverlay, setShowLoadingOverlay] = React.useState(false);
 
-  // Split checklist into standard and custom fields
-  // const standardFields = localChecklist.filter(item => !item.isCustomField)
-  // const customFields = localChecklist.filter(item => item.isCustomField)
-  // For now, list all items as standard fields
-  const standardFields = localChecklist;
-  // const customFields: QualityCheckItem[] = [];
+  // Split checklist into default and custom fields
+  const defaultFields = localChecklist.filter(item => item.defaultCheck);
+  const customFields = localChecklist.filter(item => !item.defaultCheck);
 
   // Handle toggling a checklist item's enabled state
-  const handleToggleEnabled = (index: number) => {
-    const newChecklist = [...localChecklist]
-    newChecklist[index] = {
-      ...newChecklist[index],
-      enabled: !newChecklist[index].enabled
-    }
-    setLocalChecklist(newChecklist)
+  const handleToggleEnabled = async (index: number) => {
+    const item = localChecklist[index];
+    const updatedItem = {
+      id: item.id,
+      name: item.name,
+      enabled: !item.enabled,
+      okStatus: item.okStatus,
+      type: item.type,
+      description: item.description,
+      notes: item.notes,
+    };
+    setLoadingItemId(item.id);
+    setShowLoadingOverlay(true);
+    updateItem(updatedItem, {
+      onSettled: () => {
+        setLoadingItemId(null);
+        setShowLoadingOverlay(false);
+      }
+    });
   }
 
   // Handle create custom field
@@ -90,9 +102,9 @@ export default function QCChecklistSettingsModal({
   // Handle edit custom field
   const handleEditCustomField = (data: { title: string; description: string }) => {
     if (!editingItem) return
-    
-    const newChecklist = localChecklist.map(item => 
-      item === editingItem 
+
+    const newChecklist = localChecklist.map(item =>
+      item === editingItem
         ? { ...item, title: data.title, description: data.description }
         : item
     )
@@ -151,7 +163,7 @@ export default function QCChecklistSettingsModal({
   // Save changes
   const handleSaveQcChanges = () => {
     console.log('Current QC items:', localChecklist)
-    
+
     // Update workfile with new checklist
     if (status !== QualityControlStatus.AWAITING) {
       updateWorkfile(workfileId, {
@@ -184,31 +196,70 @@ export default function QCChecklistSettingsModal({
   return (
     <>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] relative">
+          {showLoadingOverlay && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/70">
+              <div className="flex flex-col items-center gap-2">
+                <svg className="w-8 h-8 animate-spin text-gray-800" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                <span className="text-md font-medium text-gray-700">Updating item...</span>
+              </div>
+            </div>
+          )}
           <DialogHeader>
             <DialogTitle>QC Checklist Settings</DialogTitle>
-            <DialogDescription>
-              Configure which quality control items should be shown in the checklist.
-            </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
             <div className="mb-6">
-              <h3 className="mb-2 font-semibold text-md">Standard Fields</h3>
+
               <ul className="space-y-2">
-                {standardFields.map((item, idx) => (
+                {defaultFields.map((item, idx) => (
                   <li key={item.id} className="flex gap-2 items-center">
                     <Checkbox
-                      id={`standard-${idx}`}
+                      id={`default-${idx}`}
                       checked={item.enabled}
                       onCheckedChange={() => handleToggleEnabled(localChecklist.indexOf(item))}
                     />
                     <label
-                      htmlFor={`standard-${idx}`}
+                      htmlFor={`default-${idx}`}
                       className="text-xs font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     >
                       {item.name}
                     </label>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-semibold text-md">Custom Fields</h3>
+                <button
+                  type="button"
+                  className="flex items-center text-blue-600 hover:text-blue-800"
+                  onClick={() => { setIsEditing(false); setEditModalOpen(true); }}
+                  title="Add Custom Field"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+              <ul className="space-y-2">
+                {customFields.map((item, idx) => (
+                  <li key={item.id} className="flex gap-2 items-center">
+                    <Checkbox
+                      id={`custom-${idx}`}
+                      checked={item.enabled}
+                      onCheckedChange={() => handleToggleEnabled(localChecklist.indexOf(item))}
+                    />
+                    <label
+                      htmlFor={`custom-${idx}`}
+                      className="text-xs font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {item.name}
+                    </label>
+                    {/* Optionally, add edit/delete icons for custom fields here */}
                   </li>
                 ))}
               </ul>
@@ -218,20 +269,6 @@ export default function QCChecklistSettingsModal({
           <DialogFooter>
             <Button variant="outline" onClick={onClose}>
               Cancel
-            </Button>
-            <Button
-              onClick={() => setEditModalOpen(true)}
-              disabled={isAddingCheck}
-            >
-              <Plus className="mr-1 w-4 h-4" />
-              {isAddingCheck ? (
-                <svg className="w-4 h-4 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                </svg>
-              ) : (
-                'Add New'
-              )}
             </Button>
             <Button onClick={handleSaveQcChanges}>
               Save Changes
