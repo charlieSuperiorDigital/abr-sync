@@ -64,6 +64,37 @@
       "sunday": "Sunday"
     }
   },
+  "User": {
+    "add-user": "Add User",
+    "full-name": "Full Name",
+    "email": "Email",
+    "phone": "Phone Number",
+    "password": "Password",
+    "role": "Role",
+    "hourly-rate": "Hourly Rate",
+    "module-access": "Module Access",
+    "communication-access": "Communication Access",
+    "notification-type": "Notification Type",
+    "notification-categories": "Notification Categories",
+    "locations": "Locations",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "avatar": "Avatar",
+    "communication": {
+      "title": "Communication",
+      "insurances": "Insurances",
+      "vendors": "Vendors",
+      "vehicle-owners": "Vehicle Owners"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "task-assigned": "Task Assigned",
+      "task-completed": "Task Completed",
+      "opportunity-created": "Opportunity Created",
+      "workfile-ecd": "Workfile ECD"
+    }
+  },
   "Validation": {
     "due-date-required": "Due date is required",
     "errorEmail": "Please enter a valid email address",
@@ -77,6 +108,15 @@
     "recurring-fields-required": "Frequency and days are required for recurring tasks",
     "recurring-frequency-required": "Frequency is required for recurring tasks",
     "task-title-required": "Task title is required",
-    "task-type-required": "Task type is required"
+    "task-type-required": "Task type is required",
+    "full-name-required": "Full name is required",
+    "phone-required": "Phone number is required",
+    "role-required": "Role is required",
+    "hourly-rate-required": "Hourly rate is required",
+    "module-access-required": "At least one module access is required",
+    "communication-access-required": "At least one communication access is required",
+    "notification-type-required": "Notification type is required",
+    "notification-categories-required": "At least one notification category is required",
+    "locations-required": "At least one location is required"
   }
 }
