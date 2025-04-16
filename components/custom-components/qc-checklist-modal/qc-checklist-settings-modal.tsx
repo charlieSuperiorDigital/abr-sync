@@ -1,15 +1,13 @@
 'use client'
 
-import * as React from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Button } from '@/components/ui/button'
-import { QualityControlStatus } from '@/app/types/workfile'
-import { useWorkfileStore } from '@/app/stores/workfile-store'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
-import QCFieldEditModal from './qc-field-edit-modal'
-import { QualityCheckItem } from '@/app/types/quality-check'
 import { useCustomCheckMutations, useUpdateQualityCheckItem } from '@/app/api/hooks/useQualityCheck'
+import { QualityCheckItem } from '@/app/types/quality-check'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Plus, Pencil, Trash2 } from 'lucide-react'
+import * as React from 'react'
+import QCFieldEditModal from './qc-field-edit-modal'
 
 interface QCChecklistSettingsModalProps {
   open: boolean
@@ -17,7 +15,10 @@ interface QCChecklistSettingsModalProps {
   workfileId: string
   qualityCheckId: string
   checklist: QualityCheckItem[]
-  status: QualityControlStatus
+  // status: QualityControlStatus
+  modalProps?: {
+    closeOnBackdrop?: boolean
+  }
 }
 
 export default function QCChecklistSettingsModal({
@@ -26,10 +27,10 @@ export default function QCChecklistSettingsModal({
   workfileId,
   qualityCheckId,
   checklist,
-  status,
+  // status,
+  modalProps,
 }: QCChecklistSettingsModalProps) {
-  const { updateWorkfile } = useWorkfileStore()
-  const { addCustomCheck, isAddingCheck } = useCustomCheckMutations();
+  const { addCustomCheck, isAddingCheck, deleteCustomCheck, isDeletingCheck } = useCustomCheckMutations();
   const { updateItem, isLoading: isUpdatingItem } = useUpdateQualityCheckItem();
   const [localChecklist, setLocalChecklist] = React.useState<QualityCheckItem[]>(checklist)
   const [editModalOpen, setEditModalOpen] = React.useState(false)
@@ -38,152 +39,142 @@ export default function QCChecklistSettingsModal({
   const [pendingAdd, setPendingAdd] = React.useState(false);
   const [loadingItemId, setLoadingItemId] = React.useState<string | null>(null);
   const [showLoadingOverlay, setShowLoadingOverlay] = React.useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = React.useState(false)
+  const [pendingDeleteId, setPendingDeleteId] = React.useState<string | null>(null)
+  const [deletingItem, setDeletingItem] = React.useState<QualityCheckItem | null>(null)
+  const [deleteLoading, setDeleteLoading] = React.useState(false)
+
+  // Sync localChecklist with checklist prop when checklist changes (for instant UI after add)
+  React.useEffect(() => {
+    setLocalChecklist(checklist)
+  }, [checklist])
 
   // Split checklist into default and custom fields
   const defaultFields = localChecklist.filter(item => item.defaultCheck);
   const customFields = localChecklist.filter(item => !item.defaultCheck);
 
-  // Handle toggling a checklist item's enabled state
-  const handleToggleEnabled = async (index: number) => {
+  // --- Checkbox Optimistic Update State ---
+  const [optimisticEnabledIds, setOptimisticEnabledIds] = React.useState<{ [id: string]: boolean }>({});
+  const [updatingEnabledId, setUpdatingEnabledId] = React.useState<string | null>(null);
+
+  // --- Optimistic Toggle Handler (fix: update localChecklist immediately for UI) ---
+  const handleToggleEnabled = (index: number) => {
     const item = localChecklist[index];
+    const newEnabled = !item.enabled;
+    // Optimistically update localChecklist for instant UI feedback
+    setLocalChecklist(prev => prev.map((it, i) => i === index ? { ...it, enabled: newEnabled } : it));
+    setOptimisticEnabledIds(prev => ({ ...prev, [item.id]: newEnabled }));
+    setUpdatingEnabledId(item.id);
     const updatedItem = {
       id: item.id,
       name: item.name,
-      enabled: !item.enabled,
+      enabled: newEnabled,
       okStatus: item.okStatus,
       type: item.type,
       description: item.description,
       notes: item.notes,
     };
-    setLoadingItemId(item.id);
     setShowLoadingOverlay(true);
     updateItem(updatedItem, {
       onSettled: () => {
-        setLoadingItemId(null);
+        setUpdatingEnabledId(null);
         setShowLoadingOverlay(false);
+        setOptimisticEnabledIds(prev => {
+          const copy = { ...prev };
+          delete copy[item.id];
+          return copy;
+        });
+      },
+      onError: () => {
+        // Revert localChecklist if mutation fails
+        setLocalChecklist(prev => prev.map((it, i) => i === index ? { ...it, enabled: item.enabled } : it));
       }
     });
-  }
+  };
+
+  // --- Checkbox checked value ---
+  const getChecked = (item: QualityCheckItem) => {
+    if (optimisticEnabledIds.hasOwnProperty(item.id)) {
+      return optimisticEnabledIds[item.id];
+    }
+    return item.enabled;
+  };
 
   // Handle create custom field
   const handleCreateCustomField = (data: { title: string; description: string }) => {
-    const newField: QualityCheckItem = {
-      title: data.title,
+    const tempId = `temp-${Date.now()}`;
+    const body = {
+      qualityCheckId: qualityCheckId,
+      name: data.title,
+      okStatus: false,
+      type: 0,
       description: data.description,
-      completed: false,
+      notes: "string",
       enabled: true,
-      isCustomField: true
-    }
-    const newChecklist = [...localChecklist, newField]
-    setLocalChecklist(newChecklist)
-
-    // Update workfile with new checklist
-    if (status !== QualityControlStatus.AWAITING) {
-      updateWorkfile(workfileId, {
-        qualityControl: {
-          status,
-          checklist: newChecklist
-        }
-      })
-    } else {
-      // Create a new quality control object if it doesn't exist
-      updateWorkfile(workfileId, {
-        qualityControl: {
-          status: QualityControlStatus.AWAITING,
-          checklist: newChecklist,
-          completionDate: undefined,
-          completedBy: undefined,
-          assignedTo: undefined
-        }
-      })
-    }
+      defaultCheck: false
+    };
+    // Optimistically add new item
+    setLocalChecklist(prev => [
+      ...prev,
+      { ...body, id: tempId, images: [], performedBy: null, updatedAt: null }
+    ]);
+    setPendingAdd(true);
+    addCustomCheck(body, {
+      onSuccess: () => {
+        setPendingAdd(false);
+        setEditModalOpen(false);
+      },
+      onError: () => {
+        setPendingAdd(false);
+        // Remove the temp item if mutation fails
+        setLocalChecklist(prev => prev.filter(item => item.id !== tempId));
+      }
+    });
   }
 
   // Handle edit custom field
   const handleEditCustomField = (data: { title: string; description: string }) => {
     if (!editingItem) return
 
-    const newChecklist = localChecklist.map(item =>
-      item === editingItem
-        ? { ...item, title: data.title, description: data.description }
-        : item
-    )
-    setLocalChecklist(newChecklist)
+    const updatedItem = {
+      id: editingItem.id,
+      name: data.title,
+      description: data.description,
+      enabled: editingItem.enabled,
+      okStatus: editingItem.okStatus,
+      type: editingItem.type,
+      notes: editingItem.notes,
+    };
+    updateItem(updatedItem);
     setEditingItem(null)
-
-    // Update workfile with edited checklist
-    if (status !== QualityControlStatus.AWAITING) {
-      updateWorkfile(workfileId, {
-        qualityControl: {
-          status,
-          checklist: newChecklist
-        }
-      })
-    } else {
-      // Create a new quality control object if it doesn't exist
-      updateWorkfile(workfileId, {
-        qualityControl: {
-          status: QualityControlStatus.AWAITING,
-          checklist: newChecklist,
-          completionDate: undefined,
-          completedBy: undefined,
-          assignedTo: undefined
-        }
-      })
-    }
   }
 
   // Handle delete custom field
-  const handleDeleteCustomField = (item: QualityCheckItem) => {
-    const newChecklist = localChecklist.filter(field => field !== item)
-    setLocalChecklist(newChecklist)
+  const handleDeleteClick = (item: QualityCheckItem) => {
+    setDeletingItem(item)
+    setDeleteModalOpen(true)
+  }
 
-    // Update workfile with filtered checklist
-    if (status !== QualityControlStatus.AWAITING) {
-      updateWorkfile(workfileId, {
-        qualityControl: {
-          status,
-          checklist: newChecklist
-        }
-      })
-    } else {
-      // Create a new quality control object if it doesn't exist
-      updateWorkfile(workfileId, {
-        qualityControl: {
-          status: QualityControlStatus.AWAITING,
-          checklist: newChecklist,
-          completionDate: undefined,
-          completedBy: undefined,
-          assignedTo: undefined
-        }
-      })
-    }
+  const confirmDelete = () => {
+    if (!deletingItem) return;
+    setDeleteLoading(true)
+    deleteCustomCheck({
+      qualityCheckItemId: deletingItem.id
+    }, {
+      onSuccess: () => {
+        setDeleteLoading(false)
+        setDeleteModalOpen(false)
+        setDeletingItem(null)
+      },
+      onError: () => {
+        setDeleteLoading(false)
+      }
+    })
   }
 
   // Save changes
   const handleSaveQcChanges = () => {
     console.log('Current QC items:', localChecklist)
-
-    // Update workfile with new checklist
-    if (status !== QualityControlStatus.AWAITING) {
-      updateWorkfile(workfileId, {
-        qualityControl: {
-          status,
-          checklist: localChecklist
-        }
-      })
-    } else {
-      // Create a new quality control object if it doesn't exist
-      updateWorkfile(workfileId, {
-        qualityControl: {
-          status: QualityControlStatus.AWAITING,
-          checklist: localChecklist,
-          completionDate: undefined,
-          completedBy: undefined,
-          assignedTo: undefined
-        }
-      })
-    }
     onClose()
   }
 
@@ -193,18 +184,48 @@ export default function QCChecklistSettingsModal({
     setEditModalOpen(true)
   }
 
+  // --- Edit Modal Initial Data ---
+  const getEditInitialData = () => {
+    if (!isEditing || !editingItem) return undefined;
+    return {
+      title: editingItem.name,
+      description: editingItem.description || '',
+      enabled: editingItem.enabled
+    };
+  };
+
   return (
     <>
-      <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[425px] relative">
+      <Dialog
+        open={open}
+        onOpenChange={setEditModalOpen}
+        // Prevent closing on backdrop click if closeOnBackdrop is false
+        modal={true}
+        {...(modalProps?.closeOnBackdrop === false ? { onInteractOutside: (e: Event) => e.preventDefault() } : {})}
+      >
+        <DialogContent
+          className="sm:max-w-[425px] relative flex flex-col items-center justify-center min-h-[300px] min-w-[350px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+          style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
+        >
           {showLoadingOverlay && (
-            <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/70">
-              <div className="flex flex-col items-center gap-2">
-                <svg className="w-8 h-8 animate-spin text-gray-800" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <div className="flex absolute inset-0 z-50 justify-center items-center bg-white/70">
+              <div className="flex flex-col gap-2 items-center">
+                <svg className="w-8 h-8 text-gray-800 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                 </svg>
-                <span className="text-md font-medium text-gray-700">Updating item...</span>
+                <span className="font-medium text-gray-700 text-md">Updating item...</span>
+              </div>
+            </div>
+          )}
+          {pendingAdd && (
+            <div className="flex absolute inset-0 z-50 justify-center items-center bg-white/70">
+              <div className="flex flex-col gap-2 items-center">
+                <svg className="w-8 h-8 text-gray-800 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                <span className="font-medium text-gray-700 text-md">Creating item...</span>
               </div>
             </div>
           )}
@@ -220,7 +241,8 @@ export default function QCChecklistSettingsModal({
                   <li key={item.id} className="flex gap-2 items-center">
                     <Checkbox
                       id={`default-${idx}`}
-                      checked={item.enabled}
+                      checked={getChecked(item)}
+                      disabled={updatingEnabledId === item.id || showLoadingOverlay}
                       onCheckedChange={() => handleToggleEnabled(localChecklist.indexOf(item))}
                     />
                     <label
@@ -234,23 +256,24 @@ export default function QCChecklistSettingsModal({
               </ul>
             </div>
             <div className="mb-6">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="font-semibold text-md">Custom Fields</h3>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold">Custom Fields</h3>
                 <button
                   type="button"
                   className="flex items-center text-blue-600 hover:text-blue-800"
                   onClick={() => { setIsEditing(false); setEditModalOpen(true); }}
                   title="Add Custom Field"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-5 h-5" color="black" />
                 </button>
               </div>
-              <ul className="space-y-2">
+              <ul className="space-y-1">
                 {customFields.map((item, idx) => (
-                  <li key={item.id} className="flex gap-2 items-center">
+                  <li key={item.id} className="flex gap-1 items-center hover:bg-gray-200">
                     <Checkbox
                       id={`custom-${idx}`}
-                      checked={item.enabled}
+                      checked={getChecked(item)}
+                      disabled={updatingEnabledId === item.id || showLoadingOverlay}
                       onCheckedChange={() => handleToggleEnabled(localChecklist.indexOf(item))}
                     />
                     <label
@@ -259,7 +282,14 @@ export default function QCChecklistSettingsModal({
                     >
                       {item.name}
                     </label>
-                    {/* Optionally, add edit/delete icons for custom fields here */}
+                    <div className="flex gap-3 ml-auto">
+                      <button onClick={() => handleEditClick(item)} className="p-1 rounded hover:bg-gray-400" aria-label="Edit">
+                        <Pencil className="w-4 h-4 text-black" />
+                      </button>
+                      <button onClick={() => handleDeleteClick(item)} className="p-1 rounded hover:bg-gray-400" aria-label="Delete">
+                        <Trash2 className="w-4 h-4 text-black" />
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -283,34 +313,36 @@ export default function QCChecklistSettingsModal({
           if (!isAddingCheck) setEditModalOpen(open);
         }}
         title={isEditing ? "Edit Field" : "Add Field"}
-        initialData={isEditing && editingItem ? { title: editingItem.name, description: editingItem.description || '' } : undefined}
+        initialData={getEditInitialData()}
         onSave={data => {
           if (!isEditing) {
-            const body = {
-              qualityCheckId: qualityCheckId,
-              name: data.title,
-              description: data.description,
-              okStatus: false,
-              type: 0,
-              notes: "string",
-              performedBy: ""
-            };
-            console.log('addCustomCheck body:', body);
             setPendingAdd(true);
-            addCustomCheck(body, {
-              onSuccess: () => {
-                setPendingAdd(false);
-                setEditModalOpen(false);
-              },
-              onError: () => {
-                setPendingAdd(false);
-              }
-            });
+            handleCreateCustomField(data);
           } else {
             handleEditCustomField(data);
           }
         }}
       />
+
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent className="sm:max-w-[350px]">
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+          </DialogHeader>
+          <div className="py-3">Are you sure you want to delete <span className="font-semibold">{deletingItem?.name}</span>?</div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteModalOpen(false)} disabled={deleteLoading}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmDelete} disabled={deleteLoading}>
+              {deleteLoading ? (
+                <svg className="inline-block mr-2 w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+              ) : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
