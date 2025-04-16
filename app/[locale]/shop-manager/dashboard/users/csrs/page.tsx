@@ -11,8 +11,8 @@ import { UserCircle2 } from 'lucide-react'
 import { LocationSelect } from '@/components/custom-components/selects/location-select'
 import { useUsers } from '@/app/context/UsersProvider'
 
-export default function BodyTechs() {
-  const { bodyTechs, isLoading } = useUsers()
+export default function CSRs() {
+  const { csrs, isLoading } = useUsers()
 
   const columns: ColumnDef<User>[] = [
     {
@@ -103,7 +103,6 @@ export default function BodyTechs() {
         </div>
       ),
     },
-    
   ]
 
   return (
@@ -113,7 +112,7 @@ export default function BodyTechs() {
       ) : (
         <DataTable<User, any>
           columns={columns}
-          data={bodyTechs}
+          data={csrs}
           pageSize={10}
           pageSizeOptions={[5, 10, 20, 50]}
         />

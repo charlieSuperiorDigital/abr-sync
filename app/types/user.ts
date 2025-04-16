@@ -1,13 +1,15 @@
 export enum UserRole {
-  Admin = 'Admin',
-  ShopOwner = 'ShopOwner',
-  ShopManager = 'ShopManager',
-  PartManager = 'PartManager',
-  Estimator = 'Estimator',
-  CSR = 'CSR',
-  BodyTech = 'BodyTech',
-  PaintTech = 'PaintTech',
-  Technician = 'Technician'
+  Admin = 'admin',
+  User = 'user',
+  SuperAdmin = 'superadmin',
+  ShopOwner = 'shopowner',
+  ShopManager = 'shopmanager',
+  PartManager = 'partmanager',
+  Estimator = 'estimator',
+  CSR = 'csr',
+  SalesRep = 'salesrep',
+  BodyTech = 'bodytech',
+  PaintTech = 'painttech'
 }
 
 export enum Language {
@@ -105,7 +107,7 @@ export const DEFAULT_USER = {
   email: '',
   phoneNumber: '',
   password: '',
-  role: UserRole.Technician,
+  role: UserRole.User,
   hourlyRate: 0,
   isActive: true,
   preferredLanguage: Language.English,
