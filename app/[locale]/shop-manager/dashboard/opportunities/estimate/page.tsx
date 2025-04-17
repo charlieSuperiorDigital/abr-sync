@@ -68,7 +68,7 @@ export default function EstimateOpportunities() {
         <VehicleCell
           make={row.original.vehicle.make}
           model={row.original.vehicle.model}
-          year={row.original.vehicle.year}
+          year={String(row.original.vehicle.year)}
           imageUrl={`https://picsum.photos/seed/${row.original.opportunityId}/200/100`}
         />
       ),

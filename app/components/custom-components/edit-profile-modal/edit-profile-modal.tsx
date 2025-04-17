@@ -19,14 +19,17 @@ export function EditProfileModal({ open, onOpenChange }: EditProfileModalProps) 
   const [language, setLanguage] = useState('English') // Default language
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
+  // Debug: Log the session when modal opens
+  console.log('EditProfileModal session:', session)
+
   // Mock user data - replace with actual user data from session when available
   const userData = {
     username: session?.user?.firstName && session?.user?.lastName 
       ? `${session.user.firstName} ${session.user.lastName}`
-      : 'Gregory Smith',
-    role: 'Technician',
-    phone: '(111) 222-3333',
-    email: session?.user?.email || 'gregorysmith@email.com',
+      : 'No name',
+    role: session?.user?.roles?.join(', ') || 'No role assigned',
+    phone:  'No phone number provided',
+    email: session?.user?.email || 'No email',
   }
 
   const handleLogout = async () => {
@@ -70,14 +73,14 @@ export function EditProfileModal({ open, onOpenChange }: EditProfileModalProps) 
         </DialogHeader>
         <div className="flex flex-col space-y-4">
           <div className="flex items-center space-x-3">
-            <Avatar className="h-14 w-14">
+            <Avatar className="w-14 h-14">
               <AvatarImage src="/avatars/user-avatar.png" alt="User" />
               <AvatarFallback>
                 {userData.username.split(' ').map(name => name[0]).join('')}
               </AvatarFallback>
             </Avatar>
             <Button variant="ghost" size="sm" className="h-8 text-xs">
-              <Pencil className="mr-1 h-3 w-3" /> Edit
+              <Pencil className="mr-1 w-3 h-3" /> Edit
             </Button>
           </div>
 
@@ -105,12 +108,12 @@ export function EditProfileModal({ open, onOpenChange }: EditProfileModalProps) 
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-500">Password</span>
               <Button variant="ghost" size="sm" className="h-8 text-xs">
-                <Pencil className="mr-1 h-3 w-3" /> Edit
+                <Pencil className="mr-1 w-3 h-3" /> Edit
               </Button>
             </div>
           </div>
 
-          <div className="flex rounded-full bg-gray-100 p-1">
+          <div className="flex p-1 bg-gray-100 rounded-full">
             <Button 
               variant={language === 'English' ? 'default' : 'ghost'} 
               className={`flex-1 rounded-full text-xs ${language === 'English' ? 'bg-black text-white' : ''}`}
@@ -129,7 +132,7 @@ export function EditProfileModal({ open, onOpenChange }: EditProfileModalProps) 
 
           <Button 
             variant="ghost" 
-            className="text-red-500 hover:text-red-700 hover:bg-red-50 justify-start"
+            className="justify-start text-red-500 hover:text-red-700 hover:bg-red-50"
             onClick={handleLogout}
             disabled={isLoggingOut}
           >

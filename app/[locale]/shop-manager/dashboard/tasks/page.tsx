@@ -1,5 +1,4 @@
 'use client'
-import UsersProvider from '@/app/context/UsersProvider'
 
 export default function Tasks() {
   return (
