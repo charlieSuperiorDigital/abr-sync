@@ -28,7 +28,7 @@ class ApiService {
       baseURL: process.env.NEXT_PUBLIC_API_URL,
       timeout: 10000,
       headers: {
-        'Content-Type': 'application/json',
+        // 'Content-Type': 'application/json', // REMOVED to allow Axios to set the correct header per request
       },
     })
 

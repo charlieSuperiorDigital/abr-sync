@@ -103,7 +103,7 @@ export default function InsuranceApprovalsNeeded() {
                   <VehicleCell
                     make={invoice.vehicle.make}
                     model={invoice.vehicle.model}
-                    year={invoice.vehicle.year}
+                    year={String(invoice.vehicle.year)}
                     imageUrl={invoice.vehicle.imageUrl}
                   />
                 </TableCell>
@@ -131,11 +131,13 @@ export default function InsuranceApprovalsNeeded() {
                 <TableCell className="whitespace-nowrap">{invoice.ecd || 'N/A'}</TableCell>
                 <TableCell className="whitespace-nowrap">{invoice.expected || 'N/A'}</TableCell>
                 <TableCell>
-                  <ViewPartsModal workfile={findWorkfileByRoNumber(invoice.roNumber)}>
+                  {/* <ViewPartsModal 
+                  workfile={findWorkfileByRoNumber(invoice.roNumber)}
+                  >
                     <DarkButton 
                       buttonText="View Parts" 
                     />
-                  </ViewPartsModal>
+                  </ViewPartsModal> */}
                 </TableCell>
                 <TableCell>
                   <div

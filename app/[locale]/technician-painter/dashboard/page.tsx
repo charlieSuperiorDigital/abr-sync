@@ -1,3 +1,5 @@
+import RoleGuard from '@/app/components/RoleGuard'
+
 export default function TechnicianPainterDashboard() {
   return (
     <div>

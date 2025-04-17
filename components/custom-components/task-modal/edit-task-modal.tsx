@@ -28,11 +28,13 @@ import { CustomSelect } from '../selects/custom-select'
 import { CustomButtonSelect, CustomButtonSelectField } from '../selects/custom-button-select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { createLocalISOString } from '@/lib/utils/date'
-import { useTenant } from '@/app/context/TenantProvider'
+import { useGetTenant } from '@/app/api/hooks/useGetTenant'
 import { Location } from '@/app/types/location'
-import { useUsers } from '@/app/context/UsersProvider'
+import { useGetUsersByTenant } from '@/app/api/hooks/useGetUsersByTenant'
 import { useUpdateTask } from '@/app/api/hooks/useUpdateTask'
 import { UpdateTaskPayload } from '@/app/api/functions/tasks'
+import { useSession } from 'next-auth/react'
+import { getUserFullName } from '@/app/types/user'
 
 // Extended task type to handle both Task and ApiTask properties
 interface ExtendedTask {
@@ -87,8 +89,29 @@ export function EditTaskModal({
   const [originalTask, setOriginalTask] = useState<ExtendedTask | null>(null)
   const t = useTranslations('Task')
   const validationMessage = useTranslations('Validation')
-  const { tenant, locations: tenantLocations, isLoading: isLoadingTenant } = useTenant()
-  const { usersForSelect, isLoading: isLoadingUsers, totalCount } = useUsers()
+  
+  // Get session for tenant ID
+  const { data: session } = useSession()
+  const tenantId = session?.user?.tenantId
+  
+  // Use hooks directly instead of providers
+  const { tenant, locations: tenantLocations, isLoading: isLoadingTenant } = useGetTenant({
+    tenantId: tenantId!
+  })
+  
+  const { users, isLoading: isLoadingUsers, totalCount } = useGetUsersByTenant({
+    tenantId: tenantId!,
+    page: 1,
+    perPage: 100 // Fetch a larger number to have all users available
+  })
+  
+  // Transform users into format needed for select components
+  const usersForSelect = users.map(user => ({
+    value: user.id,
+    label: getUserFullName(user),
+    avatar: '/placeholder.svg' // Default avatar, could be replaced with actual user avatar
+  }))
+  
   const [locations, setLocations] = useState<{value: string, label: string}[]>([])
   const { updateTaskAsync, isLoading: isUpdating, isError, error } = useUpdateTask()
 

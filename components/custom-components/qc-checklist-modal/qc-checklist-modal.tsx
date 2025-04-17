@@ -1,16 +1,14 @@
 'use client'
 
-import * as React from 'react'
-import { Workfile, QualityControlChecklistItem, QualityControlStatus } from '@/app/types/workfile'
+import { useGetQualityCheck, useUpdateQualityCheck, useUpdateQualityCheckItem, useQualityCheckImageMutations } from '@/app/api/hooks/useQualityCheck'
 import { QualityCheckItem } from '@/app/types/quality-check'
+import { Workfile } from '@/app/types/workfile'
 import { Button } from '@/components/ui/button'
-import { Upload, Check, X, Settings } from 'lucide-react'
-import { formatDate } from '@/app/utils/date-utils'
-import { useWorkfileStore } from '@/app/stores/workfile-store'
-import { useGetQualityCheck } from '@/app/api/hooks/useQualityCheck'
-import { useUpdateQualityCheckItem } from '@/app/api/hooks/useQualityCheck'
-import { useUpdateQualityCheck } from '@/app/api/hooks/useQualityCheck'
+import { Check, Settings, X, Upload } from 'lucide-react'
+import * as React from 'react'
 import QCChecklistSettingsModal from './qc-checklist-settings-modal'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { toast } from 'react-toastify';
 
 interface QCChecklistModalProps {
   workfile: Workfile
@@ -23,6 +21,8 @@ export default function QCChecklistModal({ workfile, onClose }: QCChecklistModal
   const [updatingItemId, setUpdatingItemId] = React.useState<string | null>(null)
   const { updateItem, isLoading: isUpdating } = useUpdateQualityCheckItem()
   const { updateQualityCheck, isLoading: isCompletingQC } = useUpdateQualityCheck();
+  const { addImage, isAddingImage, addImageError } = useQualityCheckImageMutations();
+  const [uploadingId, setUploadingId] = React.useState<string | null>(null);
 
   // Defensive: fallback for missing vehicle
   const safeVehicle = workfile.vehicle || { make: '---', model: '---', year: '---', vehiclePicturesUrls: [], vin: '---' };
@@ -33,6 +33,16 @@ export default function QCChecklistModal({ workfile, onClose }: QCChecklistModal
 
   // Only show enabled items
   const enabledChecks = checks.filter(item => item.enabled);
+
+  // Helper to identify special QC items
+  const SPECIAL_QC_NAMES = [
+    'Quality Control Photos',
+    'Pre Scan',
+    'Post Scan',
+  ];
+
+  const specialChecks = enabledChecks.filter(item => SPECIAL_QC_NAMES.includes(item.name));
+  const normalChecks = enabledChecks.filter(item => !SPECIAL_QC_NAMES.includes(item.name));
 
   if (isLoading) {
     return (
@@ -85,6 +95,25 @@ export default function QCChecklistModal({ workfile, onClose }: QCChecklistModal
     })
   }
 
+  const handleUpload = (itemId: string, file: File) => {
+    setUploadingId(itemId);
+    addImage(
+      { id: itemId, file },
+      {
+        onSuccess: () => {
+          toast.success('File uploaded successfully!');
+          setUploadingId(null);
+          // After upload, mark item as completed (okStatus = true)
+          updateItem({ id: itemId, okStatus: true });
+        },
+        onError: (error: any) => {
+          toast.error(error?.message || 'Failed to upload file.');
+          setUploadingId(null);
+        },
+      }
+    );
+  };
+
   return (
     <div className="max-h-[80vh] overflow-y-auto">
       {/* Header with progress bar */}
@@ -95,7 +124,7 @@ export default function QCChecklistModal({ workfile, onClose }: QCChecklistModal
             <Button
               variant="outline"
               onClick={() => setSettingsOpen(true)}
-              className="flex items-center gap-2 px-4 py-2"
+              className="flex gap-2 items-center px-4 py-2"
             >
               <Settings className="w-4 h-4" />
               <span className="text-sm font-medium">Settings</span>
@@ -127,106 +156,183 @@ export default function QCChecklistModal({ workfile, onClose }: QCChecklistModal
       </div>
 
       {/* Checklist items in two columns */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div className="space-y-6">
-          {enabledChecks.slice(0, Math.ceil(enabledChecks.length / 2)).map((item, index) => (
-            <div key={item.id} className="flex relative justify-between items-center">
-              <div className="flex gap-3 items-center">
-                <div className="flex justify-center items-center w-8 h-8">
+      <TooltipProvider delayDuration={0}>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="space-y-6">
+            {normalChecks.slice(0, Math.ceil(normalChecks.length / 2)).map((item, index) => (
+              <div key={item.id} className="flex relative justify-between items-center">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex gap-3 items-center cursor-pointer" tabIndex={0}>
+                      <div className="flex justify-center items-center w-8 h-8">
+                        {item.okStatus ? (
+                          <Check className="w-5 h-5 text-green-600" />
+                        ) : (
+                          <X className="w-5 h-5 text-gray-400" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium">{item.name}</div>
+                      </div>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" align="center" sideOffset={5} className="w-[400px] max-w-[400px] text-sm">
+                    <p>{item.description ? item.description : "No description entered"}</p>
+                  </TooltipContent>
+                </Tooltip>
+                <div className="flex gap-2">
+                  <Button
+                    variant={item.okStatus ? "default" : "outline"}
+                    size="sm"
+                    className={`rounded-2xl px-5 py-1.5 ${item.okStatus ? 'bg-black text-white hover:bg-neutral-900' : ''}`}
+                    onClick={() => handleSetCompleted(item, true)}
+                    disabled={isUpdating && updatingItemId === item.id}
+                  >
+                    {isUpdating && updatingItemId === item.id ? (
+                      <svg className="mr-2 w-4 h-4 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                      </svg>
+                    ) : 'Yes'}
+                  </Button>
+                  <Button
+                    variant={!item.okStatus ? "default" : "outline"}
+                    size="sm"
+                    className={`rounded-2xl px-5 py-1.5 ${!item.okStatus ? 'bg-black text-white hover:bg-neutral-900' : ''}`}
+                    onClick={() => handleSetCompleted(item, false)}
+                    disabled={isUpdating && updatingItemId === item.id}
+                  >
+                    {isUpdating && updatingItemId === item.id ? (
+                      <svg className="mr-2 w-4 h-4 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                      </svg>
+                    ) : 'No'}
+                  </Button>
+                </div>
+              </div>
+            ))}
+            {/* Special QC Items - always last */}
+            {specialChecks.map(item => (
+              <div key={item.id} className="flex relative justify-between items-center p-3 mt-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex gap-3 items-center cursor-pointer" tabIndex={0}>
+                      <div className="flex justify-center items-center w-8 h-8">
+                        {/* No icon here, icon will be inside the button */}
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-black">{item.name}</div>
+                      </div>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" align="center" sideOffset={5} className="w-[400px] max-w-[400px] text-sm">
+                    <p>{item.description ? item.description : "No description entered"}</p>
+                  </TooltipContent>
+                </Tooltip>
+                <div className="flex gap-2">
                   {item.okStatus ? (
-                    <Check className="w-5 h-5 text-green-600" />
+                    <span className="text-green-700 font-semibold">File Uploaded</span>
                   ) : (
-                    <X className="w-5 h-5 text-gray-400" />
-                  )}
-                </div>
-                <div>
-                  <div className="text-sm font-medium">{item.name}</div>
-                  {item.description && (
-                    <div className="text-xs text-gray-500">{item.description}</div>
-                  )}
-                  {item.updatedAt && (
-                    <div className="text-xs text-gray-400">{formatDateWithTime(item.updatedAt)}</div>
+                    <>
+                      <input
+                        type="file"
+                        id={`qc-upload-${item.id}`}
+                        style={{ display: 'none' }}
+                        onChange={e => {
+                          const file = e.target.files?.[0];
+                          if (file) handleUpload(item.id, file);
+                          // Reset value so same file can be re-uploaded
+                          e.target.value = '';
+                        }}
+                        disabled={uploadingId === item.id}
+                      />
+                      <label htmlFor={`qc-upload-${item.id}`}>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="rounded-2xl px-5 py-1.5 bg-white text-black border border-black hover:bg-neutral-100 flex items-center gap-2"
+                          disabled={uploadingId === item.id}
+                          asChild
+                        >
+                          <span className="flex gap-2 items-center">
+                            {uploadingId === item.id ? (
+                              <svg className="mr-2 w-4 h-4 text-black animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                              </svg>
+                            ) : (
+                              <>
+                                <Upload className="w-5 h-5 text-black" />
+                                Upload
+                              </>
+                            )}
+                          </span>
+                        </Button>
+                      </label>
+                    </>
                   )}
                 </div>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant={item.okStatus ? "default" : "outline"}
-                  size="sm"
-                  className={`rounded-2xl px-5 py-1.5 ${item.okStatus ? 'bg-black text-white hover:bg-neutral-900' : ''}`}
-                  onClick={() => handleSetCompleted(item, true)}
-                  disabled={isUpdating && updatingItemId === item.id}
-                >
-                  Yes
-                </Button>
-                <Button
-                  variant={!item.okStatus ? "default" : "outline"}
-                  size="sm"
-                  className={`rounded-2xl px-5 py-1.5 ${!item.okStatus ? 'bg-gray-600 hover:bg-gray-700' : ''}`}
-                  onClick={() => handleSetCompleted(item, false)}
-                  disabled={isUpdating && updatingItemId === item.id}
-                >
-                  No
-                </Button>
-              </div>
-              {(isUpdating && updatingItemId === item.id) && (
-                <div className="flex absolute inset-0 z-10 justify-center items-center bg-white/60">
-                  <span className="loader" />
+            ))}
+          </div>
+          <div className="space-y-6">
+            {normalChecks.slice(Math.ceil(normalChecks.length / 2)).map((item, index) => (
+              <div key={item.id} className="flex relative justify-between items-center">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex gap-3 items-center cursor-pointer" tabIndex={0}>
+                      <div className="flex justify-center items-center w-8 h-8">
+                        {item.okStatus ? (
+                          <Check className="w-5 h-5 text-green-600" />
+                        ) : (
+                          <X className="w-5 h-5 text-gray-400" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium">{item.name}</div>
+                      </div>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" align="center" sideOffset={5} className="w-[400px] max-w-[400px] text-sm">
+                    <p>{item.description ? item.description : "No description entered"}</p>
+                  </TooltipContent>
+                </Tooltip>
+                <div className="flex gap-2">
+                  <Button
+                    variant={item.okStatus ? "default" : "outline"}
+                    size="sm"
+                    className={`rounded-2xl px-5 py-1.5 ${item.okStatus ? 'bg-black text-white hover:bg-neutral-900' : ''}`}
+                    onClick={() => handleSetCompleted(item, true)}
+                    disabled={isUpdating && updatingItemId === item.id}
+                  >
+                    {isUpdating && updatingItemId === item.id ? (
+                      <svg className="mr-2 w-4 h-4 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                      </svg>
+                    ) : 'Yes'}
+                  </Button>
+                  <Button
+                    variant={!item.okStatus ? "default" : "outline"}
+                    size="sm"
+                    className={`rounded-2xl px-5 py-1.5 ${!item.okStatus ? 'bg-black text-white hover:bg-neutral-900' : ''}`}
+                    onClick={() => handleSetCompleted(item, false)}
+                    disabled={isUpdating && updatingItemId === item.id}
+                  >
+                    {isUpdating && updatingItemId === item.id ? (
+                      <svg className="mr-2 w-4 h-4 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                      </svg>
+                    ) : 'No'}
+                  </Button>
                 </div>
-              )}
-            </div>
-          ))}
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="space-y-6">
-          {enabledChecks.slice(Math.ceil(enabledChecks.length / 2)).map((item, index) => (
-            <div key={item.id} className="flex relative justify-between items-center">
-              <div className="flex gap-3 items-center">
-                <div className="flex justify-center items-center w-8 h-8">
-                  {item.okStatus ? (
-                    <Check className="w-5 h-5 text-green-600" />
-                  ) : (
-                    <X className="w-5 h-5 text-gray-400" />
-                  )}
-                </div>
-                <div>
-                  <div className="text-sm font-medium">{item.name}</div>
-                  {item.description && (
-                    <div className="text-xs text-gray-500">{item.description}</div>
-                  )}
-                  {item.updatedAt && (
-                    <div className="text-xs text-gray-400">{formatDateWithTime(item.updatedAt)}</div>
-                  )}
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant={item.okStatus ? "default" : "outline"}
-                  size="sm"
-                  className={`rounded-2xl px-5 py-1.5 ${item.okStatus ? 'bg-black text-white hover:bg-neutral-900' : ''}`}
-                  onClick={() => handleSetCompleted(item, true)}
-                  disabled={isUpdating && updatingItemId === item.id}
-                >
-                  Yes
-                </Button>
-                <Button
-                  variant={!item.okStatus ? "default" : "outline"}
-                  size="sm"
-                  className={`rounded-2xl px-5 py-1.5 ${!item.okStatus ? 'bg-gray-600 hover:bg-gray-700' : ''}`}
-                  onClick={() => handleSetCompleted(item, false)}
-                  disabled={isUpdating && updatingItemId === item.id}
-                >
-                  No
-                </Button>
-              </div>
-              {(isUpdating && updatingItemId === item.id) && (
-                <div className="flex absolute inset-0 z-10 justify-center items-center bg-white/60">
-                  <span className="loader" />
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
+      </TooltipProvider>
 
       {/* Settings modal (if needed) */}
       {settingsOpen && (
@@ -236,7 +342,10 @@ export default function QCChecklistModal({ workfile, onClose }: QCChecklistModal
           workfileId={workfile.id}
           qualityCheckId={qualityCheck?.id || ''}
           checklist={checks}
-          status={qualityCheck?.status as QualityControlStatus}
+          // status={qualityCheck?.status as QualityControlStatus}
+          modalProps={{
+            closeOnBackdrop: false
+          }}
         />
       )}
     </div>

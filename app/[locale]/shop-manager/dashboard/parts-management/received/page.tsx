@@ -53,7 +53,7 @@ export default function Received() {
         <VehicleCell
           make={row.original.vehicle.make}
           model={row.original.vehicle.model}
-          year={row.original.vehicle.year}
+          year={String(row.original.vehicle.year)}
           imageUrl={row.original.vehicle.imageUrl}
         />
       ),
@@ -100,11 +100,13 @@ export default function Received() {
       header: 'VIEW PARTS',
       cell: ({ row }) => (
         <div className="flex justify-center">
-          <ViewPartsModal workfile={findWorkfileByRoNumber(row.original.roNumber)}>
+          {/* <ViewPartsModal 
+            workfile={findWorkfileByRoNumber(row.original.roNumber)}
+          >
             <DarkButton 
               buttonText="View Parts" 
             />
-          </ViewPartsModal>
+          </ViewPartsModal> */}
         </div>
       ),
     },

@@ -28,9 +28,11 @@ import { OpportunityInfoCard } from '../opportunity-info-card/opportunity-info-c
 import { useCreateTask } from '@/app/api/hooks/useCreateTask'
 import { TaskCreateVM } from '@/app/api/functions/tasks'
 import { toast } from 'react-toastify'
-import { useUsers } from '@/app/context/UsersProvider'
-import { useTenant } from '@/app/context/TenantProvider'
+import { useGetUsersByTenant } from '@/app/api/hooks/useGetUsersByTenant'
+import { useGetTenant } from '@/app/api/hooks/useGetTenant'
 import { Location } from '@/app/types/location'
+import { useSession } from 'next-auth/react'
+import { getUserFullName } from '@/app/types/user'
 
 interface NewTaskModalProps {
   children: React.ReactNode
@@ -52,8 +54,29 @@ export function NewTaskModal({
   const t = useTranslations('Task')
   const validationMessage = useTranslations('Validation')
   const { createTask, isLoading: isCreatingTask, error: createTaskError } = useCreateTask()
-  const { usersForSelect, isLoading: isLoadingUsers, totalCount } = useUsers()
-  const { tenant, locations: tenantLocations, isLoading: isLoadingTenant } = useTenant()
+  
+  // Get session for tenant ID
+  const { data: session } = useSession()
+  const tenantId = session?.user?.tenantId
+  
+  // Use hooks directly instead of providers
+  const { users, isLoading: isLoadingUsers, totalCount } = useGetUsersByTenant({
+    tenantId: tenantId!,
+    page: 1,
+    perPage: 100 // Fetch a larger number to have all users available
+  })
+  
+  const { tenant, locations: tenantLocations, isLoading: isLoadingTenant } = useGetTenant({
+    tenantId: tenantId!
+  })
+  
+  // Transform users into format needed for select components
+  const usersForSelect = users.map(user => ({
+    value: user.id,
+    label: getUserFullName(user),
+    avatar: '/placeholder.svg' // Default avatar, could be replaced with actual user avatar
+  }))
+  
   const [locations, setLocations] = useState<{value: string, label: string}[]>([])
 
   // Initialize form before any effects that use form functions
