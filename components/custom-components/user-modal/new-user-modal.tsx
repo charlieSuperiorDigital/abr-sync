@@ -134,20 +134,23 @@ export function NewUserModal({
 
 
       // Update the user with additional information
+      const updateData = {
+        userId: registerResponse.userId,
+        data: {
+          preferredLanguage: data.preferredLanguage,
+          phoneNumber: data.phoneNumber,
+          hourlyRate: data.hourlyRate,
+          modules: data.moduleAccess?.length || 0,
+          communication: data.communicationAccess?.length || 0,
+          notificationType: data.notificationType || NotificationType.None,
+          notification: data.notificationCategories?.length || 0,
+        }
+      };
+      console.log('Attempting to update user with data:', JSON.stringify(updateData, null, 2));
+      
       await new Promise((resolve, reject) => {
         updateUser(
-          {
-            userId: registerResponse.userId,
-            data: {
-              preferredLanguage: data.preferredLanguage,
-              phoneNumber: data.phoneNumber,
-              hourlyRate: data.hourlyRate,
-              modules: data.moduleAccess?.length || 0,
-              communication: data.communicationAccess?.length || 0,
-              notificationType: data.notificationType as unknown as number,
-              notification: data.notificationCategories?.length || 0,
-            }
-          },
+          updateData,
           {
             onSuccess: (data) => resolve(data),
             onError: (error) => reject(error)

@@ -36,9 +36,10 @@ export enum CommunicationAccess {
 }
 
 export enum NotificationType {
-  SMS = 'SMS',
-  Email = 'Email',
-  Both = 'Both'
+  None = 0,
+  SMS = 1,
+  Email = 2,
+  Both = 3
 }
 
 export enum NotificationCategory {
