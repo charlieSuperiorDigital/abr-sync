@@ -13,12 +13,29 @@ import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import LocaleSwitcher from '@/components/custom-components/selects/locale-switcher'
 import { getLoginFormSchema, LoginFormData } from './schema'
+import { useSession } from 'next-auth/react'
 
 export default function LoginPage() {
   const router = useRouter()
+  const { data: session, status } = useSession()
   const t = useTranslations('Login')
   const validationMessage = useTranslations('Validation')
   const [isLoading, setIsLoading] = useState(false)
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (status === 'authenticated') {
+      const roles = session?.user?.roles || [];
+      const locale = window.location.pathname.split('/')[1];
+      if (roles.includes('superadmin')) {
+        router.replace(`/${locale}/super-admin/dashboard`);
+      } else if (roles.includes('bodytech') || roles.includes('painttech')) {
+        router.replace(`/${locale}/technician-painter/dashboard`);
+      } else {
+        router.replace(`/${locale}/shop-manager/dashboard`);
+      }
+    }
+  }, [status, session, router]);
 
   const {
     control,
@@ -44,14 +61,22 @@ export default function LoginPage() {
         email: data.email,
         password: data.password,
       })
-      
       if (result?.ok) {
-        // Successful login, redirect to dashboard
-        router.push(`/${window.location.pathname.split('/')[1]}/shop-manager/dashboard/opportunities/new-opportunities`)
+        // Fetch session to get the user roles
+        const { getSession } = await import('next-auth/react');
+        const session = await getSession();
+        const roles = session?.user?.roles || [];
+        const locale = window.location.pathname.split('/')[1];
+        if (roles.includes('superadmin')) {
+          router.push(`/${locale}/super-admin/dashboard`);
+        } else if (roles.includes('bodytech') || roles.includes('painttech')) {
+          router.push(`/${locale}/technician-painter/dashboard`);
+        } else {
+          router.push(`/${locale}/shop-manager/dashboard`);
+        }
       } else {
         console.error('Login failed:', result?.error)
       }
-      
       console.log('Submitting form data:', data)
     } catch (error) {
       console.error('Login error:', error)

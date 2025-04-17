@@ -45,13 +45,13 @@ export interface UpdateQualityCheckRequest {
 
 export interface UpdateQualityCheckItemRequest {
   id: string
-  name: string
-  enabled: boolean
-  okStatus: boolean
+  name?: string
+  enabled?: boolean
+  okStatus?: boolean
   // defaultCheck: boolean //should we send this?
-  type: number
-  description: string
-  notes: string
+  type?: number
+  description?: string
+  notes?: string
 }
 
 export interface AddCustomCheckRequest {

@@ -1,7 +1,7 @@
 "use client"
 import DraggableNav from '@/components/custom-components/draggable-nav/draggable-nav';
 import { useSession } from 'next-auth/react';
-import { useWorkfiles } from '@/app/context/WorkfilesProvider';
+import { useGetWorkfiles } from '@/app/api/hooks/useGetWorkfiles';
 import React from 'react';
 
 export default function WorkfilesLayout({
@@ -16,7 +16,7 @@ export default function WorkfilesLayout({
     return <div>No tenant ID found</div>
   }
 
-  const { workfilesQuantity, isLoading, error } = useWorkfiles()
+  const { workfilesQuantity, isLoading, error } = useGetWorkfiles({ tenantId })
 
   if (error) {
     return <div>Error loading workfiles: {error.message}</div>

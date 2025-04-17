@@ -1,6 +1,13 @@
 import apiService from '@/app/utils/apiService'
 import { GetQualityCheckResponse, UpdateQualityCheckRequest, UpdateQualityCheckItemRequest, AddCustomCheckRequest, DeleteImageParams, DeleteCustomCheckParams } from '@/app/types/quality-check'
 
+// Type for the upload response
+export interface QualityCheckUploadResult {
+  url: string;
+  type: string;
+  name: string;
+}
+
 export const createQualityCheck = async (workfileId: string) => {
   try {
     return await apiService.post<any>('/QualityCheck', { workfileId })
@@ -20,7 +27,6 @@ export const getQualityCheck = async (workfileId: string) => {
   }
 }
 
-
 export const updateQualityCheck = async (data: UpdateQualityCheckRequest) => {
   try {
     return await apiService.put<void>('/QualityCheck/UpdateQualityCheck', data)
@@ -39,11 +45,27 @@ export const updateQualityCheckItem = async (data: UpdateQualityCheckItemRequest
   }
 }
 
-export const addImageToQualityCheckItem = async (id: string, file: File) => {
+export const addImageToQualityCheckItem = async (id: string, file: File): Promise<QualityCheckUploadResult> => {
   try {
     const formData = new FormData()
     formData.append('file', file)
-    return await apiService.post<any>(`/QualityCheck/AddImageToQualityCheckItem?id=${id}`, formData)
+    const response = await apiService.post<string>(`/QualityCheck/AddImageToQualityCheckItem?id=${id}`, formData)
+    const url = response.data
+    // Extract file name and type from the url
+    const name = url.split('/').pop() || ''
+    // Try to extract file type from extension
+    let type = ''
+    const extMatch = name.match(/\.([a-zA-Z0-9]+)$/)
+    if (extMatch) {
+      const ext = extMatch[1].toLowerCase()
+      // Simple mapping for common types
+      if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext)) {
+        type = `image/${ext === 'jpg' ? 'jpeg' : ext}`
+      } else {
+        type = ext
+      }
+    }
+    return { url, type, name }
   } catch (error) {
     console.error('Error adding image to quality check item:', error)
     throw error

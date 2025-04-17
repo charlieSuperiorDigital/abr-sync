@@ -1,10 +1,11 @@
 'use client'
 
-import { useOpportunities } from '@/app/context/OpportunitiesProvider'
+import { useGetOpportunities } from '@/app/api/hooks/useGetOpportunities'
 import DraggableNav, {
   NavItem,
 } from '@/components/custom-components/draggable-nav/draggable-nav'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { useSession } from 'next-auth/react'
 
 
 export default function OpportunitiesLayout({
@@ -12,7 +13,27 @@ export default function OpportunitiesLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { opportunitiesQuantity, isLoading } = useOpportunities();
+  const { data: session } = useSession();
+  const tenantId = session?.user?.tenantId;
+  
+  const { 
+    newOpportunities, 
+    estimateOpportunities, 
+    secondCallOpportunities, 
+    totalLossOpportunities, 
+    archivedOpportunities, 
+    isLoading, 
+    error 
+  } = useGetOpportunities({ tenantId: tenantId! });
+
+  // Calculate quantities using useMemo to avoid recalculation on every render
+  const opportunitiesQuantity = useMemo(() => ({
+    new: newOpportunities?.length || 0,
+    estimate: estimateOpportunities?.length || 0,
+    secondCall: secondCallOpportunities?.length || 0,
+    totalLoss: totalLossOpportunities?.length || 0,
+    archived: archivedOpportunities?.length || 0
+  }), [newOpportunities, estimateOpportunities, secondCallOpportunities, totalLossOpportunities, archivedOpportunities]);
 
   return (
     <div className="flex flex-col w-full min-h-screen">

@@ -195,11 +195,11 @@ export function ViewPartsModal({
                 
                 {expandedSections.overview && (
                   <div className="">
-                    <DataTable
+                    {/* <DataTable
                       columns={overviewColumns}
                       data={overviewData}
                       className="w-full"
-                    />
+                    /> */}
                   </div>
                 )}
               </div>
@@ -214,11 +214,11 @@ export function ViewPartsModal({
                 
                 {expandedSections.parts && (
                   <div className="">
-                    <DataTable
+                    {/* <DataTable
                       columns={partsColumns}
                       data={partsData}
                       className="w-full"
-                    />
+                    /> */}
                   </div>
                 )}
               </div>
@@ -233,11 +233,11 @@ export function ViewPartsModal({
                 
                 {expandedSections.partsByVendor && (
                   <div className="">
-                    <DataTable
+                    {/* <DataTable
                       columns={vendorColumns}
                       data={vendorData}
                       className="w-full"
-                    />
+                    /> */}
                   </div>
                 )}
               </div>

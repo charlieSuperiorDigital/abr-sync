@@ -45,7 +45,7 @@ export default function Invoices() {
         <VehicleCell
           make={row.original.vehicle.make}
           model={row.original.vehicle.model}
-          year={row.original.vehicle.year}
+          year={String(row.original.vehicle.year)}
           imageUrl={row.original.vehicle.imageUrl}
         />
       ),
