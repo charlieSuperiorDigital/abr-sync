@@ -69,6 +69,10 @@ export const routing = defineRouting({
       en: '/shop-manager/dashboard/ai',
       es: '/shop-manager/dashboard/ai',
     },
+    '/shop-manager/dashboard/users': {
+      en: '/shop-manager/dashboard/users',
+      es: '/shop-manager/dashboard/users',
+    },
     '/shop-manager/dashboard/search': {
       en: '/shop-manager/dashboard/search',
       es: '/shop-manager/dashboard/busqueda',
