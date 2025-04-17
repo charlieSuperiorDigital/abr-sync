@@ -13,10 +13,12 @@ import { useUsers } from '@/app/context/UsersProvider'
 import { useTenant } from '@/app/context/TenantProvider'
 
 export default function BodyTechs() {
-  const tenant = useTenant()
-  const { bodyTechs, isLoading } = useUsers({
-    tenantId: tenant.tenant?.id!
+  const { tenant, isLoading: isTenantLoading } = useTenant()
+  const { bodyTechs, isLoading: isUsersLoading } = useUsers({
+    tenantId: tenant?.id
   })
+  
+  const isLoading = isTenantLoading || isUsersLoading;
 
   const columns: ColumnDef<User>[] = [
     {
