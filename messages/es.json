@@ -64,6 +64,37 @@
       "sunday": "Domingo"
     }
   },
+  "User": {
+    "add-user": "Agregar Usuario",
+    "full-name": "Nombre Completo",
+    "email": "Correo Electrónico",
+    "phone": "Número de Teléfono",
+    "password": "Contraseña",
+    "role": "Rol",
+    "hourly-rate": "Tarifa por Hora",
+    "module-access": "Acceso a Módulos",
+    "communication-access": "Acceso a Comunicaciones",
+    "notification-type": "Tipo de Notificación",
+    "notification-categories": "Categorías de Notificación",
+    "locations": "Ubicaciones",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "saving": "Guardando...",
+    "avatar": "Avatar",
+    "communication": {
+      "title": "Comunicación",
+      "insurances": "Seguros",
+      "vendors": "Proveedores",
+      "vehicle-owners": "Propietarios de Vehículos"
+    },
+    "notifications": {
+      "title": "Notificaciones",
+      "task-assigned": "Tarea Asignada",
+      "task-completed": "Tarea Completada",
+      "opportunity-created": "Oportunidad Creada",
+      "workfile-ecd": "Archivo de Trabajo ECD"
+    }
+  },
   "Validation": {
     "due-date-required": "La fecha de vencimiento es obligatoria",
     "errorEmail": "Por favor, introduce una dirección de correo electrónico válida",
@@ -77,6 +108,15 @@
     "recurring-fields-required": "La frecuencia y los días son obligatorios para tareas recurrentes",
     "recurring-frequency-required": "La frecuencia es obligatoria para tareas recurrentes",
     "task-title-required": "El título de la tarea es obligatorio",
-    "task-type-required": "El tipo de tarea es obligatorio"
+    "task-type-required": "El tipo de tarea es obligatorio",
+    "full-name-required": "El nombre completo es requerido",
+    "phone-required": "El número de teléfono es requerido",
+    "role-required": "El rol es requerido",
+    "hourly-rate-required": "La tarifa por hora es requerida",
+    "module-access-required": "Se requiere al menos un acceso a módulo",
+    "communication-access-required": "Se requiere al menos un acceso a comunicación",
+    "notification-type-required": "El tipo de notificación es requerido",
+    "notification-categories-required": "Se requiere al menos una categoría de notificación",
+    "locations-required": "Se requiere al menos una ubicación"
   }
 }
