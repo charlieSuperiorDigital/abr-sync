@@ -90,14 +90,17 @@ export const UsersProvider = ({ children }: UsersProviderProps) => {
     return phone
   }
 
+
   // Ensure users have required fields
   const processedUsers = users.map(user => ({
     ...user,
     fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown',
-    phoneNumber: formatPhoneNumber(user.phoneNumber || ''),
+    phoneNumber: user.phoneNumber || '',
     locations: user.locations || [],
     isActive: user.isActive ?? true
   }))
+
+  console.log('Processed users:', processedUsers)
 
   // Categorize users by role
   const bodyTechs = processedUsers.filter(user => hasRole(user, UserRole.BodyTech))

@@ -18,7 +18,7 @@ interface AuthResponse {
   tokenExpiration: string
 }
 
-interface RegisterCredentials {
+export interface RegisterCredentials {
   tenantId: string
   firstName: string
   lastName: string
@@ -26,9 +26,10 @@ interface RegisterCredentials {
   password: string
   confirmPassword: string
   ssoToken: string
+  roles: string[]
 }
 
-interface RegisterResponse {
+export interface RegisterResponse {
   userId: string
   token: string
   email: string
@@ -98,7 +99,8 @@ export const register = async (credentials: RegisterCredentials): Promise<Regist
       email: credentials.email,
       password: credentials.password,
       confirmPassword: credentials.confirmPassword,
-      ssoToken: credentials.ssoToken
+      ssoToken: credentials.ssoToken,
+      roles: credentials.roles
     })
 
     if (response.data) {

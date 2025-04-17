@@ -7,6 +7,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
 import { UserFormData, userFormSchema, UserRoleOptions, LanguageOptions, NotificationTypeOptions } from './schema'
 import { CustomInput } from '../inputs/custom-input'
+import type { RegisterResponse } from '@/app/api/functions/authentication'
+import { useRegister } from '@/app/api/hooks/useRegister'
+import { useUpdateUser } from '@/app/api/hooks/useUpdateUser'
+
 
 import { CustomSelect } from '../selects/custom-select'
 import { CustomButtonSelect, CustomButtonSelectField } from '../selects/custom-button-select'
@@ -19,6 +23,7 @@ import { Plus } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { UserCircle2 } from 'lucide-react'
 import { CustomMaskedInput } from '../inputs/custom-masked-input'
+import { useTenant } from '@/app/context/TenantProvider'
 
 interface NewUserModalProps {
   children: React.ReactNode
@@ -29,6 +34,7 @@ export function NewUserModal({
   children,
   title
 }: NewUserModalProps) {
+  const { tenant } = useTenant()
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const t = useTranslations('User')
@@ -68,60 +74,99 @@ export function NewUserModal({
     }
   })
 
+  const { register: registerUser } = useRegister()
+  const { updateUser } = useUpdateUser()
+
   const onSubmit = async (data: UserFormData) => {
+    console.log('Form submitted with data:', data)
     try {
+      if (!tenant?.id) {
+        throw new Error('No tenant selected. Please try again.')
+      }
       setIsLoading(true)
 
-      // Create new user object from form data
-      const newUser: User = {
-          id: String(Math.floor(Math.random() * 1000000)).padStart(6, '0'), // Generate 6-digit ID like tasks
-          firstName: '',
-          lastName: '',
-          fullName: data.fullName,
-          email: data.email,
-          phoneNumber: data.phoneNumber,
-          password: data.password,
-          role: data.role,
-          hourlyRate: data.hourlyRate,
-          isActive: data.isActive,
-          preferredLanguage: data.preferredLanguage,
-          moduleAccess: data.moduleAccess as ModuleAccess[],
-          communicationAccess: data.communicationAccess as CommunicationAccess[],
-          notificationType: data.notificationType as NotificationType,
-          notificationCategories: data.notificationCategories as NotificationCategory[],
-          locations: data.locations as Location[],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName)}`,
-          passwordHash: '',
-          isVerified: false,
-          verificationCode: null,
-          tenantId: '',
-          passwordResetValidity: '',
-          tempPasswordResetCode: '',
-          googleSSOId: null,
-          facebookSSOId: null,
-          appleSSOId: null,
-          roles: '',
-          invitations: [],
-          tenantRoles: [],
-          lastLoginAt: ''
+      // Split full name into first and last name
+      const nameParts = data.fullName.trim().split(/\s+/)
+      if (nameParts.length < 2) {
+        throw new Error('Please enter both first and last name')
+      }
+      const firstName = nameParts[0]
+      const lastName = nameParts.slice(1).join(' ')
+
+      // Validate name parts
+      if (!firstName || !lastName) {
+        throw new Error('Both first and last name are required')
       }
 
-      // Log both raw form data and processed user object for debugging
-      console.log('Form submission:', {
-        rawFormData: data,
-        processedUser: newUser
+      // Register the user first
+      console.log('Attempting to register user with:', { firstName, lastName, email: data.email, role: data.role })
+      let registerResponse: RegisterResponse
+      try {
+        const registerResult = await new Promise<RegisterResponse>((resolve, reject) => {
+          registerUser(
+            {
+              tenantId: tenant?.id,
+              firstName,
+              lastName,
+              email: data.email,
+              password: data.password,
+              confirmPassword: data.password,
+              ssoToken: '',
+              roles: [data.role] // Convert the single role to an array
+            },
+            {
+              onSuccess: (data) => resolve(data),
+              onError: (error) => reject(error)
+            }
+          )
+        })
+
+        if (!registerResult || !registerResult.userId) {
+          throw new Error('Registration failed - no user ID returned')
+        }
+
+        registerResponse = registerResult
+      } catch (error) {
+        console.error('Registration failed:', error)
+        throw new Error('Failed to register user. Please try again.')
+      }
+
+
+
+      // Update the user with additional information
+      await new Promise((resolve, reject) => {
+        updateUser(
+          {
+            userId: registerResponse.userId,
+            data: {
+              preferredLanguage: data.preferredLanguage,
+              phoneNumber: data.phoneNumber,
+              hourlyRate: data.hourlyRate,
+              modules: data.moduleAccess?.length || 0,
+              communication: data.communicationAccess?.length || 0,
+              notificationType: data.notificationType as unknown as number,
+              notification: data.notificationCategories?.length || 0,
+            }
+          },
+          {
+            onSuccess: (data) => resolve(data),
+            onError: (error) => reject(error)
+          }
+        )
       })
 
-      // Add user to store
-      addUser(newUser)
+      // Log success
+      console.log('User created and updated successfully')
+
+      // Reset form
       reset()
       setIsOpen(false)
-    } catch (error) {
-      console.error('Failed to create user:', error)
-    } finally {
       setIsLoading(false)
+    } catch (error) {
+      console.error('Error creating user:', error)
+      setIsLoading(false)
+      // Re-throw the error to trigger form error state
+      throw error
     }
   }
 
@@ -165,7 +210,13 @@ export function NewUserModal({
             </div>
 
             <div className="overflow-y-auto flex-1 p-6">
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <form onSubmit={handleSubmit(
+                onSubmit,
+                (formErrors) => {
+                  console.log('Form validation errors:', formErrors)
+                }
+              )} 
+              className="space-y-4">
                 <div className="space-y-4">
                   <div className="flex justify-start">
                     <Avatar className="h-20 w-20">
@@ -275,7 +326,7 @@ export function NewUserModal({
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="font-semibold">{t('communication')}</Label>
+                    <Label className="font-semibold">{t('communication.title')}</Label>
                     <Controller
                       name="communicationAccess"
                       control={control}
@@ -302,7 +353,7 @@ export function NewUserModal({
                   </div>
 
                   <div className="flex flex-row space-x-4">
-                    <Label className="font-semibold">{t('notifications')}</Label>
+                    <Label className="font-semibold">{t('notifications.title')}</Label>
                     <Controller
                       name="notificationType"
                       control={control}
