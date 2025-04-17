@@ -46,7 +46,12 @@ const UsersContext = createContext<UsersContextType>({
   currentPage: 0
 })
 
-export const useUsers = () => useContext(UsersContext)
+interface UseUsersOptions {
+  tenantId?: string;
+  enabled?: boolean;
+}
+
+export const useUsers = (options?: UseUsersOptions) => useContext(UsersContext)
 
 interface UsersProviderProps {
   children: React.ReactNode
@@ -63,7 +68,7 @@ export const UsersProvider = ({ children }: UsersProviderProps) => {
     totalCount,
     currentPage
   } = useGetUsersByTenant({
-    tenantId: tenant?.id!,
+    tenantId: tenant?.id || '',
     page: 1,
     perPage: 100 // Fetch all users since we need them for counts
   })

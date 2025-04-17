@@ -2,17 +2,21 @@
 import DraggableNav, {
   NavItem,
 } from '@/components/custom-components/draggable-nav/draggable-nav'
-import type React from 'react'
+import * as React from 'react'
 import { Plus } from 'lucide-react'
 import { NewUserModal } from '@/components/custom-components/user-modal/new-user-modal'
 import { useUsers } from '@/app/context/UsersProvider'
+import { useSession } from 'next-auth/react'
+import { useTenant } from '@/app/context/TenantProvider'
+import UsersProvider from '@/app/context/UsersProvider'
 
-export default function UsersLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const { usersQuantity, isLoading, error } = useUsers()
+function UsersLayoutContent({ children }: { children: React.ReactNode }) {
+  const { data: session } = useSession()
+  const tenant = useTenant()
+  const tenantId = session?.user?.tenantId;
+  const { usersQuantity, isLoading, error } = useUsers({
+    tenantId: tenantId!
+  })
 
   const taskNavItems: NavItem[] = [
     { id: 'body-techs', label: 'Body Techs', count: usersQuantity.bodyTechs },
@@ -48,5 +52,13 @@ export default function UsersLayout({
         </>
       )}
     </div>
+  )
+}
+
+export default function UsersLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <UsersProvider>
+      <UsersLayoutContent>{children}</UsersLayoutContent>
+    </UsersProvider>
   )
 }

@@ -10,9 +10,13 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { UserCircle2 } from 'lucide-react'
 import { LocationSelect } from '@/components/custom-components/selects/location-select'
 import { useUsers } from '@/app/context/UsersProvider'
+import { useTenant } from '@/app/context/TenantProvider'
 
 export default function BodyTechs() {
-  const { bodyTechs, isLoading } = useUsers()
+  const tenant = useTenant()
+  const { bodyTechs, isLoading } = useUsers({
+    tenantId: tenant.tenant?.id!
+  })
 
   const columns: ColumnDef<User>[] = [
     {
