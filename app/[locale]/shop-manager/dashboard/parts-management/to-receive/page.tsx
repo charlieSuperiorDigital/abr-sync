@@ -16,10 +16,9 @@ import { ViewPartsModal } from '@/app/[locale]/custom-components/view-parts-moda
 import { useSession } from 'next-auth/react'
 import { useGetTenantPartOrders } from '@/app/api/hooks/useParts'
 import { WorkfileStatus } from '@/app/types/workfile'
-import { Tech, PartsOrderSummary } from '@/app/api/functions/parts'
 import { formatCurrency } from '@/app/utils/currency-utils'
 import { formatDate } from '@/app/utils/date-utils'
-import { TenantPartOrder } from '@/app/api/functions/parts'
+import { TenantPartOrder } from '@/app/types/parts'
 
 // interface PartsReceive {
 //   opportunityId: string;
@@ -101,7 +100,7 @@ export default function ToReceive() {
       header: 'ASSIGNED TECH',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
-          {row.original.assignedTech.name ?? '---'}
+          {row.original.assignedTech?.name ?? '---'}
         </span>
       ),
     },
@@ -150,7 +149,7 @@ export default function ToReceive() {
       cell: ({ row }) => (
         
         <span className="whitespace-nowrap">
-          {formatDate(row.original.estimatedCompletionDate)}
+          {formatDate(row.original.estimatedCompletionDate || '')}
         </span>
       ),
     },
@@ -165,11 +164,11 @@ export default function ToReceive() {
       header: 'VIEW PARTS',
       cell: ({ row }) => (
         <div className="flex justify-center">
-          <ViewPartsModal partOrder={row.original}>
+          {/* <ViewPartsModal partOrder={row.original}>
             <DarkButton 
               buttonText="View Parts" 
             />
-          </ViewPartsModal>
+          </ViewPartsModal> */}
         </div>
       ),
     },
@@ -199,7 +198,7 @@ export default function ToReceive() {
 
   return (
     <div>
-      <DataTable columns={columns} data={transformedData} />
+      <DataTable columns={columns} data={data} />
     </div>
   )
 }

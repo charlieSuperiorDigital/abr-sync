@@ -24,7 +24,7 @@ import { ViewPartsModal } from '@/app/[locale]/custom-components/view-parts-moda
 import { workfiles } from '@/app/mocks/workfiles_new'
 import { useGetTenantPartOrders } from '@/app/api/hooks/useParts';
 import { useSession } from 'next-auth/react';
-import { TenantPartOrder as PartsOrder, TenantPartOrder } from '@/app/api/functions/parts'
+import { TenantPartOrder } from '@/app/types/parts'
 
 
 export default function ToOrder() {
@@ -68,7 +68,7 @@ export default function ToOrder() {
 
 
 
-  const getTotalEstimatedAmount = (partOrders: PartsOrder['partsOrders']) => {
+  const getTotalEstimatedAmount = (partOrders: TenantPartOrder['partsOrders']) => {
     return partOrders.reduce((sum, order) => sum + order.totalAmount, 0)
   }
 
@@ -118,12 +118,12 @@ export default function ToOrder() {
                   {formatCurrency((opportunity.estimateAmount))}
                 </TableCell>
                 <TableCell>
-                  {formatDate(opportunity.estimatedCompletionDate)}
+                  {formatDate(opportunity.estimatedCompletionDate || '')}
                 </TableCell>
                 <TableCell>
-                  <ViewPartsModal workfile={findWorkfileByRoNumber(opportunity.roNumber)}>
+                  {/* <ViewPartsModal workfile={findWorkfileByRoNumber(opportunity.roNumber)}>
                     <DarkButton buttonText="View Parts" />
-                  </ViewPartsModal>
+                  </ViewPartsModal> */}
                 </TableCell>
               </TableRow>
 

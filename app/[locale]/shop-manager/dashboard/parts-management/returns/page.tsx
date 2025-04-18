@@ -177,11 +177,11 @@ export default function Returns() {
                       className="inline-flex justify-between items-center px-4 py-2 w-full text-sm font-medium bg-white rounded-md border border-gray-300 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setOpenDropdownId(openDropdownId === item.returnId ? null : item.returnId);
+                        setOpenDropdownId(openDropdownId === item.id ? null : item.id);
                       }}
                     >
-                      <span className={item.refundStatus === 'pending' ? 'text-amber-600' : 'text-green-600'}>
-                        {item.refundStatus === 'pending' ? 'Pending Refund' : 'Refund Complete'}
+                      <span className={item.refundStatus === 0 ? 'text-amber-600' : 'text-green-600'}>
+                        {item.refundStatus === 0 ? 'Pending Refund' : 'Refund Complete'}
                       </span>
                       <ChevronDown className="ml-2 w-4 h-4" />
                     </button>
@@ -240,7 +240,7 @@ export default function Returns() {
                       title="New Task"
                       defaultRelation={
                         {
-                          id: item.returnId,
+                          id: item.id,
                           type: 'opportunity'
                         }
                       }
