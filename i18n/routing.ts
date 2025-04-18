@@ -89,6 +89,18 @@ export const routing = defineRouting({
       en: '/super-admin/dashboard',
       es: '/super-administrador/dashboard',
     },
+    '/super-admin/dashboard/reports': {
+      en: '/super-admin/dashboard/reports',
+      es: '/super-administrador/dashboard/reports',
+    },
+    '/super-admin/dashboard/tenants': {
+      en: '/super-admin/dashboard/tenants',
+      es: '/super-administrador/dashboard/tenants',
+    },
+    '/super-admin/dashboard/fees': {
+      en: '/super-admin/dashboard/fees',
+      es: '/super-administrador/dashboard/fees',
+    },
   }
 })
 
