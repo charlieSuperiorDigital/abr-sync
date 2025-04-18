@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Image from "next/image";
-import { ClipboardList, FolderOpen, Mail, Settings, SquareUser, TrendingUp, User, Search } from "lucide-react";
+import { FolderOpen, User, Users, ChartLine, Layers } from "lucide-react";
 import EditProfileModal from "@/app/components/custom-components/edit-profile-modal/edit-profile-modal";
 import SideBarIconGroup from "../../custom-components/sidebar-icon-group";
 import RoleGuard from "@/app/components/RoleGuard";
@@ -23,21 +23,21 @@ export default function SuperAdminDashboardLayoutClient({ children }: { children
             <div className="flex flex-col space-y-4">
               {/* Gotta change those icons, they dont match the design */}
               <SideBarIconGroup
-                link={'/shop-manager/dashboard/tasks'}
-                icons={[{ newNotificationsQuantity: 0, Icon: ClipboardList }]}
+                link={'/super-admin/dashboard'}
+                icons={[{ newNotificationsQuantity: 0, Icon: ChartLine }]}
               />
               <SideBarIconGroup
-                link={'/shop-manager/dashboard/opportunities'}
-                icons={[{ newNotificationsQuantity: 0, Icon: Mail }]}
+                link={'/super-admin/dashboard/tenants'}
+                icons={[{ newNotificationsQuantity: 0, Icon: Layers }]}
               />
               <SideBarIconGroup
-                link={'/shop-manager/dashboard/workfiles'}
+                link={'/super-admin/dashboard/fees'}
+                icons={[{ newNotificationsQuantity: 0, Icon: Users }]}
+              />
+              {/* <SideBarIconGroup
+                link={'/super-admin/dashboard/workfiles'}
                 icons={[{ newNotificationsQuantity: 0, Icon: FolderOpen }]}
-              />
-              <SideBarIconGroup
-                link={'/shop-manager/dashboard/workfiles'}
-                icons={[{ newNotificationsQuantity: 0, Icon: FolderOpen }]}
-              />
+              /> */}
             </div>
             <div className="flex flex-col space-y-4">
               <div
