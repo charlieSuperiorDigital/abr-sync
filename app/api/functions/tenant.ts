@@ -3,6 +3,15 @@ import { User } from "@/app/types/user";
 import { Location } from "@/app/types/location";
 import apiService from "@/app/utils/apiService";
 
+export interface CreateTenantRequest {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  logoUrl: string;
+  cccApiKey: string;
+}
+
 export interface GetUsersByTenantResponse {
   currentPage: number;
   perPage: number;
@@ -83,5 +92,22 @@ export async function getTenantList(onlyActives: boolean): Promise<TenantListIte
     console.error('Error fetching tenant list:', error)
     // Return empty array instead of throwing
     return [];
+  }
+}
+
+/**
+ * Create a new tenant
+ * @param tenantData - The tenant data to create
+ * @returns Promise with the created tenant ID
+ */
+export async function createTenant(tenantData: CreateTenantRequest): Promise<string> {
+  console.log('Creating new tenant with data:', tenantData)
+  try {
+    const response = await apiService.post<string>('/Tenant', tenantData)
+    console.log('Tenant created successfully, response:', response.data)
+    return response.data;
+  } catch (error) {
+    console.error('Error creating tenant:', error)
+    throw error;
   }
 }

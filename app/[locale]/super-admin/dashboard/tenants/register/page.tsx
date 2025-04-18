@@ -1,12 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { CustomInput } from '@/components/custom-components/inputs/custom-input'
 import { CustomButton } from '@/components/custom-components/buttons/custom-button'
 import { Upload } from 'lucide-react'
 import { z } from 'zod'
+import { createTenant, CreateTenantRequest } from '@/app/api/functions/tenant'
 
 // Step indicators at the top of the form
 const StepIndicator = ({ currentStep, totalSteps }: { currentStep: number; totalSteps: number }) => {
@@ -67,6 +70,8 @@ const paymentDetailsSchema = z.object({
 });
 
 export default function RegisterTenant() {
+  const params = useParams();
+  const locale = params?.locale || 'en';
   const [currentStep, setCurrentStep] = useState(1);
   // No need for password visibility state as it's handled by CustomInput
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -187,15 +192,51 @@ export default function RegisterTenant() {
     }
   };
 
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+
+  const handleSubmitTenant = async () => {
+    setIsSubmitting(true);
+    setSubmitError('');
+    
+    try {
+      // Prepare the tenant data according to the API requirements
+      const tenantData: CreateTenantRequest = {
+        name: formData.shopName,
+        email: formData.shopEmail,
+        phone: formData.shopPhoneNo,
+        address: formData.shopAddress,
+        logoUrl: '', // We'll skip this for now as mentioned
+        cccApiKey: formData.cccApiKey
+      };
+      
+      console.log('Submitting tenant data:', tenantData);
+      
+      // Call the API to create the tenant
+      const tenantId = await createTenant(tenantData);
+      
+      console.log('Tenant created successfully with ID:', tenantId);
+      
+      // Redirect to the tenants list page
+      router.push(`/${locale}/super-admin/dashboard/tenants`);
+    } catch (error) {
+      console.error('Failed to create tenant:', error);
+      setSubmitError('Failed to create tenant. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleContinue = () => {
     if (currentStep === 6) {
       // Final step - submit the form
-      console.log('Form submitted with data:', formData);
+      handleSubmitTenant();
       return;
     }
     
     // For email verification step, skip validation
-    if (currentStep === 1) {
+    if (currentStep === 2) {
       setCurrentStep(currentStep + 1);
       return;
     }
@@ -470,6 +511,11 @@ export default function RegisterTenant() {
           <div className="max-w-2xl mx-auto">
             <h2 className="text-2xl font-bold mb-8">Payment Details</h2>
             <p className="mb-4">Powered by Stripe.</p>
+            {submitError && (
+              <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
+                {submitError}
+              </div>
+            )}
             
             <div className="space-y-6">
               <div>
@@ -539,6 +585,9 @@ export default function RegisterTenant() {
 
   return (
     <div className="w-full min-h-screen p-5">
+      <CustomButton onClick={() => router.push(`/${locale}/super-admin/dashboard/tenants`)}>
+        test redirect button
+      </CustomButton>
       <div className="mx-auto">
         <h1 className="text-2xl font-bold text-center mb-8">Tenant Registration</h1>
         
@@ -560,6 +609,8 @@ export default function RegisterTenant() {
               <CustomButton 
                 onClick={handleContinue}
                 variant="filled"
+                loading={isSubmitting}
+                disabled={isSubmitting}
               >
                 {currentStep === 6 ? 'Pay & Complete' : 'Continue'}
               </CustomButton>
