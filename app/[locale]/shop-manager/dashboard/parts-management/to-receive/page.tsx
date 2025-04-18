@@ -14,7 +14,7 @@ import { NewTaskModal } from '@/components/custom-components/task-modal/new-task
 import { Plus } from 'lucide-react'
 import { ViewPartsModal } from '@/app/[locale]/custom-components/view-parts-modal'
 import { useSession } from 'next-auth/react'
-import { useGetTenantPartOrders } from '@/app/api/hooks/useGetTenantPartOrders'
+import { useGetTenantPartOrders } from '@/app/api/hooks/useParts'
 import { WorkfileStatus } from '@/app/types/workfile'
 import { Tech, PartsOrderSummary } from '@/app/api/functions/parts'
 import { formatCurrency } from '@/app/utils/currency-utils'

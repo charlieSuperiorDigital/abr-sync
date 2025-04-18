@@ -3,7 +3,7 @@
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
 import { ViewPartsModal } from '@/app/[locale]/custom-components/view-parts-modal'
 import { TenantPartOrder } from '@/app/api/functions/parts'
-import { useGetTenantPartOrders } from '@/app/api/hooks/useGetTenantPartOrders'
+import { useGetTenantPartOrders } from '@/app/api/hooks/useParts'
 import { VendorDetail, vendorDetailsMockData } from '@/app/mocks/parts-management'
 import { workfiles } from '@/app/mocks/workfiles_new'
 import {

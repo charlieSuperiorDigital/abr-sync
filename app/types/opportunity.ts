@@ -133,11 +133,12 @@ export type Opportunity = {
   parts?: {
     count: number;
     warning?: PartsWarningStatus;
-    total?: number; // Total number of parts on the estimate
-    cores?: number; // Number of core parts
-    coresAmount?: number; // Total cost of core parts
-    returns?: number; // Number of returned parts
-    returnsAmount?: number; // Total cost of returned parts
+    total?: number;
+    toReceive?: number;
+    cores?: number;
+    coresAmount?: number;
+    returns?: number;
+    returnsAmount?: number;
   };
   // QC and repair tracking
   preScanCompleted?: boolean; // Indicates if the pre-scan is completed

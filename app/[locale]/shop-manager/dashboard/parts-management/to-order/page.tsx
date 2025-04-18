@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/table'
 import { ViewPartsModal } from '@/app/[locale]/custom-components/view-parts-modal'
 import { workfiles } from '@/app/mocks/workfiles_new'
-import { useGetTenantPartOrders } from '@/app/api/hooks/useGetTenantPartOrders';
+import { useGetTenantPartOrders } from '@/app/api/hooks/useParts';
 import { useSession } from 'next-auth/react';
 import { TenantPartOrder as PartsOrder, TenantPartOrder } from '@/app/api/functions/parts'
 
