@@ -1,12 +1,15 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import { ColumnDef } from '@tanstack/react-table'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { UserCircle2 } from 'lucide-react'
+import { Plus, UserCircle2 } from 'lucide-react'
 import { FriendlyDateCell, StatusBadgeCell, UserAvatarCell } from '@/components/custom-components/custom-table/table-cells'
 import { useGetTenantList } from '@/app/api/hooks/useGetTenantList'
 import { TenantListItem } from '@/app/types/tenant'
+import { CustomButton } from '@/components/custom-components/buttons/custom-button'
 
 // Default revenue value for tenants (since it's not in the API response)
 const DEFAULT_REVENUE = 0
@@ -38,6 +41,10 @@ const fallbackTenants: TenantListItem[] = [
 export default function Tenants() {
   // Set whether to show only active tenants
   const onlyActives = true;
+
+  const params = useParams();
+  const locale = params?.locale || 'en';
+  const router = useRouter();
   
   // Fetch tenant list data
   const { tenants, isLoading, isError } = useGetTenantList({
@@ -166,7 +173,15 @@ export default function Tenants() {
 
   return (
     <div className="w-full">
-      <h1 className="text-3xl font-semibold p-5">Tenants</h1>
+        <div className='flex justify-between items-center p-5'>
+          <h1 className="text-3xl font-semibold">Tenants</h1>
+          <button 
+            className="w-10 h-10 rounded-full flex items-center justify-center  transition-colors duration-200 hover:bg-black hover:border-black group" 
+            onClick={() => router.push(`/${locale}/super-admin/dashboard/tenants/register`)}
+          >
+            <Plus size={18} className="group-hover:text-white" />
+          </button>
+        </div>
       {isLoading ? (
         <div className="text-center p-10 text-muted-foreground">Loading tenants...</div>
       ) : (

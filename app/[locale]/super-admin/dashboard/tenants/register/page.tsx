@@ -585,9 +585,6 @@ export default function RegisterTenant() {
 
   return (
     <div className="w-full min-h-screen p-5">
-      <CustomButton onClick={() => router.push(`/${locale}/super-admin/dashboard/tenants`)}>
-        test redirect button
-      </CustomButton>
       <div className="mx-auto">
         <h1 className="text-2xl font-bold text-center mb-8">Tenant Registration</h1>
         
