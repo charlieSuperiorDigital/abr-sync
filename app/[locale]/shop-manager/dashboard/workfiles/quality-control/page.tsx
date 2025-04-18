@@ -9,7 +9,7 @@ import {
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { ColumnDef } from '@tanstack/react-table'
 import { ClipboardPlus, Calendar, Check, MessageSquareMore, ClipboardCheck } from 'lucide-react'
-import { Workfile, WorkfileStatus, QualityControlStatus } from '@/app/types/workfile'
+import { Workfile, WorkfileStatus, QualityControlStatus, WorkfileApiResponse } from '@/app/types/workfile'
 import { useState, useCallback, useEffect } from 'react'
 import { useOpportunityStore } from '@/app/stores/opportunity-store'
 import RoundButtonWithTooltip from '@/app/[locale]/custom-components/round-button-with-tooltip'
@@ -71,12 +71,12 @@ export default function QualityControl() {
     setIsQCChecklistOpen(true)
   }, [])
 
-  const columns: ColumnDef<Workfile, any>[] = [
+  const columns: ColumnDef<WorkfileApiResponse, any>[] = [
     {
       accessorKey: 'roNumber',
       header: 'RO',
       cell: ({ row }) => (
-        <span className="font-medium">{row.original.roNumber || '---'}</span>
+        <span className="font-medium">{row.original.id || '---'}</span>
       ),
     },
     // {
@@ -96,7 +96,7 @@ export default function QualityControl() {
       header: 'Owner',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
-          {row.original.owner?.name || '---'}
+          {/* {row.original.owner?.name || '---'} */}
         </span>
       ),
     },
@@ -104,7 +104,7 @@ export default function QualityControl() {
       accessorKey: 'qualityControl.status',
       header: 'QC Status',
       cell: ({ row }) => {
-        const status = row.original.qualityControl?.status || QualityControlStatus.AWAITING;
+        const status = row.original.status || QualityControlStatus.AWAITING;
         return (
           <div className="flex gap-2 items-center">
             <StatusBadge 
@@ -155,7 +155,7 @@ export default function QualityControl() {
       id: 'lastCommDate',
       header: 'Last Comm Date',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{formatDate(row.original.lastUpdatedDate)}</span>
+        <span className="whitespace-nowrap">{formatDate(row.original.updatedAt)}</span>
       ),
     },
     {

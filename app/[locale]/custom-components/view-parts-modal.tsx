@@ -6,7 +6,7 @@ import { X, ChevronDown, ChevronUp } from 'lucide-react'
 import { Workfile } from '@/app/types/workfile'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import { ColumnDef } from '@tanstack/react-table'
-import { TenantPartOrder } from '@/app/api/functions/parts'
+import { TenantPartOrder } from '@/app/types/parts'
 
 interface ViewPartsModalProps {
   children: React.ReactNode

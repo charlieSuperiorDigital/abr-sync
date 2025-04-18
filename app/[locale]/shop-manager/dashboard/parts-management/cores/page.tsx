@@ -2,10 +2,11 @@
 
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
 import { ViewPartsModal } from '@/app/[locale]/custom-components/view-parts-modal'
-import { TenantPartOrder } from '@/app/api/functions/parts'
-import { useGetTenantPartOrders } from '@/app/api/hooks/useGetTenantPartOrders'
+// import { TenantPartOrder } from '@/app/api/functions/parts'
+import { useGetTenantPartOrders } from '@/app/api/hooks/useParts'
 import { VendorDetail, vendorDetailsMockData } from '@/app/mocks/parts-management'
 import { workfiles } from '@/app/mocks/workfiles_new'
+import { PartsOrderSummary, TenantPartOrder } from '@/app/types/parts'
 import {
   SummaryCell,
   VehicleCell
@@ -99,9 +100,9 @@ export default function ToOrder() {
                 {/* <TableCell>{opportunity.core?.description}</TableCell> */}
                 {/* <TableCell>{formatCurrency(opportunity.core?.price)}</TableCell> */}
                 <TableCell>
-                  <ViewPartsModal partOrder={opportunity}>
+                  {/* <ViewPartsModal partOrder={opportunity}>
                     <DarkButton buttonText="View Parts" />
-                  </ViewPartsModal>
+                  </ViewPartsModal> */}
                 </TableCell>
                 <TableCell>
                   <NewTaskModal
@@ -116,9 +117,9 @@ export default function ToOrder() {
                   />
                 </TableCell>
                 <TableCell>
-                  <ViewPartsModal partOrder={opportunity}>
+                  {/* <ViewPartsModal partOrder={opportunity}>
                     <DarkButton buttonText="View Parts" />
-                  </ViewPartsModal>
+                  </ViewPartsModal> */}
                 </TableCell>
                 <TableCell>
                   <NewTaskModal
@@ -155,7 +156,7 @@ export default function ToOrder() {
                             </tr>
                           </thead>
                           <tbody className="bg-gray-100 divide-y divide-gray-200">
-                            {opportunity.partsOrders.map((order) => (
+                            {opportunity.partsOrders.map((order:PartsOrderSummary) => (
                               <tr key={order.partsOrderId}>
                                 <td className="py-4 text-sm font-medium whitespace-nowrap bg-gray-300">
                                   {order.vendor.name}

@@ -1,5 +1,6 @@
-import { useQuery } from '@tanstack/react-query'
-import { getPartOrdersByTenantId, TenantPartOrder } from '../functions/parts'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { getPartOrdersByTenantId, updatePartOrder, getPartsOnReturnStatus } from '../functions/parts'
+import { PartsOrderSummary, TenantPartOrder, UpdatePartOrderRequest, Part } from '../../types/parts';
 
 interface UseGetTenantPartOrdersOptions {
     tenantId: string
@@ -33,43 +34,43 @@ export function useGetTenantPartOrders({ tenantId }: UseGetTenantPartOrdersOptio
 
     // Filter orders based on different parts statuses
     const ordersWithPartsToBeOrdered = data?.filter(order =>
-        order.partsOrders.some(po => po.partsToOrderCount > 0)
+        order.partsOrders.some((po : PartsOrderSummary) => po.partsToOrderCount > 0)
     ) || []
 
     const ordersWithPartsToBeReceived = data?.filter(order =>
-        order.partsOrders.some(po => po.partsToReceiveCount > 0)
+        order.partsOrders.some((po : PartsOrderSummary) => po.partsToReceiveCount > 0)
     ) || []
 
     const ordersWithPartsToBeReturned = data?.filter(order =>
-        order.partsOrders.some(po => po.partsToReturnCount > 0)
+        order.partsOrders.some((po : PartsOrderSummary) => po.partsToReturnCount > 0)
     ) || []
 
     const calculateOrderTotalParts = (order: TenantPartOrder) => {
-        return order.partsOrders.reduce((total, po) =>
+        return order.partsOrders.reduce((total : number, po : PartsOrderSummary) =>
             total + (po.partsToOrderCount + po.partsToReceiveCount + po.partsToReturnCount),
             0);
     };
 
     const calculateOrderToOrderParts = (order: TenantPartOrder) => {
-        return order.partsOrders.reduce((total, po) =>
+        return order.partsOrders.reduce((total : number, po : PartsOrderSummary) =>
             total + po.partsToOrderCount,
             0);
     };
 
     const calculateOrderToReceiveParts = (order: TenantPartOrder) => {
-        return order.partsOrders.reduce((total, po) =>
+        return order.partsOrders.reduce((total : number, po : PartsOrderSummary) =>
             total + po.partsToReceiveCount,
             0);
     };
 
     const calculateOrderToReturnParts = (order: TenantPartOrder) => {
-        return order.partsOrders.reduce((total, po) =>
+        return order.partsOrders.reduce((total : number, po : PartsOrderSummary) =>
             total + po.partsToReturnCount,
             0);
     };
 
     // Filter orders with core parts
-    const ordersWithCoreParts = data?.filter(order => order.partsOrders.some(o => o.hasCoreParts)) || [];
+    const ordersWithCoreParts = data?.filter(order => order.partsOrders.some((po : PartsOrderSummary) => po.hasCorePart)) || [];
 
     // Return categorized and raw data similar to other hooks
     return {
@@ -85,4 +86,36 @@ export function useGetTenantPartOrders({ tenantId }: UseGetTenantPartOrdersOptio
         isLoading,
         error
     }
+}
+
+export function useUpdatePartOrder() {
+    const queryClient = useQueryClient();
+    const mutation = useMutation({
+        mutationFn: ({ partOrderId, data }: { partOrderId: string, data: UpdatePartOrderRequest }) => updatePartOrder(partOrderId, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['partOrders'] });
+        }
+    });
+    return {
+        updatePartOrder: mutation.mutate,
+        isLoading: mutation.isPending,
+        error: mutation.error,
+        isSuccess: mutation.isSuccess
+    };
+}
+
+export function usePartsOnReturnStatus() {
+  const { data, isLoading, error } = useQuery<Part[]>({
+    queryKey: ['partsOnReturnStatus'],
+    queryFn: getPartsOnReturnStatus,
+    staleTime: 5 * 60 * 1000,
+    retry: 0,
+    refetchOnWindowFocus: false,
+  });
+
+  return {
+    parts: data || [],
+    isLoading,
+    error,
+  };
 }

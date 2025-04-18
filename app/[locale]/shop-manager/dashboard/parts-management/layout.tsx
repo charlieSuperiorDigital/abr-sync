@@ -1,7 +1,7 @@
 'use client'
 import PartsSummaryBar from '@/app/[locale]/custom-components/parts-summary-bar';
 import DraggableNav from '@/components/custom-components/draggable-nav/draggable-nav';
-import { useGetTenantPartOrders } from '@/app/api/hooks/useGetTenantPartOrders';
+import { useGetTenantPartOrders } from '@/app/api/hooks/useParts';
 import { useSession } from 'next-auth/react';
 import {
     toOrderMockData,
