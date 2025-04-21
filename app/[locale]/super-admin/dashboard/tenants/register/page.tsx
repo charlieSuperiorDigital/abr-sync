@@ -1,15 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useParams } from 'next/navigation'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { CustomInput } from '@/components/custom-components/inputs/custom-input'
 import { CustomButton } from '@/components/custom-components/buttons/custom-button'
-import { Upload } from 'lucide-react'
+import { Upload, X } from 'lucide-react'
 import { z } from 'zod'
-import { createTenant, CreateTenantRequest } from '@/app/api/functions/tenant'
+import { createTenant, CreateTenantRequest, ApiErrorResponse } from '@/app/api/functions/tenant'
+import { useFileUpload } from '@/app/api/hooks/useFileUpload'
+import Image from 'next/image'
 
 // Step indicators at the top of the form
 const StepIndicator = ({ currentStep, totalSteps }: { currentStep: number; totalSteps: number }) => {
@@ -76,6 +78,13 @@ export default function RegisterTenant() {
   // No need for password visibility state as it's handled by CustomInput
   const [errors, setErrors] = useState<Record<string, string>>({});
   
+  // File input reference
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Logo preview state
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  
   // Form data state
   const [formData, setFormData] = useState({
     // Account Info
@@ -112,6 +121,20 @@ export default function RegisterTenant() {
     cvc: '',
   });
 
+  const { uploadFile, isUploading, error: uploadError } = useFileUpload({
+    onSuccess: (data) => {
+      console.log('File uploaded successfully:', data);
+      // Store the URL for later use when creating the tenant
+      setUploadedLogoUrl(data.fileUrl);
+    },
+    onError: (error) => {
+      console.error('File upload failed:', error);
+      setErrors(prev => ({ ...prev, logo: 'File upload failed. Please try again.' }));
+    }
+  });
+
+  // State to store the uploaded logo URL
+  const [uploadedLogoUrl, setUploadedLogoUrl] = useState<string | null>(null);
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -199,15 +222,47 @@ export default function RegisterTenant() {
   const handleSubmitTenant = async () => {
     setIsSubmitting(true);
     setSubmitError('');
+    setErrors({});
     
     try {
-      // Prepare the tenant data according to the API requirements
+      let logoUrl = '';
+      
+      // If we have a logo file, upload it
+      if (logoFile) {
+        try {
+          // Use shop name as the namePrefix for the file
+          const namePrefix = formData.shopName || 'tenant-logo';
+          console.log(`Uploading logo with prefix: ${namePrefix}`);
+          
+          const uploadResult = await uploadFile(logoFile, namePrefix);
+          
+          if (uploadResult) {
+            logoUrl = uploadResult.fileUrl;
+            console.log(`Logo uploaded successfully. URL: ${logoUrl}`);
+          } else {
+            console.warn('Logo upload returned no result');
+            throw new Error('Logo upload failed - no URL returned');
+          }
+        } catch (uploadError) {
+          console.error('Failed to upload logo during tenant creation:', uploadError);
+          setSubmitError('Failed to upload logo. Please try again.');
+          setIsSubmitting(false);
+          return; // Stop tenant creation if logo upload fails
+        }
+      } else {
+        // Logo is required
+        setErrors(prev => ({ ...prev, logo: 'Please select a logo for the tenant' }));
+        setSubmitError('Please select a logo for the tenant.');
+        setIsSubmitting(false);
+        return;
+      }
+      
       const tenantData: CreateTenantRequest = {
         name: formData.shopName,
         email: formData.shopEmail,
         phone: formData.shopPhoneNo,
         address: formData.shopAddress,
-        logoUrl: '', // We'll skip this for now as mentioned
+        logoUrl: logoUrl,
         cccApiKey: formData.cccApiKey
       };
       
@@ -216,15 +271,81 @@ export default function RegisterTenant() {
       // Call the API to create the tenant
       const tenantId = await createTenant(tenantData);
       
+      // Check if the response is an error object
+      if (typeof tenantId === 'object' && tenantId !== null && 'status' in tenantId) {
+        const errorResponse = tenantId as unknown as ApiErrorResponse;
+        console.error('API validation error:', errorResponse);
+        
+        // Handle validation errors
+        if (errorResponse.errors) {
+          const newErrors: Record<string, string> = {};
+          
+          // Map API error fields to form fields
+          Object.entries(errorResponse.errors).forEach(([field, messages]) => {
+            const fieldName = field.charAt(0).toLowerCase() + field.slice(1);
+            newErrors[fieldName] = messages[0];
+          });
+          
+          setErrors(newErrors);
+          setSubmitError(`Validation failed: ${Object.values(newErrors).join(', ')}`);
+          return;
+        }
+        
+        setSubmitError(`Error: ${errorResponse.title || 'Unknown error'}`);
+        return;
+      }
+      
       console.log('Tenant created successfully with ID:', tenantId);
       
       // Redirect to the tenants list page
       router.push(`/${locale}/super-admin/dashboard/tenants`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create tenant:', error);
-      setSubmitError('Failed to create tenant. Please try again.');
+      
+      // Handle API error response
+      if (error && typeof error === 'object' && 'errors' in error) {
+        const apiError = error as ApiErrorResponse;
+        const errorMessages = Object.entries(apiError.errors)
+          .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+          .join('; ');
+        
+        setSubmitError(`Validation failed: ${errorMessages}`);
+      } else {
+        setSubmitError(`Failed to create tenant: ${error.message || 'Unknown error'}`);
+      }
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleLogoUpload = () => {
+    // Trigger the hidden file input
+    console.log('Logo upload triggered');
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Store the file for later upload
+    setLogoFile(file);
+    
+    // Create a preview URL
+    const previewUrl = URL.createObjectURL(file);
+    setLogoPreview(previewUrl);
+    
+    // In a real implementation, you would upload the file to your server here
+    console.log('File selected:', file.name, file.type, file.size);
+  };
+  
+  const handleRemoveLogo = () => {
+    setLogoPreview(null);
+    setLogoFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -384,11 +505,45 @@ export default function RegisterTenant() {
             <div className="space-y-6">
               <div className="space-y-2">
                 <Label>Shop Logo:</Label>
-                <div className="flex items-center justify-center w-20 h-20 rounded-full bg-gray-100">
-                  <Upload size={24} className="text-gray-400" />
+                <div className="flex flex-col items-start gap-3">
+                  {/* Hidden file input */}
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                  />
+                  
+                  {/* Logo preview or placeholder */}
+                  <div className="relative"  style={{ cursor: 'pointer' }}>
+                    <div onClick={handleLogoUpload} className="flex items-center justify-center w-20 h-20 rounded-full overflow-hidden bg-gray-100 border border-gray-200">
+                      {logoPreview ? (
+                        <>
+                          <Image 
+                            src={logoPreview} 
+                            alt="Shop logo preview" 
+                            width={80} 
+                            height={80} 
+                            className="object-cover w-full h-full"
+                            
+                          />
+                          <button 
+                            type="button"
+                            onClick={handleRemoveLogo}
+                            className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 transform translate-x-1/3 -translate-y-1/3"
+                          >
+                            <X size={12} />
+                          </button>
+                        </>
+                      ) : (
+                        <Upload size={24} className="text-gray-400" />
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-              
+              {uploadError !== null && <p className="text-xs text-red-500 mt-1">Upload failed. Please try again.</p>}
               <div className="space-y-2">
                 <CustomInput
                   label="Shop Name"
