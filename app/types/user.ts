@@ -95,6 +95,7 @@ export interface User {
   locations: Location[]
   avatar: string
   lastLoginAt: string;
+  profilePicture: string | null;
 }
 
 

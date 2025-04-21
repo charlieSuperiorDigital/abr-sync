@@ -27,12 +27,16 @@ export default function BodyTechs() {
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
           <Avatar className="h-[22px] w-[22px]">
-            <AvatarImage 
-              src={row.original.avatar} 
-              alt={row.original.fullName} 
-            />
+            {row.original.profilePicture ? (
+              <AvatarImage 
+                src={row.original.profilePicture} 
+                alt={row.original.fullName} 
+              />
+            ) : null}
             <AvatarFallback>
-              <UserCircle2 className="h-4 w-4 text-muted-foreground" />
+              {row.original.fullName ? row.original.fullName.charAt(0) : (
+                <UserCircle2 className="h-4 w-4 text-muted-foreground" />
+              )}
             </AvatarFallback>
           </Avatar>
           <div className="text-base font-semibold leading-none">{row.original.fullName}</div>

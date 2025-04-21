@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
@@ -10,7 +10,7 @@ import { CustomInput } from '../inputs/custom-input'
 import type { RegisterResponse } from '@/app/api/functions/authentication'
 import { useRegister } from '@/app/api/hooks/useRegister'
 import { useUpdateUser } from '@/app/api/hooks/useUpdateUser'
-
+import { useFileUpload } from '@/app/api/hooks/useFileUpload'
 
 import { CustomSelect } from '../selects/custom-select'
 import { CustomButtonSelect, CustomButtonSelectField } from '../selects/custom-button-select'
@@ -19,11 +19,12 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { useUserStore } from '@/app/stores/user-store'
 import { User, ModuleAccess, CommunicationAccess, NotificationCategory, Language, NotificationType, Location } from '@/app/types/user'
-import { Plus } from 'lucide-react'
+import { Plus, Upload, X } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { UserCircle2 } from 'lucide-react'
 import { CustomMaskedInput } from '../inputs/custom-masked-input'
 import { useTenant } from '@/app/context/TenantProvider'
+import Image from 'next/image'
 
 interface NewUserModalProps {
   children: React.ReactNode
@@ -39,6 +40,25 @@ export function NewUserModal({
   const [isLoading, setIsLoading] = useState(false)
   const t = useTranslations('User')
   const addUser = useUserStore((state) => state.addUser)
+  
+  // File input reference
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // Profile picture state
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string | null>(null)
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null)
+  
+  // File upload hook
+  const { uploadFile, isUploading, error: uploadError } = useFileUpload({
+    onSuccess: (data) => {
+      console.log('Profile picture uploaded successfully:', data)
+      setProfilePictureUrl(data.fileUrl)
+    },
+    onError: (error) => {
+      console.error('Profile picture upload failed:', error)
+    }
+  })
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -85,6 +105,28 @@ export function NewUserModal({
       }
       setIsLoading(true)
 
+      // Upload profile picture if selected
+      let profilePictureURL = '';
+      if (logoFile) {
+        try {
+          // Use user's name as the namePrefix for the file
+          const namePrefix = data.fullName.replace(/\s+/g, '-').toLowerCase() || 'user-profile';
+          console.log(`Uploading profile picture with prefix: ${namePrefix}`);
+          
+          const uploadResult = await uploadFile(logoFile, namePrefix);
+          
+          if (uploadResult) {
+            profilePictureURL = uploadResult.fileUrl;
+            console.log(`Profile picture uploaded successfully. URL: ${profilePictureURL}`);
+          } else {
+            console.warn('Profile picture upload returned no result');
+          }
+        } catch (uploadError) {
+          console.error('Failed to upload profile picture:', uploadError);
+          // Continue with user creation even if profile picture upload fails
+        }
+      }
+
       // Split full name into first and last name
       const nameParts = data.fullName.trim().split(/\s+/)
       if (nameParts.length < 2) {
@@ -126,37 +168,49 @@ export function NewUserModal({
         }
 
         registerResponse = registerResult
+        console.log('User registered successfully:', registerResponse)
       } catch (error) {
-        console.error('Registration failed:', error)
+        console.error('Error registering user:', error)
         throw new Error('Failed to register user. Please try again.')
       }
 
-
-
       // Update the user with additional information
-      const updateData = {
-        userId: registerResponse.userId,
-        data: {
-          preferredLanguage: data.preferredLanguage,
-          phoneNumber: data.phoneNumber,
-          hourlyRate: data.hourlyRate,
-          modules: data.moduleAccess?.length || 0,
-          communication: data.communicationAccess?.length || 0,
-          notificationType: data.notificationType || NotificationType.None,
-          notification: data.notificationCategories?.length || 0,
+      try {
+        if (!registerResponse?.userId) {
+          throw new Error('User registration did not return a user ID')
         }
-      };
-      console.log('Attempting to update user with data:', JSON.stringify(updateData, null, 2));
-      
-      await new Promise((resolve, reject) => {
-        updateUser(
-          updateData,
-          {
-            onSuccess: (data) => resolve(data),
-            onError: (error) => reject(error)
-          }
-        )
-      })
+
+        // The updateUser hook expects a different parameter structure
+        const updateResult = await new Promise<User>((resolve, reject) => {
+          updateUser(
+            {
+              userId: registerResponse.userId,
+              data: {
+                firstName,
+                lastName,
+                email: data.email,
+                preferredLanguage: data.preferredLanguage,
+                phoneNumber: data.phoneNumber,
+                hourlyRate: data.hourlyRate,
+                modules: data.moduleAccess?.reduce((acc, curr) => acc | Number(curr), 0) || 0,
+                communication: data.communicationAccess?.reduce((acc, curr) => acc | Number(curr), 0) || 0,
+                notificationType: Number(data.notificationType || 0),
+                notification: data.notificationCategories?.reduce((acc, curr) => acc | Number(curr), 0) || 0,
+                profilePicture: profilePictureURL || undefined, // Add the profile picture URL
+              }
+            },
+            {
+              onSuccess: (data) => resolve(data),
+              onError: (error) => reject(error)
+            }
+          )
+        })
+
+        console.log('User updated successfully with additional info:', updateResult)
+      } catch (error) {
+        console.error('Error updating user with additional info:', error)
+        // Continue even if update fails, as the user has been created
+      }
 
       // Log success
       console.log('User created and updated successfully')
@@ -172,6 +226,38 @@ export function NewUserModal({
       throw error
     }
   }
+
+  const handleLogoUpload = () => {
+    // Trigger the hidden file input
+    console.log('Logo upload triggered');
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Store the file for later upload
+    setLogoFile(file);
+    
+    // Create a preview URL
+    const previewUrl = URL.createObjectURL(file);
+    setLogoPreview(previewUrl);
+    
+    // In a real implementation, you would upload the file to your server here
+    console.log('File selected:', file.name, file.type, file.size);
+  };
+  
+  const handleRemoveLogo = () => {
+    setLogoPreview(null);
+    setLogoFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
 
   React.useEffect(() => {
     const handleEscapeKey = (e: KeyboardEvent) => {
@@ -222,12 +308,44 @@ export function NewUserModal({
               className="space-y-4">
                 <div className="space-y-4">
                   <div className="flex justify-start">
-                    <Avatar className="h-20 w-20">
-                      <AvatarImage src="" alt="Profile picture" />
-                      <AvatarFallback>
-                        <UserCircle2 className="h-20 w-20" />
-                      </AvatarFallback>
-                    </Avatar>
+                    {/* Hidden file input */}
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      accept="image/*"
+                      className="hidden"
+                    />
+                    
+                    {/* Profile picture preview or placeholder */}
+                    <div className="relative" style={{ cursor: 'pointer' }}>
+                      <div onClick={handleLogoUpload} className="flex items-center justify-center w-20 h-20 rounded-full overflow-hidden bg-gray-100 border border-gray-200">
+                        {logoPreview ? (
+                          <>
+                            <Image 
+                              src={logoPreview} 
+                              alt="Profile picture preview" 
+                              width={80} 
+                              height={80} 
+                              className="object-cover w-full h-full"
+                            />
+                            <button 
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveLogo();
+                              }}
+                              className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 transform translate-x-1/3 -translate-y-1/3"
+                            >
+                              <X size={12} />
+                            </button>
+                          </>
+                        ) : (
+                          <Upload size={24} className="text-gray-400" />
+                        )}
+                      </div>
+                    </div>
+                    {uploadError !== null && <p className="text-xs text-red-500 mt-1">Upload failed. Please try again.</p>}
                   </div>
 
                   <CustomInput

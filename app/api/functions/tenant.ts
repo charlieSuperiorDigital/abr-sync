@@ -96,18 +96,51 @@ export async function getTenantList(onlyActives: boolean): Promise<TenantListIte
 }
 
 /**
+ * Error response from the API
+ */
+export interface ApiErrorResponse {
+  type: string;
+  title: string;
+  status: number;
+  errors: Record<string, string[]>;
+  traceId: string;
+}
+
+/**
  * Create a new tenant
  * @param tenantData - The tenant data to create
  * @returns Promise with the created tenant ID
+ * @throws ApiErrorResponse if validation fails
  */
 export async function createTenant(tenantData: CreateTenantRequest): Promise<string> {
   console.log('Creating new tenant with data:', tenantData)
   try {
+    // Ensure all required fields are present
+    if (!tenantData.name || !tenantData.email || !tenantData.phone || 
+        !tenantData.address || !tenantData.logoUrl || !tenantData.cccApiKey) {
+      throw new Error('All tenant fields are required');
+    }
+    
     const response = await apiService.post<string>('/Tenant', tenantData)
+    
+    // Check if response data is an error object
+    if (typeof response.data === 'object' && response.data !== null && 'status' in response.data) {
+      const errorResponse = response.data as unknown as ApiErrorResponse;
+      console.error('API returned error response:', errorResponse);
+      throw errorResponse;
+    }
+    
     console.log('Tenant created successfully, response:', response.data)
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating tenant:', error)
+    
+    // Check if it's an axios error with a response
+    if (error.response && error.response.data) {
+      console.error('API error response:', error.response.data);
+      throw error.response.data;
+    }
+    
     throw error;
   }
 }

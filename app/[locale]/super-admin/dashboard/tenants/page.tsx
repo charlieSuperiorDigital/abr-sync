@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useParams } from 'next/navigation'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import { ColumnDef } from '@tanstack/react-table'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Plus, UserCircle2 } from 'lucide-react'
 import { FriendlyDateCell, StatusBadgeCell, UserAvatarCell } from '@/components/custom-components/custom-table/table-cells'
 import { useGetTenantList } from '@/app/api/hooks/useGetTenantList'
@@ -67,6 +67,9 @@ export default function Tenants() {
         return (
           <div className="flex items-center gap-3">
             <Avatar className="h-[22px] w-[22px]">
+              {row.original.logoUrl ? (
+                <AvatarImage src={row.original.logoUrl} alt={name} />
+              ) : null}
               <AvatarFallback>
                 {name.charAt(0)}
               </AvatarFallback>
