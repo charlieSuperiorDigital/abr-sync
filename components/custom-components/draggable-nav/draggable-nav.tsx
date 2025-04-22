@@ -40,7 +40,7 @@ export default function DraggableNav({ navItems, defaultTab }: DraggableNavProps
   }, [navItems, defaultTab])
 
   useEffect(() => {
-    const currentTab = pathname.split('/').pop()
+    const currentTab = pathname?.split('/').pop()
     if (currentTab && items.some((item) => item.id === currentTab)) {
       setActiveTab(currentTab)
     } else if (defaultTab && items.some((item) => item.id === defaultTab)) {
@@ -74,7 +74,7 @@ export default function DraggableNav({ navItems, defaultTab }: DraggableNavProps
 
   const handleClick = (id: string) => {
 
-    const pageName = pathname.split('/')[4]
+    const pageName = pathname?.split('/')[4]
     
     if (id === '2nd-call') id = 'second-call'
     setActiveTab(id)
@@ -82,8 +82,8 @@ export default function DraggableNav({ navItems, defaultTab }: DraggableNavProps
   }
 
   return (
-    <nav className="w-full  border-b border-gray-200">
-      <div className="flex items-center space-x-1 overflow-x-auto">
+    <nav className="w-full border-b border-gray-200">
+      <div className="flex overflow-x-auto items-center space-x-1">
         {items.map((item, index) => (
           <div
             key={item.id}
@@ -107,7 +107,7 @@ export default function DraggableNav({ navItems, defaultTab }: DraggableNavProps
               )}
             </button>
             {index < items.length - 1 && (
-              <div className="w-1 h-1 rounded-full bg-gray-300" />
+              <div className="w-1 h-1 bg-gray-300 rounded-full" />
             )}
           </div>
         ))}

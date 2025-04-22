@@ -3,11 +3,11 @@
 import * as React from 'react'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import QCChecklistModal from './qc-checklist-modal'
-import { Workfile } from '@/app/types/workfile'
+import { Workfile, WorkfileApiResponse } from '@/app/types/workfile'
 import { useGetQualityCheck } from '@/app/api/hooks/useQualityCheck'
 
 interface QCChecklistBottomSheetProps {
-  workfile: Workfile | null
+  workfile: WorkfileApiResponse | null
   isOpen: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -20,10 +20,10 @@ export default function QCChecklistBottomSheet({
   if (!workfile) return null
   
   // Defensive: fallback for missing vehicle
-  const safeVehicle = workfile.vehicle || { make: '---', model: '---' };
+  const safeVehicle = workfile.opportunity.vehicle || { make: '---', model: '---' };
 
   const { qualityCheck, checks, isLoading, error } = useGetQualityCheck({
-    workfileId: workfile.workfileId,
+    workfileId: workfile.id,
     enabled: isOpen
   })
   
@@ -40,10 +40,6 @@ export default function QCChecklistBottomSheet({
       <QCChecklistModal 
         workfile={workfile} 
         onClose={handleClose}
-        qualityCheck={qualityCheck}
-        checks={checks}
-        isLoading={isLoading}
-        error={error}
       />
     </BottomSheetModal>
   )

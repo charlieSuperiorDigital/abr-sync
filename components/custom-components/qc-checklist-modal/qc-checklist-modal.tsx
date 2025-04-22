@@ -9,14 +9,15 @@ import * as React from 'react'
 import QCChecklistSettingsModal from './qc-checklist-settings-modal'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { toast } from 'react-toastify';
+import { WorkfileApiResponse } from '@/app/types/workfile'
 
 interface QCChecklistModalProps {
-  workfile: Workfile
+  workfile: WorkfileApiResponse 
   onClose?: () => void
 }
 
 export default function QCChecklistModal({ workfile, onClose }: QCChecklistModalProps) {
-  const { qualityCheck, checks, isLoading, error } = useGetQualityCheck({ workfileId: workfile.id })
+  const { qualityCheck, checks, isLoading, error } = useGetQualityCheck({ workfileId: workfile?.id })
   const [settingsOpen, setSettingsOpen] = React.useState(false)
   const [updatingItemId, setUpdatingItemId] = React.useState<string | null>(null)
   const { updateItem, isLoading: isUpdating } = useUpdateQualityCheckItem()
@@ -25,7 +26,7 @@ export default function QCChecklistModal({ workfile, onClose }: QCChecklistModal
   const [uploadingId, setUploadingId] = React.useState<string | null>(null);
 
   // Defensive: fallback for missing vehicle
-  const safeVehicle = workfile.vehicle || { make: '---', model: '---', year: '---', vehiclePicturesUrls: [], vin: '---' };
+  const safeVehicle = workfile?.opportunity.vehicle || { make: '---', model: '---', year: '---', vehiclePicturesUrls: [], vin: '---' };
 
   React.useEffect(() => {
     console.log('Current workfile ID:', workfile.id)
@@ -232,7 +233,7 @@ export default function QCChecklistModal({ workfile, onClose }: QCChecklistModal
                 </Tooltip>
                 <div className="flex gap-2">
                   {item.okStatus ? (
-                    <span className="text-green-700 font-semibold">File Uploaded</span>
+                    <span className="font-semibold text-green-700">File Uploaded</span>
                   ) : (
                     <>
                       <input
