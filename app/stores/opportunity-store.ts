@@ -191,7 +191,7 @@ export const useOpportunityStore = create<OpportunityStore>((set, get) => ({
     }
 
     // Add workfile to store
-    workfileStore.addWorkfile(workfile)
+    // workfileStore.addWorkfile(workfile)
 
     // Update opportunity status and stage
     get().updateOpportunity(opportunityId, { 

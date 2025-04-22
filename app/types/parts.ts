@@ -93,3 +93,105 @@ export interface Part {
   refundStatus: number;
   refundAmount: number;
 }
+
+export interface PartWithFullDetails {
+  opportunity: {
+    id: string;
+    tenantId: string;
+    insuranceId: string;
+    vehicleId: string;
+    locationId: string | null;
+    documentId: string | null;
+    status: string;
+    roNumber: string;
+    createdAt: string;
+    updatedAt: string;
+    _1stCall: string;
+    _2ndCall: string;
+    dropDate: string | null;
+    summary: string;
+    inDate: string;
+    inRental: boolean;
+    estimatedCompletionDate: string;
+  };
+  partsDetails: Array<{
+    partOrderItem: {
+      id: string;
+      orderId: string;
+      partId: string;
+      quantity: number;
+      unitPrice: number;
+      createdAt: string;
+      updatedAt: string;
+    };
+    partOrder: {
+      id: string;
+      opportunityId: string;
+      vendorId: string;
+      partsManagerId: string;
+      status: number;
+      invoiceNumber: string | null;
+      totalAmount: number;
+      approvedBy: string | null;
+      approvedAt: string | null;
+      printedAt: string | null;
+      createdBy: string;
+      updatedBy: string;
+      createdAt: string;
+      updatedAt: string;
+      hasUpdates: boolean;
+      insuranceApprovalStatus: number;
+    };
+    part: {
+      id: string;
+      opportunityId: string;
+      description: string;
+      partNumber: string;
+      oemPartNumber: string;
+      type: number;
+      status: number;
+      listPrice: number;
+      value: number;
+      unitPrice: number;
+      isPriceIncluded: boolean;
+      isTaxable: boolean;
+      isPriceManuallyAdjusted: boolean;
+      quantity: number;
+      isAlternatePart: boolean;
+      isGlassPart: boolean;
+      isCore: boolean;
+      coreStatus: number;
+      coreCharge: number | null;
+      expectedDeliveryDate: string | null;
+      orderedDate: string | null;
+      orderedQuantity: number | null;
+      receivedDate: string | null;
+      receivedQuantity: number | null;
+      returnAmount: number | null;
+      returnPickupDate: string | null;
+      returnDate: string | null;
+      refundStatus: number | null;
+      refundAmount: number | null;
+      createdBy: string;
+      updatedBy: string;
+      createdAt: string;
+      updatedAt: string;
+    };
+    vendor: {
+      id: string;
+      name: string;
+      contactName: string;
+      contactPhone: string;
+      contactEmail: string;
+      address: string;
+      city: string;
+      state: string;
+      zipCode: string;
+      isActive: boolean;
+      createdBy: string;
+      updatedBy: string;
+      createdAt: string;
+      updatedAt: string;
+    };
+  }>;
+}

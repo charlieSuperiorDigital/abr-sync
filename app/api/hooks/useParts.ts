@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getPartOrdersByTenantId, updatePartOrder, getPartsOnReturnStatus } from '../functions/parts'
-import { PartsOrderSummary, TenantPartOrder, UpdatePartOrderRequest, Part } from '../../types/parts';
+import { getAllPartsFromTenant, getPartOrdersByTenantId, updatePartOrder, getPartsByOpportunityId } from '../functions/parts'
+import { PartsOrderSummary, TenantPartOrder, UpdatePartOrderRequest, PartWithFullDetails } from '../../types/parts';
 
 interface UseGetTenantPartOrdersOptions {
     tenantId: string
@@ -34,43 +34,43 @@ export function useGetTenantPartOrders({ tenantId }: UseGetTenantPartOrdersOptio
 
     // Filter orders based on different parts statuses
     const ordersWithPartsToBeOrdered = data?.filter(order =>
-        order.partsOrders.some((po : PartsOrderSummary) => po.partsToOrderCount > 0)
+        order.partsOrders.some((po: PartsOrderSummary) => po.partsToOrderCount > 0)
     ) || []
 
     const ordersWithPartsToBeReceived = data?.filter(order =>
-        order.partsOrders.some((po : PartsOrderSummary) => po.partsToReceiveCount > 0)
+        order.partsOrders.some((po: PartsOrderSummary) => po.partsToReceiveCount > 0)
     ) || []
 
     const ordersWithPartsToBeReturned = data?.filter(order =>
-        order.partsOrders.some((po : PartsOrderSummary) => po.partsToReturnCount > 0)
+        order.partsOrders.some((po: PartsOrderSummary) => po.partsToReturnCount > 0)
     ) || []
 
     const calculateOrderTotalParts = (order: TenantPartOrder) => {
-        return order.partsOrders.reduce((total : number, po : PartsOrderSummary) =>
+        return order.partsOrders.reduce((total: number, po: PartsOrderSummary) =>
             total + (po.partsToOrderCount + po.partsToReceiveCount + po.partsToReturnCount),
             0);
     };
 
     const calculateOrderToOrderParts = (order: TenantPartOrder) => {
-        return order.partsOrders.reduce((total : number, po : PartsOrderSummary) =>
+        return order.partsOrders.reduce((total: number, po: PartsOrderSummary) =>
             total + po.partsToOrderCount,
             0);
     };
 
     const calculateOrderToReceiveParts = (order: TenantPartOrder) => {
-        return order.partsOrders.reduce((total : number, po : PartsOrderSummary) =>
+        return order.partsOrders.reduce((total: number, po: PartsOrderSummary) =>
             total + po.partsToReceiveCount,
             0);
     };
 
     const calculateOrderToReturnParts = (order: TenantPartOrder) => {
-        return order.partsOrders.reduce((total : number, po : PartsOrderSummary) =>
+        return order.partsOrders.reduce((total: number, po: PartsOrderSummary) =>
             total + po.partsToReturnCount,
             0);
     };
 
     // Filter orders with core parts
-    const ordersWithCoreParts = data?.filter(order => order.partsOrders.some((po : PartsOrderSummary) => po.hasCorePart)) || [];
+    const ordersWithCoreParts = data?.filter(order => order.partsOrders.some((po: PartsOrderSummary) => po.hasCorePart)) || [];
 
     // Return categorized and raw data similar to other hooks
     return {
@@ -104,18 +104,84 @@ export function useUpdatePartOrder() {
     };
 }
 
-export function usePartsOnReturnStatus() {
-  const { data, isLoading, error } = useQuery<Part[]>({
-    queryKey: ['partsOnReturnStatus'],
-    queryFn: getPartsOnReturnStatus,
-    staleTime: 5 * 60 * 1000,
-    retry: 0,
-    refetchOnWindowFocus: false,
-  });
+export function useGetAllPartsFromTenant(tenantId: string) {
+    const { data, isLoading, error } = useQuery<PartWithFullDetails[]>({
+        queryKey: ['partsOnReturnStatus', tenantId],
+        queryFn: () => getAllPartsFromTenant(tenantId),
+        staleTime: 5 * 60 * 1000,
+        retry: 0,
+        refetchOnWindowFocus: false,
+    });
 
-  return {
-    parts: data || [],
-    isLoading,
-    error,
-  };
+    const filterPartsByOpportunityId = (opportunityId: string) => {
+        return data?.filter(part => part.opportunity.id === opportunityId) || [];
+    }
+
+    const groupedPartsByOpportunity = () => {
+        const grouped: Array<{
+            opportunity: PartWithFullDetails['opportunity'];
+            partsDetails: PartWithFullDetails['partsDetails'];
+        }> = [];
+        const seenOpportunities = new Map<string, number>();
+
+        if (!data) return grouped;
+
+        for (const part of data) {
+            const oppId = part.opportunity.id;
+            if (seenOpportunities.has(oppId)) {
+                // Add this part's partsDetails to the existing group
+                const idx = seenOpportunities.get(oppId)!;
+                grouped[idx].partsDetails = grouped[idx].partsDetails.concat(part.partsDetails);
+            } else {
+                // First time seeing this opportunity, create a father object
+                grouped.push({
+                    opportunity: part.opportunity,
+                    partsDetails: [...part.partsDetails],
+                });
+                seenOpportunities.set(oppId, grouped.length - 1);
+            }
+        }
+       
+        return grouped;
+    };
+
+    function debugLog() {
+        console.log('[debugLog]', groupedPartsByOpportunity);
+    }
+
+    return {
+        parts: data || [],
+        filterPartsByOpportunityId,
+        groupedPartsByOpportunity,
+        isLoading,
+        debugLog,
+        error,
+    };
+}
+
+/**
+ * Hook to fetch parts grouped by opportunity for a specific opportunity ID
+ * @param opportunityId - The opportunity ID
+ * @returns Query result with parts grouped by opportunity (array)
+ */
+export function useGetPartsByOpportunityId(opportunityId: string) {
+    const { data, isLoading, error } = useQuery<PartWithFullDetails[]>({
+        queryKey: ['partsByOpportunity', opportunityId],
+        queryFn: () => getPartsByOpportunityId(opportunityId),
+        enabled: !!opportunityId,
+        staleTime: 5 * 60 * 1000,
+        retry: 1,
+        refetchOnWindowFocus: false,
+    });
+
+    function returnPartsWithOpportunityId(opportunityId: string): PartWithFullDetails[] {
+        return data?.filter(part => part.opportunity.id === opportunityId) || [];
+    }
+
+    return {
+        parts: data || [],
+        returnPartsWithOpportunityId,
+        isLoading,
+        error,
+    };
 }

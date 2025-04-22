@@ -21,7 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useSession } from 'next-auth/react'
-import { usePartsOnReturnStatus, useUpdatePartOrder } from '@/app/api/hooks/useParts'
+import {  useUpdatePartOrder } from '@/app/api/hooks/useParts'
 import { toast } from 'react-toastify'
 import { Part } from '@/app/types/parts'
 
@@ -45,16 +45,53 @@ interface PartsReturn {
 export default function Returns() {
   const { data: session } = useSession();
   // Replace useGetTenantPartOrders with usePartsOnReturnStatus for production data
-  const { parts: data, isLoading } = usePartsOnReturnStatus();
 
   const { updatePartOrder, isLoading: isUpdatingStatus } = useUpdatePartOrder();
 
-  if (isLoading) return <div>Loading...</div>;
+  // if (isLoading) return <div>Loading...</div>;
   
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
 
   const [vendorDetails] = useState<VendorDetail[]>(vendorDetailsMockData)
+
+  // Mock data for returns table
+  const mockReturnsData = [
+    {
+      id: 'ret-1',
+      roNumber: 'RO12345',
+      vehicle: {
+        make: 'Toyota',
+        model: 'Camry',
+        year: 2022,
+        imageUrl: 'https://via.placeholder.com/100x60.png?text=Toyota+Camry',
+      },
+      part: 'Front Bumper',
+      status: 'pending',
+      pickedUpDate: '2025-04-19T10:00:00Z',
+      returnedDate: '2025-04-20T14:00:00Z',
+      refundStatus: 'pending',
+      refundAmount: 150.25,
+      vendor: 'OEM Parts Inc.',
+    },
+    {
+      id: 'ret-2',
+      roNumber: 'RO67890',
+      vehicle: {
+        make: 'Honda',
+        model: 'Civic',
+        year: 2021,
+        imageUrl: 'https://via.placeholder.com/100x60.png?text=Honda+Civic',
+      },
+      part: 'Rear Door',
+      status: 'approved',
+      pickedUpDate: '2025-04-18T08:30:00Z',
+      returnedDate: '2025-04-19T13:00:00Z',
+      refundStatus: 'approved',
+      refundAmount: 220.00,
+      vendor: 'Aftermarket World',
+    }
+  ];
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -123,7 +160,7 @@ export default function Returns() {
           <TableRow>
             <TableHead className="font-semibold text-black whitespace-nowrap">RO</TableHead>
             <TableHead className="font-semibold text-black whitespace-nowrap">VEHICLE</TableHead>
-            <TableHead className="font-semibold text-black whitespace-nowrap">RECEIVED</TableHead>
+            <TableHead className="font-semibold text-black whitespace-nowrap">RETURNED</TableHead>
             <TableHead className="font-semibold text-black whitespace-nowrap">PICKED-UP</TableHead>
             <TableHead className="font-semibold text-black whitespace-nowrap">RETURNED</TableHead>
             <TableHead className="font-semibold text-black whitespace-nowrap">REFUND STATUS</TableHead>
@@ -134,7 +171,7 @@ export default function Returns() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((item: Part) => (
+          {mockReturnsData.map((item) => (
             <React.Fragment key={item.id}>
               <TableRow 
                 className="cursor-pointer hover:bg-gray-50"
@@ -150,12 +187,12 @@ export default function Returns() {
                   />
                 </TableCell>
                 <TableCell className="whitespace-nowrap">
-                  {formatDate(item.receivedDate)}
+                  {formatDate(item.returnedDate)}
                 </TableCell>
                 <TableCell>
                   <div className="date-picker-container" onClick={(e) => e.stopPropagation()}>
                     <DateTimePicker
-                      value={item.returnPickupDate}
+                      value={item.pickedUpDate}
                       editable={true}
                       onOk={(date: Date) => handleDateChange(item.id, 'pickedUpDate', date)}
                     />
@@ -164,7 +201,7 @@ export default function Returns() {
                 <TableCell>
                   <div className="date-picker-container" onClick={(e) => e.stopPropagation()}>
                     <DateTimePicker
-                      value={item.returnDate}
+                      value={item.returnedDate}
                       editable={true}
                       onOk={(date: Date) => handleDateChange(item.id, 'returnedDate', date)}
                     />
@@ -180,8 +217,8 @@ export default function Returns() {
                         setOpenDropdownId(openDropdownId === item.id ? null : item.id);
                       }}
                     >
-                      <span className={item.refundStatus === 0 ? 'text-amber-600' : 'text-green-600'}>
-                        {item.refundStatus === 0 ? 'Pending Refund' : 'Refund Complete'}
+                      <span className={item.refundStatus === 'pending' ? 'text-amber-600' : 'text-green-600'}>
+                        {item.refundStatus === 'pending' ? 'Pending Refund' : 'Refund Complete'}
                       </span>
                       <ChevronDown className="ml-2 w-4 h-4" />
                     </button>

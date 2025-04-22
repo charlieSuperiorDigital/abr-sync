@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { User } from '../types/user'
-import { mockUsers } from '../mocks/users.mocks'
+// import { mockUsers } from '../mocks/users.mocks'
 
 interface UserStore {
   users: User[]
@@ -13,7 +13,7 @@ interface UserStore {
 }
 
 export const useUserStore = create<UserStore>((set, get) => ({
-  users: mockUsers,
+  users: [],
   selectedUser: null,
 
   setSelectedUser: (user) => set({ selectedUser: user }),

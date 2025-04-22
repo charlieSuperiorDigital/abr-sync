@@ -5,7 +5,6 @@ import { ViewPartsModal } from '@/app/[locale]/custom-components/view-parts-moda
 // import { TenantPartOrder } from '@/app/api/functions/parts'
 import { useGetTenantPartOrders } from '@/app/api/hooks/useParts'
 import { VendorDetail, vendorDetailsMockData } from '@/app/mocks/parts-management'
-import { workfiles } from '@/app/mocks/workfiles_new'
 import { PartsOrderSummary, TenantPartOrder } from '@/app/types/parts'
 import {
   SummaryCell,
@@ -61,7 +60,7 @@ export default function ToOrder() {
 
   // Find a workfile by RO number
   const findWorkfileByRoNumber = (roNumber: string) => {
-    return workfiles.find(workfile => workfile.roNumber === roNumber) || workfiles[0];
+    // return workfiles.find(workfile => workfile.roNumber === roNumber) || workfiles[0];
   }
 
 
@@ -117,9 +116,9 @@ export default function ToOrder() {
                   />
                 </TableCell>
                 <TableCell>
-                  {/* <ViewPartsModal partOrder={opportunity}>
+                  <ViewPartsModal opportunityId={opportunity.opportunityId}>
                     <DarkButton buttonText="View Parts" />
-                  </ViewPartsModal> */}
+                  </ViewPartsModal>
                 </TableCell>
                 <TableCell>
                   <NewTaskModal
