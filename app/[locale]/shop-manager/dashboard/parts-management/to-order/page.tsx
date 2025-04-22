@@ -21,10 +21,10 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ViewPartsModal } from '@/app/[locale]/custom-components/view-parts-modal'
-import { workfiles } from '@/app/mocks/workfiles_new'
-import { useGetTenantPartOrders } from '@/app/api/hooks/useGetTenantPartOrders';
+import { useGetTenantPartOrders } from '@/app/api/hooks/useParts';
 import { useSession } from 'next-auth/react';
-import { TenantPartOrder as PartsOrder, TenantPartOrder } from '@/app/api/functions/parts'
+import { TenantPartOrder } from '@/app/types/parts'
+import { calculateDaysUntil } from '@/app/utils/date-utils'
 
 
 export default function ToOrder() {
@@ -62,13 +62,12 @@ export default function ToOrder() {
 
   // Find a workfile by RO number
   const findWorkfileByRoNumber = (roNumber: string) => {
-    return workfiles.find(workfile => workfile.roNumber === roNumber) || workfiles[0];
   }
 
 
 
 
-  const getTotalEstimatedAmount = (partOrders: PartsOrder['partsOrders']) => {
+  const getTotalEstimatedAmount = (partOrders: TenantPartOrder['partsOrders']) => {
     return partOrders.reduce((sum, order) => sum + order.totalAmount, 0)
   }
 
@@ -84,10 +83,10 @@ export default function ToOrder() {
             <TableHead className="font-semibold text-black whitespace-nowrap">TO ORDER</TableHead>
             <TableHead className="font-semibold text-black whitespace-nowrap">TO RECEIVE</TableHead>
             <TableHead className="font-semibold text-black whitespace-nowrap">TOTAL</TableHead>
-            <TableHead className="font-semibold text-black whitespace-nowrap">ASSIGNED TECH</TableHead>
-            <TableHead className="font-semibold text-black whitespace-nowrap">ESTIMATE</TableHead>
+            <TableHead className="font-semibold text-black whitespace-nowrap">TECH</TableHead>
+            <TableHead className="font-semibold text-black whitespace-nowrap">ESTIMATE $</TableHead>
             <TableHead className="font-semibold text-black whitespace-nowrap">ECD</TableHead>
-            <TableHead className="font-semibold text-black whitespace-nowrap">VIEW PARTS</TableHead>
+            <TableHead className="font-semibold text-black whitespace-nowrap"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -118,10 +117,10 @@ export default function ToOrder() {
                   {formatCurrency((opportunity.estimateAmount))}
                 </TableCell>
                 <TableCell>
-                  {formatDate(opportunity.estimatedCompletionDate)}
+                  {calculateDaysUntil(opportunity.estimatedCompletionDate || '')}
                 </TableCell>
                 <TableCell>
-                  <ViewPartsModal workfile={findWorkfileByRoNumber(opportunity.roNumber)}>
+                  <ViewPartsModal opportunityId={opportunity.opportunityId}>
                     <DarkButton buttonText="View Parts" />
                   </ViewPartsModal>
                 </TableCell>

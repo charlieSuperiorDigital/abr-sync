@@ -21,7 +21,9 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useSession } from 'next-auth/react'
-import { useGetTenantPartOrders } from '@/app/api/hooks/useGetTenantPartOrders'
+import {  useUpdatePartOrder } from '@/app/api/hooks/useParts'
+import { toast } from 'react-toastify'
+import { Part } from '@/app/types/parts'
 
 interface PartsReturn {
   returnId: string
@@ -42,16 +44,54 @@ interface PartsReturn {
 
 export default function Returns() {
   const { data: session } = useSession();
-  const { ordersWithPartsToBeReturned: data, isLoading } = useGetTenantPartOrders({
-    tenantId: session?.user?.tenantId || ''
-  });
+  // Replace useGetTenantPartOrders with usePartsOnReturnStatus for production data
 
-  if (isLoading) return <div>Loading...</div>;
+  const { updatePartOrder, isLoading: isUpdatingStatus } = useUpdatePartOrder();
+
+  // if (isLoading) return <div>Loading...</div>;
   
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
 
   const [vendorDetails] = useState<VendorDetail[]>(vendorDetailsMockData)
+
+  // Mock data for returns table
+  const mockReturnsData = [
+    {
+      id: 'ret-1',
+      roNumber: 'RO12345',
+      vehicle: {
+        make: 'Toyota',
+        model: 'Camry',
+        year: 2022,
+        imageUrl: 'https://via.placeholder.com/100x60.png?text=Toyota+Camry',
+      },
+      part: 'Front Bumper',
+      status: 'pending',
+      pickedUpDate: '2025-04-19T10:00:00Z',
+      returnedDate: '2025-04-20T14:00:00Z',
+      refundStatus: 'pending',
+      refundAmount: 150.25,
+      vendor: 'OEM Parts Inc.',
+    },
+    {
+      id: 'ret-2',
+      roNumber: 'RO67890',
+      vehicle: {
+        make: 'Honda',
+        model: 'Civic',
+        year: 2021,
+        imageUrl: 'https://via.placeholder.com/100x60.png?text=Honda+Civic',
+      },
+      part: 'Rear Door',
+      status: 'approved',
+      pickedUpDate: '2025-04-18T08:30:00Z',
+      returnedDate: '2025-04-19T13:00:00Z',
+      refundStatus: 'approved',
+      refundAmount: 220.00,
+      vendor: 'Aftermarket World',
+    }
+  ];
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -70,25 +110,31 @@ export default function Returns() {
     };
   }, [openDropdownId]);
 
-  const handleRefundStatusChange = useCallback((returnId: string, newStatus: 'pending' | 'completed') => {
-    setData(prevData => 
-      prevData.map(item => 
-        item.returnId === returnId 
-          ? { ...item, refundStatus: newStatus === 'pending' ? 'pending' : 'approved' } 
-          : item
-      )
-    );
-    setOpenDropdownId(null);
-  }, []);
+  const handleRefundStatusChange = useCallback(
+    async (partOrderId: string, insuranceApprovalStatusName: string) => {
+      try {
+        await updatePartOrder(
+          { partOrderId, data: { insuranceApprovalStatus: 1, insuranceApprovalStatusName } },
+          {
+            onSuccess: () => toast.success('Status updated successfully!'),
+            onError: (error: any) => toast.error('Failed to update status: ' + (error?.message || 'Unknown error')),
+          }
+        );
+      } catch (error: any) {
+        toast.error('Failed to update status: ' + (error?.message || 'Unknown error'));
+      }
+    },
+    [updatePartOrder]
+  );
 
   const handleDateChange = useCallback((returnId: string, field: 'pickedUpDate' | 'returnedDate', newDate: Date) => {
-    setData(prevData => 
-      prevData.map(item => 
-        item.returnId === returnId 
-          ? { ...item, [field]: newDate.toISOString() } 
-          : item
-      )
-    );
+    // setData(prevData => 
+    //   prevData.map(item => 
+    //     item.returnId === returnId 
+    //       ? { ...item, [field]: newDate.toISOString() } 
+    //       : item
+    //   )
+    // );
   }, []);
 
   const formatDate = (date: string | undefined) => {
@@ -114,7 +160,7 @@ export default function Returns() {
           <TableRow>
             <TableHead className="font-semibold text-black whitespace-nowrap">RO</TableHead>
             <TableHead className="font-semibold text-black whitespace-nowrap">VEHICLE</TableHead>
-            <TableHead className="font-semibold text-black whitespace-nowrap">RECEIVED</TableHead>
+            <TableHead className="font-semibold text-black whitespace-nowrap">RETURNED</TableHead>
             <TableHead className="font-semibold text-black whitespace-nowrap">PICKED-UP</TableHead>
             <TableHead className="font-semibold text-black whitespace-nowrap">RETURNED</TableHead>
             <TableHead className="font-semibold text-black whitespace-nowrap">REFUND STATUS</TableHead>
@@ -125,30 +171,30 @@ export default function Returns() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((item) => (
-            <React.Fragment key={item.opportunityId}>
+          {mockReturnsData.map((item) => (
+            <React.Fragment key={item.id}>
               <TableRow 
                 className="cursor-pointer hover:bg-gray-50"
-                onClick={() => toggleRow(item.opportunityId)}
+                onClick={() => toggleRow(item.id)}
               >
                 <TableCell className="font-medium">{item.roNumber || '---'}</TableCell>
                 <TableCell>
                   <VehicleCell
                     make={item.vehicle.make}
                     model={item.vehicle.model}
-                    year={parseInt(item.vehicle.year)}
+                    year={item.vehicle.year.toString()}
                     // imageUrl={item.vehicle.imageUrl}
                   />
                 </TableCell>
                 <TableCell className="whitespace-nowrap">
-                  {formatDate(item.receivedDate)}
+                  {formatDate(item.returnedDate)}
                 </TableCell>
                 <TableCell>
                   <div className="date-picker-container" onClick={(e) => e.stopPropagation()}>
                     <DateTimePicker
                       value={item.pickedUpDate}
                       editable={true}
-                      onOk={(date: Date) => handleDateChange(item.returnId, 'pickedUpDate', date)}
+                      onOk={(date: Date) => handleDateChange(item.id, 'pickedUpDate', date)}
                     />
                   </div>
                 </TableCell>
@@ -157,7 +203,7 @@ export default function Returns() {
                     <DateTimePicker
                       value={item.returnedDate}
                       editable={true}
-                      onOk={(date: Date) => handleDateChange(item.returnId, 'returnedDate', date)}
+                      onOk={(date: Date) => handleDateChange(item.id, 'returnedDate', date)}
                     />
                   </div>
                 </TableCell>
@@ -165,38 +211,38 @@ export default function Returns() {
                   <div className="relative dropdown-container" onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
-                      className="inline-flex items-center justify-between w-full px-4 py-2 text-sm font-medium bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500"
+                      className="inline-flex justify-between items-center px-4 py-2 w-full text-sm font-medium bg-white rounded-md border border-gray-300 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setOpenDropdownId(openDropdownId === item.returnId ? null : item.returnId);
+                        setOpenDropdownId(openDropdownId === item.id ? null : item.id);
                       }}
                     >
                       <span className={item.refundStatus === 'pending' ? 'text-amber-600' : 'text-green-600'}>
                         {item.refundStatus === 'pending' ? 'Pending Refund' : 'Refund Complete'}
                       </span>
-                      <ChevronDown className="w-4 h-4 ml-2" />
+                      <ChevronDown className="ml-2 w-4 h-4" />
                     </button>
                     
                     {/* Dropdown Menu */}
-                    {openDropdownId === item.returnId && (
-                      <div className="absolute right-0 z-50 w-full mt-2 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    {openDropdownId === item.id && (
+                      <div className="absolute right-0 z-50 mt-2 w-full bg-white rounded-md ring-1 ring-black ring-opacity-5 shadow-lg origin-top-right focus:outline-none">
                         <div className="py-1" role="menu" aria-orientation="vertical">
                           <button
-                            className="block w-full px-4 py-2 text-sm text-left text-amber-600 hover:bg-gray-100"
+                            className="block px-4 py-2 w-full text-sm text-left text-amber-600 hover:bg-gray-100"
                             role="menuitem"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleRefundStatusChange(item.returnId, 'pending');
+                              handleRefundStatusChange(item.id, 'Pending Refund');
                             }}
                           >
                             Pending Refund
                           </button>
                           <button
-                            className="block w-full px-4 py-2 text-sm text-left text-green-600 hover:bg-gray-100"
+                            className="block px-4 py-2 w-full text-sm text-left text-green-600 hover:bg-gray-100"
                             role="menuitem"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleRefundStatusChange(item.returnId, 'completed');
+                              handleRefundStatusChange(item.id, 'Refund Complete');
                             }}
                           >
                             Refund Complete
@@ -217,7 +263,7 @@ export default function Returns() {
                     buttonText="Print Check" 
                     onClick={(e) => { 
                       e.stopPropagation();
-                      console.log('print check for', item.returnId) 
+                      console.log('print check for', item.id) 
                     }} 
                   />
                 </TableCell>
@@ -231,20 +277,20 @@ export default function Returns() {
                       title="New Task"
                       defaultRelation={
                         {
-                          id: item.returnId,
+                          id: item.id,
                           type: 'opportunity'
                         }
                       }
                       children={
-                        <Plus className="w-5 h-5 m-auto" />
+                        <Plus className="m-auto w-5 h-5" />
                       }
                     />
                   </div>
                 </TableCell>
               </TableRow>
               
-              {expandedRows[item.returnId] && (
-                <TableRow key={`expanded-${item.returnId}`}>
+              {expandedRows[item.id] && (
+                <TableRow key={`expanded-${item.id}`}>
                   <TableCell colSpan={10} className="p-0 border-0">
                     <div className="bg-gray-100 rounded-md">
                       <div className="overflow-x-auto">
@@ -266,34 +312,34 @@ export default function Returns() {
                           <tbody className="bg-gray-100 divide-y divide-gray-200">
                             {vendorDetails.map((vendor) => (
                               <tr key={vendor.vendorDetailId}>
-                                <td className="py-4 text-sm font-medium bg-gray-300 whitespace-nowrap">
+                                <td className="py-4 text-sm font-medium whitespace-nowrap bg-gray-300">
                                   {vendor.name}
                                 </td>
-                                <td className="py-4 text-sm text-gray-700 bg-gray-300 whitespace-nowrap">
+                                <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
                                   {vendor.representative}
                                 </td>
-                                <td className="py-4 text-sm text-gray-700 bg-gray-300 whitespace-nowrap">
+                                <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
                                   {vendor.toOrder}
                                 </td>
-                                <td className="py-4 text-sm text-gray-700 bg-gray-300 whitespace-nowrap">
+                                <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
                                   {vendor.toReceive}
                                 </td>
-                                <td className="py-4 text-sm text-gray-700 bg-gray-300 whitespace-nowrap">
+                                <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
                                   {vendor.toReturn}
                                 </td>
-                                <td className="py-4 text-sm text-gray-700 bg-gray-300 whitespace-nowrap">
+                                <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
                                   {vendor.total}
                                 </td>
-                                <td className="py-4 text-sm text-gray-700 bg-gray-300 whitespace-nowrap">
+                                <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
                                   {formatCurrency(vendor.totalAmount)}
                                 </td>
-                                <td className="py-4 text-sm text-gray-700 bg-gray-300 whitespace-nowrap">
+                                <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
                                   {formatDate(vendor.lastCommunicationDate)}
                                 </td>
                                 <td className="py-4 text-sm text-gray-700 bg-gray-300">
                                   <SummaryCell text={vendor.summary} />
                                 </td>
-                                <td className="py-4 text-sm text-gray-700 bg-gray-300 whitespace-nowrap">
+                                <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
                                   <div className="flex space-x-2">
                                     <a 
                                       href={`tel:${vendor.contactInfo.phone}`} 

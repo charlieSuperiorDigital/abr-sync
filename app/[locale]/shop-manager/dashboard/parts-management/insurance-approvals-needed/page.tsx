@@ -13,7 +13,6 @@ import { NewTaskModal } from '@/components/custom-components/task-modal/new-task
 import { Plus, Phone, Mail, ChevronDown } from 'lucide-react'
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
 import { ViewPartsModal } from '@/app/[locale]/custom-components/view-parts-modal'
-import { workfiles } from '@/app/mocks/workfiles_new'
 import {
   Table,
   TableBody,
@@ -69,7 +68,7 @@ export default function InsuranceApprovalsNeeded() {
 
   // Find a workfile by RO number
   const findWorkfileByRoNumber = (roNumber: string) => {
-    return workfiles.find(workfile => workfile.roNumber === roNumber) || workfiles[0];
+    // return workfiles.find(workfile => workfile.roNumber === roNumber) || workfiles[0];
   }
 
   return (
@@ -131,13 +130,11 @@ export default function InsuranceApprovalsNeeded() {
                 <TableCell className="whitespace-nowrap">{invoice.ecd || 'N/A'}</TableCell>
                 <TableCell className="whitespace-nowrap">{invoice.expected || 'N/A'}</TableCell>
                 <TableCell>
-                  {/* <ViewPartsModal 
-                  workfile={findWorkfileByRoNumber(invoice.roNumber)}
-                  >
+                  <ViewPartsModal opportunityId={invoice.invoiceId}>
                     <DarkButton 
                       buttonText="View Parts" 
                     />
-                  </ViewPartsModal> */}
+                  </ViewPartsModal>
                 </TableCell>
                 <TableCell>
                   <div

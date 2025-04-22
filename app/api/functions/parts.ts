@@ -1,5 +1,8 @@
 import { PartOrder } from "@/app/types/part-order";
+import {  PartWithFullDetails } from '@/app/types/parts';
 import apiService from "@/app/utils/apiService";
+import { TenantPartOrder, UpdatePartOrderRequest } from "../../types/parts";
+import { Part } from "@/docs/parts-management-data-structure";
 
 export async function getPartOrdersByOpportunityId({
   opportunityId,
@@ -18,49 +21,6 @@ export async function getPartOrdersByOpportunityId({
   }
 }
 
-interface Vehicle {
-  make: string;
-  model: string;
-  year: string;
-  vin: string;
-}
-
-export interface PartsOrderSummary {
-  partsOrderId: string;
-  vendor: {
-    id: string;
-    name: string;
-    contactName: string;
-    contactPhone: string;
-    contactEmail: string;
-  };
-  partsToOrderCount: number;
-  partsToReceiveCount: number;
-  partsToReturnCount: number;
-  totalAmount: number;
-  lastCommunicationDate: string;
-  summary: string;
-  hasCoreParts: boolean;
-
-
-}
-
-export interface Tech {
-  id: string;
-  name: string;
-  profilePicture: string;
-}
-
-export interface TenantPartOrder {
-  opportunityId: string;
-  roNumber: string;
-  vehicle: Vehicle;
-  estimateAmount: number;
-  estimatedCompletionDate: string;
-  assignedTech:  Tech;
-  partsOrders: PartsOrderSummary[];
-}
-
 export async function getPartOrdersByTenantId({
   tenantId,
 }: {
@@ -76,3 +36,45 @@ export async function getPartOrdersByTenantId({
     throw error;
   }
 }
+
+export async function updatePartOrder(partOrderId: string, data: UpdatePartOrderRequest) {
+  try {
+    const response = await apiService.put<PartOrder[]>(
+      `/PartOrder/${partOrderId}`,
+      data
+    )
+    return response.data
+  } catch (error) {
+    console.error('Error updating part order:', error)
+    throw error;
+  }
+}
+
+// Rename getMockPartsOnReturnStatus to getPartsOnReturnStatus for production naming
+export async function getAllPartsFromTenant(tenantId: string): Promise<PartWithFullDetails[]> {
+  try {
+    const response = await apiService.get<PartWithFullDetails[]>(
+      `/Parts/tenant/${tenantId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching all parts from tenant:', error);
+    throw error;
+  }
+}
+
+export async function getPartsByOpportunityId(opportunityId: string): Promise<PartWithFullDetails[]> {
+  try {
+    const response = await apiService.get<PartWithFullDetails[]>(
+      `/Parts/opportunity/${opportunityId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching parts by opportunity ID:', error);
+    throw error;
+  }
+}
+
+//TODO: implement a function tat gets parts on return status
+//TODO: implement a function that updates a single part
+//TODO: throw them all in the hook and use them on the returns page
