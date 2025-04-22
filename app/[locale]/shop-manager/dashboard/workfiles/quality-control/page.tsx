@@ -36,13 +36,13 @@ export default function QualityControl() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isQCChecklistOpen, setIsQCChecklistOpen] = useState(false);
-  const [selectedQCWorkfile, setSelectedQCWorkfile] = useState<Workfile | null>(null);
-  const [selectedWorkfile, setSelectedWorkfile] = useState<Workfile | null>(null);
+  const [selectedQCWorkfile, setSelectedQCWorkfile] = useState<WorkfileApiResponse | null>(null);
+  const [selectedWorkfile, setSelectedWorkfile] = useState<WorkfileApiResponse | null>(null);
 
   // Use real data from API
   const { qualityControl: qcWorkfiles, isLoading, error } = useGetWorkfiles({ tenantId: tenantId || '' });
 
-  const handleRowClick = useCallback((workfile: Workfile) => {
+  const handleRowClick = useCallback((workfile: WorkfileApiResponse) => {
     setSelectedWorkfile(workfile);
     // Find the matching opportunity by opportunityId
     if (allOpportunities && workfile.opportunityId) {
@@ -54,17 +54,17 @@ export default function QualityControl() {
     setIsModalOpen(true);
   }, [allOpportunities]);
 
-  const handleContactClick = useCallback((workfile: Workfile) => {
+  const handleContactClick = useCallback((workfile: WorkfileApiResponse) => {
     // Handle contact info click
-    console.log('Contact clicked for workfile:', workfile.workfileId)
+    console.log('Contact clicked for workfile:', workfile.id)
   }, [])
 
-  const handleTaskClick = useCallback((workfile: Workfile) => {
+  const handleTaskClick = useCallback((workfile: WorkfileApiResponse) => {
     // Handle task button click
-    console.log('Task clicked for workfile:', workfile.workfileId)
+    console.log('Task clicked for workfile:', workfile.id)
   }, [])
 
-  const handleQCChecklistClick = useCallback((workfile: Workfile, e: React.MouseEvent) => {
+  const handleQCChecklistClick = useCallback((workfile: WorkfileApiResponse, e: React.MouseEvent) => {
     e.stopPropagation()
     // Open QC checklist modal
     setSelectedQCWorkfile(workfile)
@@ -79,24 +79,24 @@ export default function QualityControl() {
         <span className="font-medium">{row.original.id || '---'}</span>
       ),
     },
-    // {
-    //   accessorKey: 'vehicle',
-    //   header: 'Vehicle',
-    //   cell: ({ row }) => (
-    //     <VehicleCell
-    //       make={row.original.vehicle.make || 'No Make'}
-    //       model={row.original.vehicle.model || 'No Model'}
-    //       year={row.original.vehicle.year.toString() || 'No Year'}
-    //       imageUrl={row.original.vehicle.vehiclePicturesUrls[0] || `https://picsum.photos/seed/${row.original.workfileId}/200/100`}
-    //     />
-    //   ),
-    // },
+    {
+      accessorKey: 'vehicle',
+      header: 'Vehicle',
+      cell: ({ row }) => (
+        <VehicleCell
+          make={row.original.opportunity.vehicle.make || 'No Make'}
+          model={row.original.opportunity.vehicle.model || 'No Model'}
+          year={String(row.original.opportunity.vehicle.year) || 'No Year'}
+          imageUrl={row.original.opportunity.vehicle.vehiclePicturesUrls[0] || `https://picsum.photos/seed/${row.original.opportunityId}/200/100`}
+        />
+      ),
+    },
     {
       accessorKey: 'owner.name',
       header: 'Owner',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
-          {/* {row.original.owner?.name || '---'} */}
+          {row.original.opportunity.vehicle.owner?.name || '---'}
         </span>
       ),
     },
@@ -125,7 +125,7 @@ export default function QualityControl() {
       },
     },
     {
-      accessorKey: 'qualityControl.completionDate',
+      accessorKey: 'opportunity.qualityControl.completionDate',
       header: 'QC Date',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
@@ -163,7 +163,7 @@ export default function QualityControl() {
       cell: ({ row }) => (
         <RoundButtonWithTooltip 
           buttonIcon={<MessageSquareMore className="w-5 h-5" />}
-          tooltipText={row.original.lastCommunicationSummary || 'No summary available'}
+          tooltipText={row.original.opportunity.summary || 'No summary available'}
         />
       ),
     },

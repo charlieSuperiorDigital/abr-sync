@@ -1,24 +1,18 @@
-// This file represents the to-receive route
 'use client'
-
-import { DataTable } from '@/components/custom-components/custom-table/data-table'
-import {
-  StatusBadgeCell,
-  VehicleCell,
-} from '@/components/custom-components/custom-table/table-cells'
-import { ColumnDef } from '@tanstack/react-table'
-import { useState } from 'react'
-import { toReceiveMockData } from '@/app/mocks/parts-management'
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
-import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
-import { Plus } from 'lucide-react'
 import { ViewPartsModal } from '@/app/[locale]/custom-components/view-parts-modal'
-import { useSession } from 'next-auth/react'
 import { useGetTenantPartOrders } from '@/app/api/hooks/useParts'
-import { WorkfileStatus } from '@/app/types/workfile'
+import { TenantPartOrder } from '@/app/types/parts'
 import { formatCurrency } from '@/app/utils/currency-utils'
 import { formatDate } from '@/app/utils/date-utils'
-import { TenantPartOrder } from '@/app/types/parts'
+import { DataTable } from '@/components/custom-components/custom-table/data-table'
+import {
+  VehicleCell
+} from '@/components/custom-components/custom-table/table-cells'
+import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
+import { ColumnDef } from '@tanstack/react-table'
+import { Plus } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 
 // interface PartsReceive {
 //   opportunityId: string;
@@ -85,7 +79,7 @@ export default function ToReceive() {
         <VehicleCell
           make={row.original.vehicle.make}
           model={row.original.vehicle.model}
-          year={row.original.vehicle.year}
+          year={row.original.vehicle.year.toString()}
         />
       ),
     },
@@ -164,11 +158,11 @@ export default function ToReceive() {
       header: 'VIEW PARTS',
       cell: ({ row }) => (
         <div className="flex justify-center">
-          {/* <ViewPartsModal partOrder={row.original}>
+          <ViewPartsModal opportunityId={row.original.opportunityId}>
             <DarkButton 
               buttonText="View Parts" 
             />
-          </ViewPartsModal> */}
+          </ViewPartsModal>
         </div>
       ),
     },

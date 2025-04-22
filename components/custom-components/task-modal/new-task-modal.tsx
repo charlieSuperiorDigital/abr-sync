@@ -393,7 +393,7 @@ export function NewTaskModal({
                             options={locations.length > 0 ? locations : [{ value: '', label: t('no-locations-available') }]}
                             value={field.value ? [field.value] : []}
                             onChange={(values) => field.onChange(values[0] || '')}
-                            isDisabled={isLoadingTenant}
+                            // isDisabled={isLoadingTenant}
                           />
                         )}
                       />

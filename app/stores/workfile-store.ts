@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { Workfile, WorkfileStatus } from '../types/workfile'
-import { workfiles } from '../mocks/workfiles_new'
+// import { workfiles } from '../mocks/workfiles_new'
 
 interface WorkfileStore {
   workfiles: Workfile[]
@@ -28,7 +28,7 @@ interface WorkfileStore {
 }
 
 export const useWorkfileStore = create<WorkfileStore>((set, get) => ({
-  workfiles: workfiles,
+  workfiles: [],
   selectedWorkfile: null,
 
   setSelectedWorkfile: (workfile) => set({ selectedWorkfile: workfile }),
