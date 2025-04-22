@@ -6,11 +6,12 @@ import { X, ChevronDown, ChevronUp } from 'lucide-react'
 import { Workfile } from '@/app/types/workfile'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import { ColumnDef } from '@tanstack/react-table'
-import { TenantPartOrder } from '@/app/api/functions/parts'
+import { TenantPartOrder } from '@/app/types/parts'
+import { useGetPartsByOpportunityId } from '@/app/api/hooks/useParts';
 
 interface ViewPartsModalProps {
   children: React.ReactNode
-  partOrder: TenantPartOrder
+  opportunityId: string
 }
 
 // Sample data types for the tables
@@ -41,17 +42,32 @@ interface VendorInfo {
   lastOrder: string
 }
 
+/**
+ * A modal component that displays a detailed view of a part order.
+ * It shows an overview of the order, as well as detailed tables of the parts and vendors.
+ * The tables are toggleable, and the modal can be closed with a button or by clicking outside of it.
+ *
+ * @param {React.ReactNode} children - The content to be displayed inside the modal.
+ * @param {string} opportunityId - The opportunity ID to be displayed.
+ * @returns {React.ReactElement} - A JSX element representing the modal.
+ */
 export function ViewPartsModal({
   children,
-  partOrder
+  opportunityId
 }: ViewPartsModalProps) {
   const [shouldShowModal, setShouldShowModal] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
+
+  // Fetch parts group by opportunityId
+  const {  isLoading, error, returnPartsWithOpportunityId } = useGetPartsByOpportunityId(opportunityId);
+
   const [expandedSections, setExpandedSections] = useState({
     overview: true,
     parts: true,
     partsByVendor: true
   })
+
+  const parts = returnPartsWithOpportunityId(opportunityId);
 
   // Sample data for tables
 
