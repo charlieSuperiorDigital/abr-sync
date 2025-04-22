@@ -113,7 +113,6 @@ export default function BodyTechs() {
         </div>
       ),
     },
-    
   ]
 
   return (
