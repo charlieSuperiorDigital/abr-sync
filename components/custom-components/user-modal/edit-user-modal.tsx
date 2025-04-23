@@ -112,18 +112,14 @@ export function EditUserModal({
     return hasFlag(notificationAccess, notification);
   }
   
+  const toBinary = (num: number): number => {
+    return parseInt(num.toString(2), 2);
+  }
+
   const hasFlag = <T extends number>(access: number, flag: T): boolean => {
-    // Convert decimal to binary string and back to decimal to handle the input correctly
-    const binaryStr = access.toString().padStart(8, '0');
-    const normalizedAccess = parseInt(binaryStr, 2);
-    
-    console.log('Access (binary):', binaryStr);
-    console.log('Flag:', flag.toString(2).padStart(8, '0'));
-    
-    // Check if any bits are set
-    const result = (normalizedAccess & flag) !== 0;
-    console.log('Has flag:', result);
-    return result;
+    const normalizedAccess = toBinary(access);
+    const normalizedFlag = toBinary(flag);
+    return (normalizedAccess & normalizedFlag) !== 0;
   }
 
   const getNameParts = (fullName: string) => {
@@ -155,50 +151,36 @@ export function EditUserModal({
   };
 
   const handleCommunicationAccess = (communicationAccessValue: number): CommunicationAccess[] => {
-    console.log('Communication Access Raw Value:', communicationAccessValue);
-    console.log('Communication Access Type:', typeof communicationAccessValue);
-
     const selectedCommunications: CommunicationAccess[] = [];
     const communicationMapping = [
       { flag: UserCommunication.Vendors, access: CommunicationAccess.Vendors },
       { flag: UserCommunication.Insurances, access: CommunicationAccess.Insurances },
       { flag: UserCommunication.VehicleOwners, access: CommunicationAccess.VehicleOwners },
     ];
-
-    console.log('Communication Mapping:', communicationMapping);
-
     communicationMapping.forEach(({ flag, access }) => {
       if (hasCommunication(communicationAccessValue, flag)) {
         selectedCommunications.push(access);
       }
     });
 
-    console.log('Final Selected Communications:', selectedCommunications);
     return selectedCommunications;
   };
 
   const handleNotificationTypeAccess = (notificationTypeValue: number): NotificationType[] => {
-    console.log('Notification Type Raw Value:', notificationTypeValue);
-    
     const selectedTypes: NotificationType[] = [];
     const typeMapping = [
       { flag: UserNotificationType.SMS, type: NotificationType.SMS },
       { flag: UserNotificationType.Email, type: NotificationType.Email },
     ];
-
     typeMapping.forEach(({ flag, type }) => {
       if (hasNotificationType(notificationTypeValue, flag)) {
         selectedTypes.push(type);
       }
     });
-
-    console.log('Final Selected Notification Types:', selectedTypes);
     return selectedTypes;
   };
 
   const handleNotificationAccess = (notificationValue: number): NotificationCategory[] => {
-    console.log('Notification Raw Value:', notificationValue);
-    
     const selectedNotifications: NotificationCategory[] = [];
     const notificationMapping = [
       { flag: UserNotification.WorkfileECD, category: NotificationCategory.WorkfileECD },
@@ -210,8 +192,53 @@ export function EditUserModal({
       }
     });
 
-    console.log('Final Selected Notifications:', selectedNotifications);
     return selectedNotifications;
+  };
+
+  const getModuleAccessValue = (selectedModules: ModuleAccess[]): number => {
+    let value = toBinary(UserModules.None);
+    const moduleMapping = [
+      { flag: UserModules.Workfiles, access: ModuleAccess.Workfiles },
+      { flag: UserModules.Users, access: ModuleAccess.Users },
+      { flag: UserModules.Locations, access: ModuleAccess.Locations },
+      { flag: UserModules.Opportunities, access: ModuleAccess.Opportunities },
+      { flag: UserModules.Parts, access: ModuleAccess.Parts },
+      { flag: UserModules.Settings, access: ModuleAccess.Settings },
+      { flag: UserModules.InsuranceVehicleOwners, access: ModuleAccess.InsuranceVehicleOwners },
+    ];
+
+    if (selectedModules.includes(ModuleAccess.All)) {
+      return toBinary(UserModules.All);
+    }
+
+    moduleMapping.forEach(({ flag, access }) => {
+      if (selectedModules.includes(access)) {
+        value |= toBinary(flag);
+      }
+    });
+    
+    return value;
+  };
+
+  const getCommunicationAccessValue = (selectedCommunications: CommunicationAccess[]): number => {
+    let value = toBinary(UserCommunication.None);
+    const communicationMapping = [
+      { flag: UserCommunication.Vendors, access: CommunicationAccess.Vendors },
+      { flag: UserCommunication.Insurances, access: CommunicationAccess.Insurances },
+      { flag: UserCommunication.VehicleOwners, access: CommunicationAccess.VehicleOwners },
+    ];
+
+    if (selectedCommunications.includes(CommunicationAccess.All)) {
+      return toBinary(UserCommunication.All);
+    }
+
+    communicationMapping.forEach(({ flag, access }) => {
+      if (selectedCommunications.includes(access)) {
+        value |= toBinary(flag);
+      }
+    });
+
+    return value;
   };
 
   const handleSetProfilePicture = (user: User) => {
@@ -323,6 +350,13 @@ export function EditUserModal({
         // Convert role to JSON string array
         updateData.roles = JSON.stringify([data.role]);
       }
+      if (dirtyFields.moduleAccess) updateData.modules = getModuleAccessValue(data.moduleAccess);
+      if (dirtyFields.communicationAccess) updateData.communication = getCommunicationAccessValue(data.communicationAccess);
+      if (dirtyFields.notificationType) {
+        // notificationType is already a binary number
+        updateData.notificationType = data.notificationType;
+      }
+      if (dirtyFields.notification) updateData.notification = data.notification; // Already a binary number
 
       // Add profile picture if it was changed
       if (profilePictureURL) {
@@ -371,7 +405,6 @@ export function EditUserModal({
 
   const handleLogoUpload = () => {
     // Trigger the hidden file input
-    console.log('Logo upload triggered');
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
@@ -388,7 +421,6 @@ export function EditUserModal({
     const previewUrl = URL.createObjectURL(file);
     setLogoPreview(previewUrl);
 
-    console.log('File selected:', file.name, file.type, file.size);
   };
 
   const handleRemoveLogo = () => {
