@@ -111,6 +111,7 @@ export function EditUserModal({
       const primaryRole = userRoles.length > 0 ? userRoles[0] : '';
 
       reset({
+        
         fullName: `${user.firstName} ${user.lastName}`,
         email: user.email,
         phoneNumber: user.phoneNumber || '',
@@ -124,10 +125,13 @@ export function EditUserModal({
         notificationCategories: user.notificationCategories || [],
         locations: user.locations || []
       });
-
+      
       if (user.profilePicture) {
+        
         setProfilePictureUrl(user.profilePicture);
-        setLogoPreview(user.avatar)
+        setLogoPreview(user.profilePicture)
+       
+
       }
     }
   }, [isOpen, user, setValue])
