@@ -18,28 +18,27 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { useUserStore } from '@/app/stores/user-store'
 import { User, ModuleAccess, CommunicationAccess, NotificationCategory, Language, NotificationType, Location } from '@/app/types/user'
-
-enum UserModules {
-  None = 0,
-  All = ~0,
-  Workfiles = 1 << 0,
-  Users = 1 << 1,
-  Locations = 1 << 2,
-  Opportunities = 1 << 3,
-  Parts = 1 << 4,
-  Settings = 1 << 5
-}
-
-const hasModule = (moduleAccess: number, module: UserModules): boolean => {
-  return (moduleAccess & module) !== 0
-}
-
 import { Pencil, Upload, X, Plus } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { UserCircle2 } from 'lucide-react'
 import { CustomMaskedInput } from '../inputs/custom-masked-input'
 import { useTenant } from '@/app/context/TenantProvider'
 import Image from 'next/image'
+
+
+enum UserModules {
+  None = 0,                     // 0000 0000
+  Workfiles = 1,                // 0000 0001
+  Users = 2,                    // 0000 0010
+  Locations = 4,                // 0000 0100
+  Opportunities = 8,            // 0000 1000
+  Parts = 16,                   // 0001 0000
+  Settings = 32,                // 0010 0000
+  InsuranceVehicleOwners = 64,  // 0100 0000
+  All = ~0                      // 1111 1111
+}
+
+
 
 interface EditUserModalProps {
   children?: React.ReactNode
@@ -81,6 +80,20 @@ export function EditUserModal({
     if (e.target === e.currentTarget) {
       setIsOpen(false)
     }
+  }
+
+  const hasModule = (moduleAccess: number, module: UserModules): boolean => {
+    // Convert decimal to binary string and back to decimal to handle the input correctly
+    const binaryStr = moduleAccess.toString().padStart(8, '0');
+    const normalizedAccess = parseInt(binaryStr, 2);
+    
+    console.log('Module Access (binary):', binaryStr);
+    console.log('Module Flag:', module.toString(2).padStart(8, '0'));
+    
+    // Check if any bits are set
+    const result = (normalizedAccess & module) !== 0;
+    console.log('Has module:', result);
+    return result;
   }
 
   const validationMessage = useTranslations('Validation')
@@ -130,9 +143,7 @@ export function EditUserModal({
 
       // Convert moduleAccess number to array of selected modules
       const selectedModules: ModuleAccess[] = [];
-      const moduleAccessValue: number = user.modules;
-
-
+      const moduleAccessValue = user.modules;
       console.log('ModuleAccess value:', moduleAccessValue);
 
       // Map UserModules to ModuleAccess enum values
@@ -143,6 +154,7 @@ export function EditUserModal({
         { flag: UserModules.Opportunities, access: ModuleAccess.Opportunities },
         { flag: UserModules.Parts, access: ModuleAccess.Parts },
         { flag: UserModules.Settings, access: ModuleAccess.Settings },
+        { flag: UserModules.InsuranceVehicleOwners, access: ModuleAccess.InsuranceVehicleOwners },
       ];
 
       moduleMapping.forEach(({ flag, access }) => {

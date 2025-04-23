@@ -19,13 +19,13 @@ export enum Language {
 
 export enum ModuleAccess {
   All = 'All',
-  Opportunities = 'Opportunities',
   Workfiles = 'Workfiles',
-  Parts = 'Parts',
   Users = 'Users',
-  Settings = 'Settings',
   Locations = 'Locations',
-  VehicleOwners = 'Insurance & Vehicle Owners'
+  Opportunities = 'Opportunities',
+  Parts = 'Parts',
+  Settings = 'Settings',
+  InsuranceVehicleOwners = 'Insurance & Vehicle Owners'
 }
 
 export enum CommunicationAccess {
