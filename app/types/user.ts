@@ -17,6 +17,18 @@ export enum Language {
   Español = 'Español'
 }
 
+export enum UserModules {
+  None = 0,
+  All = 0b1111111,
+  Workfiles = 0b0000001,
+  Users = 0b0000010,
+  Locations = 0b0000100,
+  Opportunities = 0b0001000,
+  Parts = 0b0010000,
+  Settings = 0b0100000,
+  InsuranceVehicleOwners = 0b1000000
+}
+
 export enum ModuleAccess {
   All = 'All',
   Workfiles = 'Workfiles',
@@ -26,6 +38,14 @@ export enum ModuleAccess {
   Parts = 'Parts',
   Settings = 'Settings',
   InsuranceVehicleOwners = 'Insurance & Vehicle Owners'
+}
+
+export enum UserCommunication {
+  None = 0,
+  All = 0b111,
+  Vendors = 0b001,
+  Insurances = 0b010,
+  VehicleOwners = 0b100
 }
 
 export enum CommunicationAccess {

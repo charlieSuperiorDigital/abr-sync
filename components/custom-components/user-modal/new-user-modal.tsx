@@ -18,7 +18,13 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { useUserStore } from '@/app/stores/user-store'
-import { User, ModuleAccess, CommunicationAccess, NotificationCategory, Language, NotificationType, Location } from '@/app/types/user'
+import { User, ModuleAccess, CommunicationAccess, NotificationCategory, Language, NotificationType, Location, UserModules, UserCommunication } from '@/app/types/user'
+
+enum UserNotification{
+  None = 0, // 0000 0000
+  All = ~0, // 1111 1111
+  WorkfileECD = 1 // 0000 0001
+}
 import { Plus, Upload, X } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { UserCircle2 } from 'lucide-react'
@@ -40,15 +46,15 @@ export function NewUserModal({
   const [isLoading, setIsLoading] = useState(false)
   const t = useTranslations('User')
   const addUser = useUserStore((state) => state.addUser)
-  
+
   // File input reference
   const fileInputRef = useRef<HTMLInputElement>(null)
-  
+
   // Profile picture state
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null)
-  
+
   // File upload hook
   const { uploadFile, isUploading, error: uploadError } = useFileUpload({
     onSuccess: (data) => {
@@ -67,7 +73,7 @@ export function NewUserModal({
   }
 
   const validationMessage = useTranslations('Validation')
-  
+
 
   const {
     register,
@@ -88,11 +94,65 @@ export function NewUserModal({
       preferredLanguage: Language.English,
       moduleAccess: [],
       communicationAccess: [],
-      notificationType: undefined,
-      notificationCategories: [],
+      notificationType: NotificationType.None,
+      notification: 0,
       locations: []
     }
   })
+
+  const toBinary = (num: number): number => {
+    return parseInt(num.toString(2), 2);
+  }
+
+  const getModuleAccessValue = (selectedModules: ModuleAccess[]): number => {
+    let value = toBinary(UserModules.None);
+    const moduleMapping = [
+      { flag: UserModules.Workfiles, access: ModuleAccess.Workfiles },
+      { flag: UserModules.Users, access: ModuleAccess.Users },
+      { flag: UserModules.Locations, access: ModuleAccess.Locations },
+      { flag: UserModules.Opportunities, access: ModuleAccess.Opportunities },
+      { flag: UserModules.Parts, access: ModuleAccess.Parts },
+      { flag: UserModules.Settings, access: ModuleAccess.Settings },
+      { flag: UserModules.InsuranceVehicleOwners, access: ModuleAccess.InsuranceVehicleOwners },
+    ];
+
+    if (selectedModules.includes(ModuleAccess.All)) {
+      return toBinary(UserModules.All);
+    }
+
+    moduleMapping.forEach(({ flag, access }) => {
+      if (selectedModules.includes(access)) {
+        value |= toBinary(flag);
+      }
+    });
+
+    return value;
+  };
+
+  const getCommunicationAccessValue = (selectedCommunications: CommunicationAccess[]): number => {
+    let value = toBinary(UserCommunication.None);
+    const communicationMapping = [
+      { flag: UserCommunication.Vendors, access: CommunicationAccess.Vendors },
+      { flag: UserCommunication.Insurances, access: CommunicationAccess.Insurances },
+      { flag: UserCommunication.VehicleOwners, access: CommunicationAccess.VehicleOwners },
+    ];
+
+    if (selectedCommunications.includes(CommunicationAccess.All)) {
+      return toBinary(UserCommunication.All);
+    }
+
+    communicationMapping.forEach(({ flag, access }) => {
+      if (selectedCommunications.includes(access)) {
+        value |= toBinary(flag);
+      }
+    });
+
+    return value;
+  };
+
+  const hasNotification = (notificationAccess: number, notification: UserNotification): boolean => {
+    return notification === UserNotification.All ? notificationAccess === UserNotification.All : (notificationAccess & notification) === notification;
+  };
 
   const { register: registerUser } = useRegister()
   const { updateUser } = useUpdateUser()
@@ -112,9 +172,9 @@ export function NewUserModal({
           // Use user's name as the namePrefix for the file
           const namePrefix = data.fullName.replace(/\s+/g, '-').toLowerCase() || 'user-profile';
           console.log(`Uploading profile picture with prefix: ${namePrefix}`);
-          
+
           const uploadResult = await uploadFile(logoFile, namePrefix);
-          
+
           if (uploadResult) {
             profilePictureURL = uploadResult.fileUrl;
             console.log(`Profile picture uploaded successfully. URL: ${profilePictureURL}`);
@@ -192,10 +252,10 @@ export function NewUserModal({
                 preferredLanguage: data.preferredLanguage,
                 phoneNumber: data.phoneNumber,
                 hourlyRate: data.hourlyRate,
-                modules: data.moduleAccess?.reduce((acc, curr) => acc | Number(curr), 0) || 0,
-                communication: data.communicationAccess?.reduce((acc, curr) => acc | Number(curr), 0) || 0,
-                notificationType: Number(data.notificationType || 0),
-                notification: data.notificationCategories?.reduce((acc, curr) => acc | Number(curr), 0) || 0,
+                modules: getModuleAccessValue(data.moduleAccess),
+                communication: getCommunicationAccessValue(data.communicationAccess),
+                notificationType: data.notificationType,
+                notification: data.notification,
                 profilePicture: profilePictureURL || undefined, // Add the profile picture URL
               }
             },
@@ -234,22 +294,22 @@ export function NewUserModal({
       fileInputRef.current.click();
     }
   };
-  
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     // Store the file for later upload
     setLogoFile(file);
-    
+
     // Create a preview URL
     const previewUrl = URL.createObjectURL(file);
     setLogoPreview(previewUrl);
-    
+
     // In a real implementation, you would upload the file to your server here
     console.log('File selected:', file.name, file.type, file.size);
   };
-  
+
   const handleRemoveLogo = () => {
     setLogoPreview(null);
     setLogoFile(null);
@@ -304,8 +364,8 @@ export function NewUserModal({
                 (formErrors) => {
                   console.log('Form validation errors:', formErrors)
                 }
-              )} 
-              className="space-y-4">
+              )}
+                className="space-y-4">
                 <div className="space-y-4">
                   <div className="flex justify-start">
                     {/* Hidden file input */}
@@ -316,20 +376,20 @@ export function NewUserModal({
                       accept="image/*"
                       className="hidden"
                     />
-                    
+
                     {/* Profile picture preview or placeholder */}
                     <div className="relative" style={{ cursor: 'pointer' }}>
                       <div onClick={handleLogoUpload} className="flex items-center justify-center w-20 h-20 rounded-full overflow-hidden bg-gray-100 border border-gray-200">
                         {logoPreview ? (
                           <>
-                            <Image 
-                              src={logoPreview} 
-                              alt="Profile picture preview" 
-                              width={80} 
-                              height={80} 
+                            <Image
+                              src={logoPreview}
+                              alt="Profile picture preview"
+                              width={80}
+                              height={80}
                               className="object-cover w-full h-full"
                             />
-                            <button 
+                            <button
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -391,7 +451,7 @@ export function NewUserModal({
                         options={UserRoleOptions}
                         value={field.value ? [field.value] : []}
                         onChange={(values) => field.onChange(values[0])}
-                        
+
                       />
                     )}
                   />
@@ -474,7 +534,7 @@ export function NewUserModal({
                   </div>
 
                   <div className="flex flex-row space-x-4">
-                    <Label className="font-semibold">{t('notifications.title')}</Label>
+                    <Label className="font-semibold">Notifications</Label>
                     <Controller
                       name="notificationType"
                       control={control}
@@ -517,16 +577,16 @@ export function NewUserModal({
 
                   <div className="space-y-2">
                     <Controller
-                      name="notificationCategories"
+                      name="notification"
                       control={control}
                       render={({ field }) => (
                         <div className="grid grid-cols-2 gap-2">
                           <div className="flex items-center space-x-2">
                             <Checkbox
                               id="notification-all"
-                              checked={field.value.includes(NotificationCategory.All)}
+                              checked={hasNotification(field.value, UserNotification.All)}
                               onCheckedChange={(checked) => {
-                                field.onChange(checked ? [NotificationCategory.All] : [])
+                                field.onChange(checked ? UserNotification.All : UserNotification.None)
                               }}
                             />
                             <Label htmlFor="notification-all">All</Label>
@@ -534,12 +594,13 @@ export function NewUserModal({
                           <div className="flex items-center space-x-2">
                             <Checkbox
                               id="notification-workfile"
-                              checked={field.value.includes(NotificationCategory.WorkfileECD)}
+                              checked={hasNotification(field.value, UserNotification.WorkfileECD)}
                               onCheckedChange={(checked) => {
+                                const currentValue = field.value || 0;
                                 const newValue = checked
-                                  ? [...field.value.filter((cat: NotificationCategory) => cat !== NotificationCategory.All), NotificationCategory.WorkfileECD]
-                                  : field.value.filter((cat: NotificationCategory) => cat !== NotificationCategory.WorkfileECD)
-                                field.onChange(newValue)
+                                  ? currentValue | UserNotification.WorkfileECD
+                                  : currentValue & ~UserNotification.WorkfileECD;
+                                field.onChange(newValue);
                               }}
                             />
                             <Label htmlFor="notification-workfile">Workfile ECD</Label>
