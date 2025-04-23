@@ -88,7 +88,7 @@ export interface User {
   password: string
   role: UserRole
   hourlyRate: number
-  moduleAccess: ModuleAccess[]
+  modules: number
   communicationAccess: CommunicationAccess[]
   notificationType: NotificationType
   notificationCategories: NotificationCategory[]

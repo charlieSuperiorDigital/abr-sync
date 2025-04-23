@@ -18,6 +18,22 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { useUserStore } from '@/app/stores/user-store'
 import { User, ModuleAccess, CommunicationAccess, NotificationCategory, Language, NotificationType, Location } from '@/app/types/user'
+
+enum UserModules {
+  None = 0,
+  All = ~0,
+  Workfiles = 1 << 0,
+  Users = 1 << 1,
+  Locations = 1 << 2,
+  Opportunities = 1 << 3,
+  Parts = 1 << 4,
+  Settings = 1 << 5
+}
+
+const hasModule = (moduleAccess: number, module: UserModules): boolean => {
+  return (moduleAccess & module) !== 0
+}
+
 import { Pencil, Upload, X, Plus } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { UserCircle2 } from 'lucide-react'
@@ -110,8 +126,36 @@ export function EditUserModal({
       const userRoles = user.roles ? JSON.parse(user.roles) : [];
       const primaryRole = userRoles.length > 0 ? userRoles[0] : '';
 
+      console.log('user', user)
+
+      // Convert moduleAccess number to array of selected modules
+      const selectedModules: ModuleAccess[] = [];
+      const moduleAccessValue: number = user.modules;
+
+
+      console.log('ModuleAccess value:', moduleAccessValue);
+
+      // Map UserModules to ModuleAccess enum values
+      const moduleMapping = [
+        { flag: UserModules.Workfiles, access: ModuleAccess.Workfiles },
+        { flag: UserModules.Users, access: ModuleAccess.Users },
+        { flag: UserModules.Locations, access: ModuleAccess.Locations },
+        { flag: UserModules.Opportunities, access: ModuleAccess.Opportunities },
+        { flag: UserModules.Parts, access: ModuleAccess.Parts },
+        { flag: UserModules.Settings, access: ModuleAccess.Settings },
+      ];
+
+      moduleMapping.forEach(({ flag, access }) => {
+        if (hasModule(moduleAccessValue, flag)) {
+          console.log(`Has module: ${access}`);
+          selectedModules.push(access);
+        }
+      });
+
+      console.log('Selected Modules:', selectedModules);
+
+
       reset({
-        
         fullName: `${user.firstName} ${user.lastName}`,
         email: user.email,
         phoneNumber: user.phoneNumber || '',
@@ -119,18 +163,18 @@ export function EditUserModal({
         hourlyRate: user.hourlyRate || 0,
         isActive: user.isActive,
         preferredLanguage: user.preferredLanguage as Language || Language.English,
-        moduleAccess: user.moduleAccess || [],
+        moduleAccess: selectedModules,
         communicationAccess: user.communicationAccess || [],
         notificationType: user.notificationType,
         notificationCategories: user.notificationCategories || [],
         locations: user.locations || []
       });
-      
+
       if (user.profilePicture) {
-        
+
         setProfilePictureUrl(user.profilePicture);
         setLogoPreview(user.profilePicture)
-       
+
 
       }
     }
@@ -182,7 +226,7 @@ export function EditUserModal({
         // Convert role to JSON string array
         updateData.roles = JSON.stringify([data.role]);
       }
-      
+
       // Add profile picture if it was changed
       if (profilePictureURL) {
         updateData.profilePicture = profilePictureURL;
