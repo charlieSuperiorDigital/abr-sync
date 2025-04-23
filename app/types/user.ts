@@ -89,7 +89,7 @@ export interface User {
   role: UserRole
   hourlyRate: number
   modules: number
-  communicationAccess: CommunicationAccess[]
+  communication: number
   notificationType: NotificationType
   notificationCategories: NotificationCategory[]
   locations: Location[]

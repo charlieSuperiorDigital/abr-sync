@@ -38,6 +38,13 @@ enum UserModules {
   All = ~0                      // 1111 1111
 }
 
+enum UserCommunication {
+  None = 0,                // 0000 0000
+  Vendors = 1,             // 0000 0001
+  Insurances = 2,          // 0000 0010
+  VehicleOwners = 4,       // 0000 0100
+  All = ~0                 // 1111 1111
+}
 
 
 interface EditUserModalProps {
@@ -82,18 +89,26 @@ export function EditUserModal({
     }
   }
 
-  const hasModule = (moduleAccess: number, module: UserModules): boolean => {
+  const hasFlag = <T extends number>(access: number, flag: T): boolean => {
     // Convert decimal to binary string and back to decimal to handle the input correctly
-    const binaryStr = moduleAccess.toString().padStart(8, '0');
+    const binaryStr = access.toString().padStart(8, '0');
     const normalizedAccess = parseInt(binaryStr, 2);
     
-    console.log('Module Access (binary):', binaryStr);
-    console.log('Module Flag:', module.toString(2).padStart(8, '0'));
+    console.log('Access (binary):', binaryStr);
+    console.log('Flag:', flag.toString(2).padStart(8, '0'));
     
     // Check if any bits are set
-    const result = (normalizedAccess & module) !== 0;
-    console.log('Has module:', result);
+    const result = (normalizedAccess & flag) !== 0;
+    console.log('Has flag:', result);
     return result;
+  }
+
+  const hasModule = (moduleAccess: number, module: UserModules): boolean => {
+    return hasFlag(moduleAccess, module);
+  }
+
+  const hasCommunication = (communicationAccess: number, communication: UserCommunication): boolean => {
+    return hasFlag(communicationAccess, communication);
   }
 
   const validationMessage = useTranslations('Validation')
@@ -143,10 +158,8 @@ export function EditUserModal({
 
       // Convert moduleAccess number to array of selected modules
       const selectedModules: ModuleAccess[] = [];
+      // Handle module access
       const moduleAccessValue = user.modules;
-      console.log('ModuleAccess value:', moduleAccessValue);
-
-      // Map UserModules to ModuleAccess enum values
       const moduleMapping = [
         { flag: UserModules.Workfiles, access: ModuleAccess.Workfiles },
         { flag: UserModules.Users, access: ModuleAccess.Users },
@@ -159,12 +172,31 @@ export function EditUserModal({
 
       moduleMapping.forEach(({ flag, access }) => {
         if (hasModule(moduleAccessValue, flag)) {
-          console.log(`Has module: ${access}`);
           selectedModules.push(access);
         }
       });
 
-      console.log('Selected Modules:', selectedModules);
+      // Handle communication access
+      const communicationAccessValue = user.communication      ;
+      console.log('Communication Access Raw Value:', communicationAccessValue);
+      console.log('Communication Access Type:', typeof communicationAccessValue);
+
+      const selectedCommunications: CommunicationAccess[] = [];
+      const communicationMapping = [
+        { flag: UserCommunication.Vendors, access: CommunicationAccess.Vendors },
+        { flag: UserCommunication.Insurances, access: CommunicationAccess.Insurances },
+        { flag: UserCommunication.VehicleOwners, access: CommunicationAccess.VehicleOwners },
+      ];
+
+      console.log('Communication Mapping:', communicationMapping);
+
+      communicationMapping.forEach(({ flag, access }) => {
+        if (hasCommunication(communicationAccessValue, flag)) {
+          selectedCommunications.push(access);
+        }
+      });
+
+      console.log('Final Selected Communications:', selectedCommunications);
 
 
       reset({
@@ -176,7 +208,7 @@ export function EditUserModal({
         isActive: user.isActive,
         preferredLanguage: user.preferredLanguage as Language || Language.English,
         moduleAccess: selectedModules,
-        communicationAccess: user.communicationAccess || [],
+        communicationAccess: selectedCommunications,
         notificationType: user.notificationType,
         notificationCategories: user.notificationCategories || [],
         locations: user.locations || []
