@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getAllPartsFromTenant, getPartOrdersByTenantId, updatePartOrder, getPartsByOpportunityId } from '../functions/parts'
 import { PartsOrderSummary, TenantPartOrder, UpdatePartOrderRequest, PartWithFullDetails } from '../../types/parts';
+import { useMemo } from 'react';
 
 interface UseGetTenantPartOrdersOptions {
     tenantId: string
@@ -146,13 +147,46 @@ export function useGetAllPartsFromTenant(tenantId: string) {
     };
 
     function debugLog() {
-        console.log('[debugLog]', groupedPartsByOpportunity);
+        console.log('[debugLog]', partsCount);
     }
+
+    // --- PARTS COUNT OBJECT ---
+    // Returns an object with the count of items for each category, filtering out completed opportunities
+    const partsCount = useMemo(() => {
+        const counts = {
+            backorder: 0,
+            pending: 0,
+            missed: 0,
+            returns: 0,
+            inToday: 0
+        };
+        if (!data) return counts;
+        const today = new Date();
+        const todayStr = today.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+        for (const item of data) {
+            if (item.opportunity.status === 'archived') continue;
+            for (const partDetail of item.partsDetails) {
+                const part = partDetail.part;
+                // Status-based counts
+                if (part.status === 6) counts.backorder++;
+                if (part.status === 0) counts.pending++;
+                if (part.status === 3) counts.missed++;
+                if (part.status === 4) counts.returns++;
+                // inToday: expectedDeliveryDate matches today
+                if (part.expectedDeliveryDate) {
+                    const expectedDate = part.expectedDeliveryDate.slice(0, 10); // 'YYYY-MM-DD'
+                    if (expectedDate === todayStr) counts.inToday++;
+                }
+            }
+        }
+        return counts;
+    }, [data]);
 
     return {
         parts: data || [],
         filterPartsByOpportunityId,
         groupedPartsByOpportunity,
+        partsCount,
         isLoading,
         debugLog,
         error,

@@ -108,12 +108,6 @@ export function NewTaskModal({
     },
   })
 
-  // Debug users data
-  useEffect(() => {
-    console.log('Users for select in task modal:', usersForSelect)
-    console.log('Total users available:', totalCount)
-    console.log('Is loading users:', isLoadingUsers)
-  }, [usersForSelect, totalCount, isLoadingUsers])
 
   // Process locations for dropdown when tenant data is available
   useEffect(() => {
@@ -127,13 +121,11 @@ export function NewTaskModal({
       }))
       
       setLocations(locationOptions)
-      console.log('Locations processed for dropdown:', locationOptions)
       
       // If form has no location selected yet and we have locations, set the first one as default
       if (locationOptions.length > 0) {
         const formLocation = watch('location')
         if (!formLocation) {
-          console.log('Setting default location:', locationOptions[0].value)
           setValue('location', locationOptions[0].value)
         }
       }

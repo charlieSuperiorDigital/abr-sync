@@ -115,12 +115,7 @@ export function EditTaskModal({
   const [locations, setLocations] = useState<{value: string, label: string}[]>([])
   const { updateTaskAsync, isLoading: isUpdating, isError, error } = useUpdateTask()
 
-  // Debug users data
-  useEffect(() => {
-    console.log('Users for select in edit task modal:', usersForSelect)
-    console.log('Total users available:', totalCount)
-    console.log('Is loading users:', isLoadingUsers)
-  }, [usersForSelect, totalCount, isLoadingUsers])
+  
 
   // Process locations for dropdown when tenant data is available
   useEffect(() => {

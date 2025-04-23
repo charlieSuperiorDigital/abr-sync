@@ -61,11 +61,11 @@ export default function ToReceive() {
   // })) || [];
 
   const columns: ColumnDef<TenantPartOrder, any>[] = [
-    // {
-    //   id: 'updates',
-    //   accessorKey: 'updates',
-    //   header: 'UPDATES',
-    // },
+    {
+      id: 'updates',
+      accessorKey: 'updates', 
+      header: 'UPDATES',
+    },
     {
       id: 'roNumber',
       accessorKey: 'roNumber',
@@ -83,11 +83,11 @@ export default function ToReceive() {
         />
       ),
     },
-    // {
-    //   id: 'ordered',
-    //   accessorKey: 'ordered',
-    //   header: 'ORDERED',
-    // },
+    {
+      id: 'ordered',
+      accessorKey: 'ordered',
+      header: 'ORDERED',
+    },
     {
       id: 'assignedTech',
       accessorKey: 'assignedTech',

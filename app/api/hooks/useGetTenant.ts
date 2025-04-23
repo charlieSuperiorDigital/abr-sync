@@ -13,8 +13,6 @@ export interface UseGetTenantOptions {
  * @returns Query result with tenant data
  */
 export function useGetTenant({ tenantId }: UseGetTenantOptions) {
-  // Add debug logging
-  console.log('useGetTenant hook called with tenantId:', tenantId)
 
   const { data, isLoading, error } = useQuery<TenantWithLocations>({
     queryKey: ['tenant', tenantId],
@@ -36,13 +34,7 @@ export function useGetTenant({ tenantId }: UseGetTenantOptions) {
     
   })
 
-  // Add debug logging for the returned data
-  if (data) {
-    console.log('useGetTenant data returned:', {
-      tenant: data.tenant?.name,
-      locationsCount: data.locations?.length || 0
-    })
-  }
+
 
   return {
     tenant: data?.tenant,
