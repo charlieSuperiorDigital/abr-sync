@@ -16,6 +16,7 @@ import { useSession } from 'next-auth/react';
 import WeatherDropdown from './components/WeatherDropdown';
 import HoursButton from './components/HoursButton';
 import HoursModal from './components/HoursModal';
+import EditProfileModal from '@/app/components/custom-components/edit-profile-modal';
 
 export default function TechnicianPainterDashboard() {
   // Use local mock data for now
@@ -23,6 +24,7 @@ export default function TechnicianPainterDashboard() {
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const [modalOpen, setModalOpen] = useState(false);
   const [hoursModalOpen, setHoursModalOpen] = useState(false);
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
   const { data: session } = useSession();
   const userName = session?.user ? `${session.user.firstName} ${session.user.lastName}` : 'Technician';
 
@@ -58,11 +60,22 @@ export default function TechnicianPainterDashboard() {
                 <div className="flex gap-2 items-center">
                   <WeatherDropdown />
                   <TimeDisplay />
-                  <span className="flex gap-2 items-center ml-4">
-                    <span className="flex justify-center items-center w-7 h-7 bg-gray-300 rounded-full">
-                      <UserCircle size={20} />
-                    </span>
-                    <span className="text-lg font-semibold">{userName}</span>
+                  <span className="flex gap-4 items-center ml-4">
+                    <button
+                      className="flex justify-center items-center w-16 h-16 bg-gray-300 rounded-full focus:outline-none hover:bg-gray-400 active:bg-gray-500 transition-all"
+                      style={{ fontSize: 36 }}
+                      aria-label="Edit Profile"
+                      onClick={() => setEditProfileOpen(true)}
+                    >
+                      <UserCircle size={36} />
+                    </button>
+                    <button
+                      className="text-2xl font-semibold px-6 py-4 rounded-full bg-gray-200 hover:bg-gray-300 active:bg-gray-400 focus:outline-none transition-all"
+                      style={{ minWidth: 120 }}
+                      onClick={() => setEditProfileOpen(true)}
+                    >
+                      {userName}
+                    </button>
                   </span>
                 </div>
               </div>
@@ -161,6 +174,7 @@ export default function TechnicianPainterDashboard() {
           </Table>
           {modalOpen && <PartsModal open={modalOpen} onClose={closePartsModal} />}
           {hoursModalOpen && <HoursModal open={hoursModalOpen} onClose={closeHoursModal} />}
+          <EditProfileModal open={editProfileOpen} onOpenChange={setEditProfileOpen} />
         </div>
       </div>
     </div>

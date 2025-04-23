@@ -174,13 +174,8 @@ export function useGetPartsByOpportunityId(opportunityId: string) {
         refetchOnWindowFocus: false,
     });
 
-    function returnPartsWithOpportunityId(opportunityId: string): PartWithFullDetails[] {
-        return data?.filter(part => part.opportunity.id === opportunityId) || [];
-    }
-
     return {
         parts: data || [],
-        returnPartsWithOpportunityId,
         isLoading,
         error,
     };
