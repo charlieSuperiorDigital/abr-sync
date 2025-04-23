@@ -22,7 +22,6 @@ export function useGetTenant({ tenantId }: UseGetTenantOptions) {
           console.log('No tenant ID provided to useGetTenant')
           throw new Error('No tenant ID provided')
         }
-        console.log(`Fetching tenant ${tenantId}`)
         return await getTenantById(tenantId)
       } catch (error) {
         console.error('Error in useGetTenant hook:', error)

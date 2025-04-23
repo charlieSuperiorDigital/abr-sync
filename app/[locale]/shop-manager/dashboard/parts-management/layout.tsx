@@ -44,7 +44,6 @@ export default function PartsManagementLayout({
                             { id: 'to-receive', label: 'To Receive', count: ordersWithPartsToBeReceived.length || 0 },
                             { id: 'invoices', label: 'Invoices', count: 0 },
                             { id: 'received', label: 'Received', count: 0 },
-                            { id: 'backordered', label: 'Backordered', count: 0 },
                             { id: 'cores', label: 'Cores', count: ordersWithCoreParts.length || 0 },
                             { id: 'returns', label: 'Returns', count: ordersWithPartsToBeReturned.length || 0 },
                             { id: 'vendors', label: 'Vendors', count: 0 },

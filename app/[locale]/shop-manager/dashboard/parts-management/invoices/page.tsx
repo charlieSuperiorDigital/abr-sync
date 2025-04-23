@@ -11,6 +11,8 @@ import { invoicesMockData } from '@/app/mocks/parts-management'
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
 import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
 import { Plus } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import { useGetTenantPartOrders } from '@/app/api/hooks/useParts'
 
 interface PartsInvoice {
   invoiceId: string
@@ -31,7 +33,14 @@ interface PartsInvoice {
 }
 
 export default function Invoices() {
-  const [data] = useState<PartsInvoice[]>(invoicesMockData)
+  const { data: session } = useSession();
+  const {
+    ordersWhichExceedAmountSpecifiedByTenant,
+    isLoading,
+    error
+  } = useGetTenantPartOrders({ tenantId: session?.user?.tenantId || '' });
+
+  const data = ordersWhichExceedAmountSpecifiedByTenant;
 
   const columns: ColumnDef<PartsInvoice, any>[] = [
     {

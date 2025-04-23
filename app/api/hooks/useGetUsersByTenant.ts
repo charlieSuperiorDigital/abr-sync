@@ -26,7 +26,6 @@ export function useGetUsersByTenant({
           console.log('No tenant ID provided to useGetUsersByTenant')
           throw new Error('No tenant ID provided')
         }
-        console.log(`Fetching users for tenant ${tenantId}`)
         return await getUsersByTenant(tenantId, page, perPage)
       } catch (error) {
         console.error('Error in useGetUsersByTenant hook:', error)
