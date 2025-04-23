@@ -46,6 +46,17 @@ enum UserCommunication {
   All = ~0                 // 1111 1111
 }
 
+enum UserNotificationType{
+  None = 0,                // 0000 0000
+  SMS = 1,                 // 0000 0001
+  Email = 2                // 0000 0010
+}
+
+enum UserNotification{
+  None = 0, // 0000 0000
+  All = ~0, // 1111 1111
+  WorkfileECD = 1 // 0000 0001
+}
 
 interface EditUserModalProps {
   children?: React.ReactNode
@@ -58,21 +69,17 @@ export function EditUserModal({
   title,
   user
 }: EditUserModalProps) {
+
   const { tenant } = useTenant()
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const t = useTranslations('User')
   const updateUserInStore = useUserStore((state) => state.updateUser)
-
-  // File input reference
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  // Profile picture state
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null)
 
-  // File upload hook
   const { uploadFile, isUploading, error: uploadError } = useFileUpload({
     onSuccess: (data) => {
       console.log('Profile picture uploaded successfully:', data)
@@ -89,6 +96,22 @@ export function EditUserModal({
     }
   }
 
+  const hasModule = (moduleAccess: number, module: UserModules): boolean => {
+    return hasFlag(moduleAccess, module);
+  }
+
+  const hasCommunication = (communicationAccess: number, communication: UserCommunication): boolean => {
+    return hasFlag(communicationAccess, communication);
+  }
+
+  const hasNotificationType = (notificationAccess: number, type: UserNotificationType): boolean => {
+    return hasFlag(notificationAccess, type);
+  }
+
+  const hasNotification = (notificationAccess: number, notification: UserNotification): boolean => {
+    return hasFlag(notificationAccess, notification);
+  }
+  
   const hasFlag = <T extends number>(access: number, flag: T): boolean => {
     // Convert decimal to binary string and back to decimal to handle the input correctly
     const binaryStr = access.toString().padStart(8, '0');
@@ -103,22 +126,99 @@ export function EditUserModal({
     return result;
   }
 
-  const hasModule = (moduleAccess: number, module: UserModules): boolean => {
-    return hasFlag(moduleAccess, module);
-  }
-
-  const hasCommunication = (communicationAccess: number, communication: UserCommunication): boolean => {
-    return hasFlag(communicationAccess, communication);
-  }
-
-  const validationMessage = useTranslations('Validation')
-
-  // Extract first and last name from full name
   const getNameParts = (fullName: string) => {
     const nameParts = fullName.trim().split(/\\s+/)
     const firstName = nameParts[0] || ''
     const lastName = nameParts.slice(1).join(' ') || ''
     return { firstName, lastName }
+  }
+
+  const handleModuleAccess = (moduleAccessValue: number): ModuleAccess[] => {
+    const selectedModules: ModuleAccess[] = [];
+    const moduleMapping = [
+      { flag: UserModules.Workfiles, access: ModuleAccess.Workfiles },
+      { flag: UserModules.Users, access: ModuleAccess.Users },
+      { flag: UserModules.Locations, access: ModuleAccess.Locations },
+      { flag: UserModules.Opportunities, access: ModuleAccess.Opportunities },
+      { flag: UserModules.Parts, access: ModuleAccess.Parts },
+      { flag: UserModules.Settings, access: ModuleAccess.Settings },
+      { flag: UserModules.InsuranceVehicleOwners, access: ModuleAccess.InsuranceVehicleOwners },
+    ];
+
+    moduleMapping.forEach(({ flag, access }) => {
+      if (hasModule(moduleAccessValue, flag)) {
+        selectedModules.push(access);
+      }
+    });
+
+    return selectedModules;
+  };
+
+  const handleCommunicationAccess = (communicationAccessValue: number): CommunicationAccess[] => {
+    console.log('Communication Access Raw Value:', communicationAccessValue);
+    console.log('Communication Access Type:', typeof communicationAccessValue);
+
+    const selectedCommunications: CommunicationAccess[] = [];
+    const communicationMapping = [
+      { flag: UserCommunication.Vendors, access: CommunicationAccess.Vendors },
+      { flag: UserCommunication.Insurances, access: CommunicationAccess.Insurances },
+      { flag: UserCommunication.VehicleOwners, access: CommunicationAccess.VehicleOwners },
+    ];
+
+    console.log('Communication Mapping:', communicationMapping);
+
+    communicationMapping.forEach(({ flag, access }) => {
+      if (hasCommunication(communicationAccessValue, flag)) {
+        selectedCommunications.push(access);
+      }
+    });
+
+    console.log('Final Selected Communications:', selectedCommunications);
+    return selectedCommunications;
+  };
+
+  const handleNotificationTypeAccess = (notificationTypeValue: number): NotificationType[] => {
+    console.log('Notification Type Raw Value:', notificationTypeValue);
+    
+    const selectedTypes: NotificationType[] = [];
+    const typeMapping = [
+      { flag: UserNotificationType.SMS, type: NotificationType.SMS },
+      { flag: UserNotificationType.Email, type: NotificationType.Email },
+    ];
+
+    typeMapping.forEach(({ flag, type }) => {
+      if (hasNotificationType(notificationTypeValue, flag)) {
+        selectedTypes.push(type);
+      }
+    });
+
+    console.log('Final Selected Notification Types:', selectedTypes);
+    return selectedTypes;
+  };
+
+  const handleNotificationAccess = (notificationValue: number): NotificationCategory[] => {
+    console.log('Notification Raw Value:', notificationValue);
+    
+    const selectedNotifications: NotificationCategory[] = [];
+    const notificationMapping = [
+      { flag: UserNotification.WorkfileECD, category: NotificationCategory.WorkfileECD },
+    ];
+
+    notificationMapping.forEach(({ flag, category }) => {
+      if (hasNotification(notificationValue, flag)) {
+        selectedNotifications.push(category);
+      }
+    });
+
+    console.log('Final Selected Notifications:', selectedNotifications);
+    return selectedNotifications;
+  };
+
+  const handleSetProfilePicture = (user: User) => {
+    if (user.profilePicture) {
+      setProfilePictureUrl(user.profilePicture);
+      setLogoPreview(user.profilePicture)
+    }
   }
 
   const {
@@ -134,7 +234,6 @@ export function EditUserModal({
       fullName: '',
       email: '',
       phoneNumber: '',
-
       role: undefined,
       hourlyRate: 0,
       isActive: true,
@@ -142,62 +241,23 @@ export function EditUserModal({
       moduleAccess: [],
       communicationAccess: [],
       notificationType: undefined,
-      notificationCategories: [],
+      notification: 0,
       locations: []
     }
   })
 
-  // Initialize form with user data
   useEffect(() => {
     if (user) {
-      // Parse roles from JSON string
+      console.log('EditUserModal: user', user)
       const userRoles = user.roles ? JSON.parse(user.roles) : [];
       const primaryRole = userRoles.length > 0 ? userRoles[0] : '';
 
-      console.log('user', user)
+      const selectedModules = handleModuleAccess(user.modules);
+      const selectedCommunications = handleCommunicationAccess(user.communication);
+      const selectedNotificationTypes = handleNotificationTypeAccess(user.notificationType);
+      const selectedNotifications = user.notification || 0;
 
-      // Convert moduleAccess number to array of selected modules
-      const selectedModules: ModuleAccess[] = [];
-      // Handle module access
-      const moduleAccessValue = user.modules;
-      const moduleMapping = [
-        { flag: UserModules.Workfiles, access: ModuleAccess.Workfiles },
-        { flag: UserModules.Users, access: ModuleAccess.Users },
-        { flag: UserModules.Locations, access: ModuleAccess.Locations },
-        { flag: UserModules.Opportunities, access: ModuleAccess.Opportunities },
-        { flag: UserModules.Parts, access: ModuleAccess.Parts },
-        { flag: UserModules.Settings, access: ModuleAccess.Settings },
-        { flag: UserModules.InsuranceVehicleOwners, access: ModuleAccess.InsuranceVehicleOwners },
-      ];
-
-      moduleMapping.forEach(({ flag, access }) => {
-        if (hasModule(moduleAccessValue, flag)) {
-          selectedModules.push(access);
-        }
-      });
-
-      // Handle communication access
-      const communicationAccessValue = user.communication      ;
-      console.log('Communication Access Raw Value:', communicationAccessValue);
-      console.log('Communication Access Type:', typeof communicationAccessValue);
-
-      const selectedCommunications: CommunicationAccess[] = [];
-      const communicationMapping = [
-        { flag: UserCommunication.Vendors, access: CommunicationAccess.Vendors },
-        { flag: UserCommunication.Insurances, access: CommunicationAccess.Insurances },
-        { flag: UserCommunication.VehicleOwners, access: CommunicationAccess.VehicleOwners },
-      ];
-
-      console.log('Communication Mapping:', communicationMapping);
-
-      communicationMapping.forEach(({ flag, access }) => {
-        if (hasCommunication(communicationAccessValue, flag)) {
-          selectedCommunications.push(access);
-        }
-      });
-
-      console.log('Final Selected Communications:', selectedCommunications);
-
+      handleSetProfilePicture(user);
 
       reset({
         fullName: `${user.firstName} ${user.lastName}`,
@@ -210,17 +270,10 @@ export function EditUserModal({
         moduleAccess: selectedModules,
         communicationAccess: selectedCommunications,
         notificationType: user.notificationType,
-        notificationCategories: user.notificationCategories || [],
+        notification: selectedNotifications,
         locations: user.locations || []
       });
 
-      if (user.profilePicture) {
-
-        setProfilePictureUrl(user.profilePicture);
-        setLogoPreview(user.profilePicture)
-
-
-      }
     }
   }, [isOpen, user, setValue])
 
@@ -652,16 +705,16 @@ export function EditUserModal({
 
                   <div className="space-y-2">
                     <Controller
-                      name="notificationCategories"
+                      name="notification"
                       control={control}
                       render={({ field }) => (
                         <div className="grid grid-cols-2 gap-2">
                           <div className="flex items-center space-x-2">
                             <Checkbox
                               id="notification-all"
-                              checked={field.value.includes(NotificationCategory.All)}
+                              checked={hasNotification(field.value, UserNotification.All)}
                               onCheckedChange={(checked) => {
-                                field.onChange(checked ? [NotificationCategory.All] : [])
+                                field.onChange(checked ? UserNotification.All : UserNotification.None)
                               }}
                             />
                             <Label htmlFor="notification-all">All</Label>
@@ -669,12 +722,13 @@ export function EditUserModal({
                           <div className="flex items-center space-x-2">
                             <Checkbox
                               id="notification-workfile"
-                              checked={field.value.includes(NotificationCategory.WorkfileECD)}
+                              checked={hasNotification(field.value, UserNotification.WorkfileECD)}
                               onCheckedChange={(checked) => {
+                                const currentValue = field.value || 0;
                                 const newValue = checked
-                                  ? [...field.value.filter((cat: NotificationCategory) => cat !== NotificationCategory.All), NotificationCategory.WorkfileECD]
-                                  : field.value.filter((cat: NotificationCategory) => cat !== NotificationCategory.WorkfileECD)
-                                field.onChange(newValue)
+                                  ? currentValue | UserNotification.WorkfileECD
+                                  : currentValue & ~UserNotification.WorkfileECD;
+                                field.onChange(newValue);
                               }}
                             />
                             <Label htmlFor="notification-workfile">Workfile ECD</Label>

@@ -13,7 +13,7 @@ export const userFormSchema = z.object({
   moduleAccess: z.array(z.nativeEnum(ModuleAccess)),
   communicationAccess: z.array(z.nativeEnum(CommunicationAccess)),
   notificationType: z.nativeEnum(NotificationType),
-  notificationCategories: z.array(z.nativeEnum(NotificationCategory)),
+  notification: z.number(),
   locations: z.array(z.string()),
 })
 

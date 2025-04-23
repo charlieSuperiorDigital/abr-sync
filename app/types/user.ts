@@ -90,8 +90,8 @@ export interface User {
   hourlyRate: number
   modules: number
   communication: number
-  notificationType: NotificationType
-  notificationCategories: NotificationCategory[]
+  notificationType: number
+  notification: number
   locations: Location[]
   avatar: string
   lastLoginAt: string;
