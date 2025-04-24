@@ -1,6 +1,5 @@
-"use client";
+'use client'
 import {
-  Archive,
   ClipboardList,
   FolderOpen,
   Mail,
@@ -10,18 +9,34 @@ import {
   TrendingUp,
   TruckIcon,
   User,
-} from "lucide-react";
-import Image from "next/image";
-import SideBarIconGroup from "../../custom-components/sidebar-icon-group";
-import React, { useState } from "react";
-import EditProfileModal from "@/app/components/custom-components/edit-profile-modal/edit-profile-modal";
-import RoleGuard from "@/app/components/RoleGuard";
+} from 'lucide-react'
+import Image from 'next/image'
+import SideBarIconGroup from '../../custom-components/sidebar-icon-group'
+import type React from 'react'
+import { useState } from 'react'
+import EditProfileModal from '@/app/components/custom-components/edit-profile-modal/edit-profile-modal'
+import RoleGuard from '@/app/components/RoleGuard'
+import { CallReceiver } from '../../custom-components/calls/call-receiver'
+import { Button } from '@/components/ui/button'
+import { useCall } from '@/app/context/call-context'
+import { CallProvider } from '@/app/context/call-context'
 
-export default function DashboardLayoutClient({ children }: { children: React.ReactNode }) {
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+// Create a separate component for the dashboard content
+function DashboardContent({ children }: { children: React.ReactNode }) {
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
 
   return (
-    <RoleGuard allowedRoles={['shopmanager', 'admin', 'salesrep', 'estimator', 'shopowner', 'manager', 'technician']}>
+    <RoleGuard
+      allowedRoles={[
+        'shopmanager',
+        'admin',
+        'salesrep',
+        'estimator',
+        'shopowner',
+        'manager',
+        'technician',
+      ]}
+    >
       <div className="flex max-h-screen">
         <aside className="flex flex-col items-center px-2 py-5 w-16 text-white bg-black">
           <Image
@@ -84,12 +99,28 @@ export default function DashboardLayoutClient({ children }: { children: React.Re
             </div>
           </nav>
         </aside>
-        <main className="flex flex-col py-8 w-full min-h-screen">{children}</main>
+        <main className="flex flex-col py-8 w-full min-h-screen items-center">
+          <CallReceiver />
+          {children}
+        </main>
       </div>
       <EditProfileModal
         open={isProfileModalOpen}
         onOpenChange={setIsProfileModalOpen}
       />
     </RoleGuard>
-  );
+  )
+}
+
+// Wrap the dashboard content with the CallProvider
+export default function DashboardLayoutClient({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <CallProvider>
+      <DashboardContent>{children}</DashboardContent>
+    </CallProvider>
+  )
 }

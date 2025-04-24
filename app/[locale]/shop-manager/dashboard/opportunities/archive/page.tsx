@@ -10,7 +10,11 @@ import {
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { ColumnDef } from '@tanstack/react-table'
 import { ClipboardPlus } from 'lucide-react'
-import { Opportunity, OpportunityStatus, RepairStage } from '@/app/types/opportunity'
+import {
+  Opportunity,
+  OpportunityStatus,
+  RepairStage,
+} from '@/app/types/opportunity'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import { useState, useCallback } from 'react'
@@ -22,14 +26,20 @@ import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
 export default function ArchivedOpportunities() {
   const { data: session } = useSession()
   const tenantId = session?.user?.tenantId
-  const { archivedOpportunities, isLoading } = useGetOpportunities({ tenantId: tenantId! })
+  const { archivedOpportunities, isLoading } = useGetOpportunities({
+    tenantId: tenantId!,
+  })
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null)
+  const [selectedOpportunity, setSelectedOpportunity] =
+    useState<Opportunity | null>(null)
 
-  const handleRowClick = useCallback((opportunity: Opportunity) => {
-    setSelectedOpportunity(opportunity)
-    setIsModalOpen(true)
-  }, [setSelectedOpportunity])
+  const handleRowClick = useCallback(
+    (opportunity: Opportunity) => {
+      setSelectedOpportunity(opportunity)
+      setIsModalOpen(true)
+    },
+    [setSelectedOpportunity]
+  )
 
   const handleContactClick = useCallback((opportunity: Opportunity) => {
     // Handle contact info click based on opportunity state
@@ -80,18 +90,19 @@ export default function ArchivedOpportunities() {
       accessorKey: 'roNumber',
       header: 'RO',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.roNumber || '---'}</span>
+        <span className="whitespace-nowrap">
+          {row.original.roNumber || '---'}
+        </span>
       ),
     },
     {
       accessorKey: 'owner.name',
       header: 'Owner',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">
-          {row.original.owner.name}
-        </span>
+        <span className="whitespace-nowrap">{row.original.owner.name}</span>
       ),
-    }, {
+    },
+    {
       accessorKey: 'firstCallDate',
       header: '1ST CALL',
       cell: ({ row }) => (
@@ -131,7 +142,9 @@ export default function ArchivedOpportunities() {
       accessorKey: 'lastUpdatedDate',
       header: 'LAST UPDATED',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{formatDate(row.original.lastUpdatedDate)}</span>
+        <span className="whitespace-nowrap">
+          {formatDate(row.original.lastUpdatedDate)}
+        </span>
       ),
     },
     {
@@ -140,9 +153,11 @@ export default function ArchivedOpportunities() {
     },
     {
       header: 'SUMMARY',
-      cell: ({ row }) => <SummaryCell text='Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' />,
+      cell: ({ row }) => (
+        <SummaryCell text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." />
+      ),
     },
-   {
+    {
       id: 'unarchive',
       header: 'Unarchive',
       cell: ({ row }) => (
@@ -160,7 +175,11 @@ export default function ArchivedOpportunities() {
   ]
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-64">Loading opportunities...</div>
+    return (
+      <div className="flex justify-center items-center h-64">
+        Loading opportunities...
+      </div>
+    )
   }
 
   return (
@@ -176,9 +195,15 @@ export default function ArchivedOpportunities() {
       <BottomSheetModal
         isOpen={isModalOpen}
         onOpenChange={setIsModalOpen}
-        title={selectedOpportunity ? `${selectedOpportunity.vehicle.year} ${selectedOpportunity.vehicle.make} ${selectedOpportunity.vehicle.model}` : ''}
+        title={
+          selectedOpportunity
+            ? `${selectedOpportunity.vehicle.year} ${selectedOpportunity.vehicle.make} ${selectedOpportunity.vehicle.model}`
+            : ''
+        }
       >
-        {selectedOpportunity && <OpportunityModal opportunity={selectedOpportunity} />}
+        {selectedOpportunity && (
+          <OpportunityModal opportunity={selectedOpportunity} />
+        )}
       </BottomSheetModal>
     </div>
   )
