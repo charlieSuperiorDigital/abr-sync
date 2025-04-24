@@ -189,19 +189,19 @@ export default function Vendors() {
                         <table className="min-w-full divide-y divide-gray-300">
                           <thead className="bg-gray-200">
                             <tr>
-                              <th className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">UPDATES</th>
-                              <th className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">RO #</th>
-                              <th className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">VEHICLE</th>
-                              <th className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">ORDERED</th>
-                              <th className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">ASSIGNED TECH</th>
-                              <th className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">TO ORDER</th>
-                              <th className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">TO RECEIVE</th>
-                              <th className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">TOTAL</th>
-                              <th className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">ESTIMATE</th>
-                              <th className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">ECD</th>
-                              <th className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">EXPECTED</th>
-                              <th className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">VIEW PARTS</th>
-                              <th className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">TASK</th>
+                              <th key="th-updates" className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">UPDATES</th>
+                              <th key="th-ro" className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">RO #</th>
+                              <th key="th-vehicle" className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">VEHICLE</th>
+                              <th key="th-ordered" className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">ORDERED</th>
+                              <th key="th-assigned-tech" className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">ASSIGNED TECH</th>
+                              <th key="th-to-order" className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">TO ORDER</th>
+                              <th key="th-to-receive" className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">TO RECEIVE</th>
+                              <th key="th-total" className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">TOTAL</th>
+                              <th key="th-estimate" className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">ESTIMATE</th>
+                              <th key="th-ecd" className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">ECD</th>
+                              <th key="th-expected" className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">EXPECTED</th>
+                              <th key="th-view-parts" className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">VIEW PARTS</th>
+                              <th key="th-task" className="py-3.5 text-left text-sm font-semibold text-gray-900 bg-gray-300">TASK</th>
                             </tr>
                           </thead>
                           <tbody className="bg-gray-100 divide-y divide-gray-200">
