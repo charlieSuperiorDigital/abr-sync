@@ -64,6 +64,7 @@ export type WorkfileApiResponse = {
   opportunity: {
     id: string;
     tenantId: string;
+    inRental: boolean;
     insuranceId: string;
     insurance: null;
     vehicleId: string;

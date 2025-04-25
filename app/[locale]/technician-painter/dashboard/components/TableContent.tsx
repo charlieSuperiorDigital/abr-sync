@@ -4,9 +4,10 @@ import { Opportunity } from '@/app/types/opportunity';
 import { formatCurrency } from '@/lib/utils';
 import PartsButton from './PartsButton';
 import { CalendarDays } from 'lucide-react';
+import { useGetWorkfileById } from '@/app/api/hooks/useWorkfiles';
 
 interface TableContentProps {
-  opportunity: Opportunity;
+  workfileId: string;
 }
 
 const formatDate = (date?: string) => {
@@ -24,7 +25,7 @@ const getDaysUntil = (date?: string) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0); // Reset time to start of day
 
-  const targetDate = new Date(date);
+  const targetDate = new Date(date); 
   targetDate.setHours(0, 0, 0, 0); // Reset time to start of day
 
   const diffTime = targetDate.getTime() - today.getTime();
@@ -33,7 +34,9 @@ const getDaysUntil = (date?: string) => {
   return diffDays;
 };
 
-const TableContent: React.FC<TableContentProps> = ({ opportunity }) => {
+const TableContent: React.FC<TableContentProps> = ({ workfileId }) => {
+  const { workfile, isLoading, error } = useGetWorkfileById({ workfileId });
+
   // Updated action buttons as requested
   const actionButtons = [
     { label: 'Supplement . X', className: 'bg-black text-white hover:bg-gray-800 active:bg-gray-900', onClick: () => { } },
@@ -42,17 +45,50 @@ const TableContent: React.FC<TableContentProps> = ({ opportunity }) => {
     { label: 'Done', className: 'bg-green-600 text-white hover:bg-green-500 active:bg-green-700', onClick: () => { } },
   ];
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 p-8">
+        <div className="w-8 h-8 mb-4 border-4 rounded-full border-t-blue-500 border-b-blue-700 border-l-blue-500 border-r-blue-700 animate-spin"></div>
+        <p className="text-gray-500">Loading workfile details...</p>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error || !workfile) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 p-8">
+        <p className="mb-4 text-lg font-semibold text-red-500">Error loading workfile</p>
+        <p className="text-gray-500">{error ? (error as Error).message : 'Workfile not found'}</p>
+      </div>
+    );
+  }
+
+  // Extract data from workfile
+  const opportunity = workfile.opportunity;
+  const vehicle = opportunity?.vehicle;
+  
+  // If opportunity data is not available, show a message
+  if (!opportunity || !vehicle) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 p-8">
+        <p className="text-gray-500">No vehicle data available for this workfile</p>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-[99.99vw] bg-gray-200 ">
       {/* First Row: RO, Car details, ECD, action buttons */}
-      <div className="flex flex-row gap-0 justify-between items-center py-4">
-        <div className="flex flex-row gap-6 items-center">
-          <div className="px-4 text-2xl font-bold text-black">RO #{opportunity.roNumber}</div>
+      <div className="flex flex-row items-center justify-between gap-0 py-4">
+        <div className="flex flex-row items-center gap-6">
+          <div className="px-4 text-2xl font-bold text-black">RO #{workfile.id}</div>  {/* Comment: RO number not available in workfile */}
           <div className="text-xl font-semibold text-black">
-            {opportunity.vehicle.year} {opportunity.vehicle.make} {opportunity.vehicle.model} ({opportunity.vehicle.exteriorColor})
+            {vehicle.year} {vehicle.make} {vehicle.model} ({vehicle.exteriorColor})
           </div>
           {(() => {
-            const daysUntil = getDaysUntil(opportunity.estimatedCompletionDate);
+            const daysUntil = getDaysUntil(workfile.estimatedCompletionDate);
             const isUrgent = daysUntil !== null && daysUntil <= 3;
 
             return (
@@ -61,7 +97,7 @@ const TableContent: React.FC<TableContentProps> = ({ opportunity }) => {
                 <CalendarDays size={20} className="mr-3" />
                 {daysUntil !== null
                   ? `${daysUntil} ${daysUntil === 1 ? 'day' : 'days'} until ECD`
-                  : `ECD: ${formatDate(opportunity.estimatedCompletionDate)}`}
+                  : `ECD: ${formatDate(workfile.estimatedCompletionDate)}`}
               </div>
             );
           })()}
@@ -81,12 +117,14 @@ const TableContent: React.FC<TableContentProps> = ({ opportunity }) => {
       </div>
 
       {/* Second Row: Car image, info blocks, damage, parts, repair plan */}
-      <div className="flex flex-row gap-0 justify-between items-stretch bg-gray-200">
+      <div className="flex flex-row items-stretch justify-between gap-0 bg-gray-200">
         <div className='flex flex-[4]'>
           {/* Car Image */}
-          <div className="overflow-hidden w-48 h-full bg-red-200">
+          <div className="w-48 h-full overflow-hidden bg-red-200">
             <Image
-              src={`https://picsum.photos/seed/${opportunity.vehicle.vin}/320/240`}
+              src={vehicle.vehiclePicturesUrls && vehicle.vehiclePicturesUrls.length > 0 
+                ? vehicle.vehiclePicturesUrls[0] 
+                : `https://picsum.photos/seed/${vehicle.vin}/320/240`}
               alt="Vehicle"
               width={320}
               height={320}
@@ -98,24 +136,23 @@ const TableContent: React.FC<TableContentProps> = ({ opportunity }) => {
 
             {/* Car Info Block */}
             <div className=" flex flex-col gap-1 justify-center bg-opacity-90  px-6 py-4 min-w-[400px] flex-[1]">
-              <div className='flex-[1]'><span className="font-bold">VIN:</span> {opportunity.vehicle.vin}</div>
+              <div className='flex-[1]'><span className="font-bold">VIN:</span> {vehicle.vin}</div>
               <div className='flex flex-[4] flex-row justify-between  start max-w-[300px]'>
                 <div className='flex flex-col justify-around'>
-                  <div><span className="font-bold">Estimate:</span> ${opportunity.estimateAmount?.toLocaleString() || '---'}</div>
+                  <div><span className="font-bold">Estimate:</span> {/* Comment: Estimate amount not available in workfile */}</div>
                   <div><span className="font-bold">Tech:</span> {'---'}</div>
-                  <div><span className="font-bold">Color:</span> {opportunity.vehicle.exteriorColor}</div>
+                  <div><span className="font-bold">Color:</span> {vehicle.exteriorColor}</div>
                 </div>
                 <div className='flex flex-col justify-around'>
                   <div><span className="font-bold">Hours:</span> {'---'}</div>
                   <div><span className="font-bold">Est.:</span> {'---'}</div>
-                  <div><span className="font-bold">License:</span> {opportunity.vehicle.licensePlate || '---'}</div>
+                  <div><span className="font-bold">License:</span> {vehicle.licensePlate || '---'}</div>
                 </div>
               </div>
             </div>
             {/* Damage Description */}
             <div className="flex flex-col bg-opacity-90 items-center justify-center h-full px-6 py-4 flex-[1]">
-
-              <div className="text-gray-800">{opportunity.vehicle.damageDescription || '---'}</div>
+              <div className="text-gray-800">{/* Comment: Damage description not available in workfile */}</div>
             </div>
           </div>
         </div>
@@ -151,19 +188,19 @@ const TableContent: React.FC<TableContentProps> = ({ opportunity }) => {
           <div className="flex flex-col gap-1">
             <div className="flex flex-row justify-between">
               <span className="font-semibold">START</span>
-              <span>{formatDate(opportunity.repairStartDate)}</span>
+              <span>{formatDate(workfile.dropDate)}</span>
             </div>
             <div className="flex flex-row justify-between">
               <span className="font-semibold">IN PROGRESS</span>
-              <span>{formatDate(opportunity.repairInProgressDate)}</span>
+              <span>{formatDate(workfile.createdAt)}</span>
             </div>
             <div className="flex flex-row justify-between">
               <span className="font-semibold">COMPLETED</span>
-              <span>{formatDate(opportunity.repairCompletedDate)}</span>
+              <span>{workfile.status === 'completed' ? formatDate(workfile.updatedAt) : '---'}</span>
             </div>
             <div className="flex flex-row justify-between">
               <span className="font-semibold">VEHICLE OUT</span>
-              <span>{formatDate(opportunity.vehicleOutDate)}</span>
+              <span>{workfile.status === 'archive' ? formatDate(workfile.updatedAt) : '---'}</span>
             </div>
           </div>
         </div>
