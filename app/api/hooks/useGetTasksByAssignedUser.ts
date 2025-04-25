@@ -29,8 +29,11 @@ export function useGetTasksByAssignedUser(options: UseGetTasksByAssignedUserOpti
     refetchOnWindowFocus: false, // Don't refetch when window gains focus
   })
 
+  const incompleteTasks = data?.filter(task => task.status !== 'completed') || []
+
   return {
     tasks: data || [],
+    incompleteTasks,
     isLoading,
     error,
   }

@@ -21,6 +21,8 @@ import { useGetWorkfilesByUserId } from '@/app/api/hooks/useWorkfiles';
 import { Workfile, WorkfileApiResponse } from '@/app/types/workfile';
 import { useWeather } from '@/app/api/hooks/useWeather';
 import { Button } from '@/components/ui/button';
+import { useGetTasksByAssignedUser } from '@/app/api/hooks/useGetTasksByAssignedUser';
+import Image from 'next/image';
 
 // Define types for workfile extended properties
 interface WorkfileWithParts extends WorkfileApiResponse {
@@ -35,6 +37,7 @@ interface OpportunityWithSublet {
   subletTypes?: string[] | string;
 }
 
+
 export default function TechnicianPainterDashboard() {
   const { data: session } = useSession();
   const userId = session?.user?.userId;
@@ -44,25 +47,24 @@ export default function TechnicianPainterDashboard() {
   const [hoursModalOpen, setHoursModalOpen] = useState(false);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const userName = session?.user ? `${session.user.firstName} ${session.user.lastName}` : 'Technician';
-  
   // Geolocation states
   const [coordinates, setCoordinates] = useState<{ latitude?: number; longitude?: number }>({});
   const [locationRequested, setLocationRequested] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
-  
+
   // Weather hook
   const { weatherData, isLoading: weatherLoading, error: weatherError } = useWeather(coordinates);
-  
+
   // Request user location
   const requestLocation = () => {
     setLocationRequested(true);
     setLocationError(null);
-    
+
     if (!navigator.geolocation) {
       setLocationError('Geolocation is not supported by your browser');
       return;
     }
-    
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setCoordinates({
@@ -87,7 +89,7 @@ export default function TechnicianPainterDashboard() {
       }
     );
   };
-  
+
   // Request location on initial load
   useEffect(() => {
     if (!locationRequested) {
@@ -126,8 +128,8 @@ export default function TechnicianPainterDashboard() {
           </div>
           <div className="flex items-center gap-2">
             {locationError ? (
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="flex items-center gap-2 px-4 py-2"
                 onClick={requestLocation}
               >
@@ -142,15 +144,25 @@ export default function TechnicianPainterDashboard() {
             <TimeDisplay />
             <span className="flex items-center gap-4 ml-4">
               <button
-                className="flex items-center justify-center w-16 h-16 transition-all bg-gray-300 rounded-full focus:outline-none hover:bg-gray-400 active:bg-gray-500"
-                style={{ fontSize: 36 }}
+                className="flex items-center justify-center w-10 h-10 transition-all bg-gray-300 rounded-full focus:outline-none hover:bg-gray-400 active:bg-gray-500"
+                
                 aria-label="Edit Profile"
                 onClick={() => setEditProfileOpen(true)}
               >
-                <UserCircle size={36} />
+                {session?.user?.image ? (
+                  <Image
+                    src={session.user.image}
+                    alt="User profile"
+                    width={30}
+                    height={30}
+                    className="rounded-full"
+                  />
+                ) : (
+                  <UserCircle size={30} />
+                )}
               </button>
               <button
-                className="px-6 py-4 text-2xl font-semibold transition-all bg-gray-200 rounded-full hover:bg-gray-300 active:bg-gray-400 focus:outline-none"
+                className="px-6 py-2 text-xl font-semibold transition-all bg-gray-200 rounded-full hover:bg-gray-300 active:bg-gray-400 focus:outline-none"
                 style={{ minWidth: 120 }}
                 onClick={() => setEditProfileOpen(true)}
               >
@@ -181,10 +193,10 @@ export default function TechnicianPainterDashboard() {
               {data?.map((workfile: WorkfileApiResponse) => {
                 // Cast to extended types for added properties
                 const workfileWithParts = workfile as WorkfileWithParts;
-                
+
                 // Define default empty subletTypes array
                 const subletTypes: string[] = [];
-                
+
                 // Safely check if opportunity has subletTypes
                 const opportunitySublet = workfile.opportunity as unknown as OpportunityWithSublet;
                 if (opportunitySublet?.subletTypes) {
@@ -194,7 +206,7 @@ export default function TechnicianPainterDashboard() {
                     subletTypes.push(opportunitySublet.subletTypes);
                   }
                 }
-                
+
                 return (
                   <React.Fragment key={workfile.id}>
                     <TableRow

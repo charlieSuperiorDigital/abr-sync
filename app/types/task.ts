@@ -40,13 +40,15 @@ export interface Task {
   tenantId: string
   title: string
   description: string
-  status: 'open' | 'in_progress' | 'completed' | 'archived'
+  status: 'open' | 'in_progress' | 'completed' | 'archived' | 'New'
   assignedTo: string
   assignedUser?: User
   workfileId?: string
   workfile?: Workfile
   locationId?: string
   location?: Location
+  opportunityId?: string
+  opportunity?: any
   dueDate: string
   createdAt: string
   updatedAt: string
@@ -54,7 +56,7 @@ export interface Task {
     variant: 'danger' | 'warning' | 'success' | 'slate'
     text: 'Urgent' | 'High' | 'Normal' | 'Low'
   }
-  type: string
+  type: string | number
   endDate?: string
   roles?: string
   createdBy: string
