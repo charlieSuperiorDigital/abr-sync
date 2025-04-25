@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useGetTasksByAssignedUser } from '@/app/api/hooks/useGetTasksByAssignedUser'
-import { markTaskasDone } from '@/app/api/functions/tasks'
-import { Check } from 'lucide-react'
+import { useUpdateTask } from '@/app/api/hooks/useUpdateTask'
+import { Check, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import { format, isToday, isTomorrow, addDays, isPast, isWithinInterval } from 'date-fns'
 import TaskConfirmModal from './TaskConfirmModal'
@@ -135,6 +135,7 @@ export default function TaskSidebar() {
     enabled: !!userId
   })
 
+  const { updateTaskAsync, isLoading: isUpdating } = useUpdateTask()
   const [completedTasks, setCompletedTasks] = useState<Record<string, boolean>>({})
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
@@ -154,24 +155,27 @@ export default function TaskSidebar() {
 
   // Handle marking a task as done after confirmation
   const handleConfirmMarkAsDone = async (taskId: string) => {
-    setIsConfirmModalOpen(false)
+    if (!taskId) return
     
     try {
-      // For now, just log the task ID and show a success toast
-      console.log('Task completed:', taskId)
+      const currentDate = new Date().toISOString()
       
-      // Mock API call (replace with real API call later)
-      // const result = await markTaskasDone(taskId)
-      const result = { success: true }
+      // Update task with status, completedDate and lastUpdatedDate
+      const result = await updateTaskAsync({
+        id: taskId,
+        status: 'completed',
+        completedDate: currentDate,
+        lastUpdatedDate: currentDate
+      })
       
-      if (result.success) {
+      if (result?.success) {
         // Update completed tasks state
         setCompletedTasks(prev => ({
           ...prev,
           [taskId]: true
         }))
         
-        // Show success toast with standard configuration
+        // Show success toast
         toast.success('Task marked as completed successfully!', {
           position: "top-right",
           autoClose: 3000,
@@ -180,6 +184,8 @@ export default function TaskSidebar() {
           pauseOnHover: true,
           draggable: true,
         })
+      } else {
+        throw new Error(result?.error || 'Failed to update task')
       }
     } catch (error) {
       console.error('Error marking task as done:', error)
@@ -191,9 +197,10 @@ export default function TaskSidebar() {
         pauseOnHover: true,
         draggable: true,
       })
+    } finally {
+      setIsConfirmModalOpen(false)
+      setSelectedTaskId(null)
     }
-    
-    setSelectedTaskId(null)
   }
 
   // Format the due date in a user-friendly way
@@ -221,9 +228,29 @@ export default function TaskSidebar() {
   }
 
   // Get priority style class
-  const getPriorityStyle = (priority: string) => {
-    const upperPriority = priority.toUpperCase()
+  const getPriorityStyle = (priority: string | { variant: string, text: string }) => {
+    if (typeof priority === 'object' && priority.variant) {
+      // Handle object priority
+      const variantMap: Record<string, string> = {
+        danger: 'bg-red-500 text-white',
+        warning: 'bg-yellow-500 text-white',
+        success: 'bg-green-500 text-white', 
+        slate: 'bg-blue-500 text-white'
+      }
+      return variantMap[priority.variant] || 'bg-gray-500 text-white'
+    }
+    
+    // Handle string priority
+    const upperPriority = (typeof priority === 'string' ? priority : 'NORMAL').toUpperCase()
     return PRIORITY_STYLES[upperPriority as keyof typeof PRIORITY_STYLES] || 'bg-gray-500 text-white'
+  }
+
+  // Format priority text for display
+  const formatPriorityText = (priority: string | { variant: string, text: string }): string => {
+    if (typeof priority === 'object' && priority.text) {
+      return priority.text.toUpperCase()
+    }
+    return (typeof priority === 'string' ? priority : 'Normal').toUpperCase()
   }
 
   if (isLoading) {
@@ -251,12 +278,12 @@ export default function TaskSidebar() {
     <div className="h-full min-h-screen py-4 overflow-y-auto bg-white border-r-2 border-gray-200 shadow-md w-72">
       <h2 className="px-4 mt-8 mb-4 text-2xl font-bold">Tasks</h2>
       
-      {incompleteTasks.length === 0 ? (
+      {incompleteTasks?.length === 0 ? (
         <div className="text-gray-500">No tasks assigned</div>
       ) : (
         <div className="space-y-4">
-          {incompleteTasks.map((task) => {
-            const isDone = task.status === 'done' || completedTasks[task.id]
+          {incompleteTasks?.map((task) => {
+            const isDone = task.status === 'completed' || completedTasks[task.id]
             
             return (
               <div 
@@ -270,7 +297,7 @@ export default function TaskSidebar() {
                         {task.id}
                       </span>
                       <span className={`text-xs px-2 py-0.5 rounded-full ${getPriorityStyle(task.priority)}`}>
-                        {task.priority.toUpperCase()}
+                        {formatPriorityText(task.priority)}
                       </span>
                       <span className="text-sm text-gray-600">
                         {formatDueDate(task.dueDate)}
@@ -279,29 +306,6 @@ export default function TaskSidebar() {
                     
                     <h3 className="mb-1 text-lg font-bold">{task.title}</h3>
                     <p className="mb-3 text-sm text-gray-700">{task.description}</p>
-                    
-                    {/* {task.vehicle && (
-                      <div className="flex items-center p-3 mt-2 mb-2 bg-gray-200">
-                        {task.vehicleImageUrl ? (
-                          <Image 
-                            src={task.vehicleImageUrl} 
-                            alt={`${task.vehicleName}`}
-                            width={40}
-                            height={40}
-                            className="mr-2 rounded-sm"
-                          />
-                        ) : (
-                          <div className="flex items-center justify-center w-10 h-10 mr-2 bg-gray-200 rounded-sm">
-                            <span className="text-xs text-gray-500">No img</span>
-                          </div>
-                        )}
-                        <span className="text-sm">
-                          {task.vehicleName}
-                        </span>
-                      </div>
-                    )} */}
-                    
-                   
                   </div>
                 </div>
                 
@@ -309,6 +313,7 @@ export default function TaskSidebar() {
                   <button
                     onClick={(e) => handleDoneClick(task.id, e)}
                     className="flex items-center gap-1 px-3 py-1 mt-3 text-sm text-white transition-colors bg-black rounded-full hover:bg-gray-800"
+                    disabled={isUpdating && selectedTaskId === task.id}
                   >
                     <Check size={14} /> Done
                   </button>
@@ -320,7 +325,7 @@ export default function TaskSidebar() {
                   </div>
                 )}
                  <div className="mt-2 text-sm text-gray-500">
-                      Created by {task.createdBy || 'Unknown'} {task.createdAt ? format(new Date(task.createdAt), 'MMM d') : ''}
+                       Created by {task.createdByUser?.firstName || 'Unknown'} {task.createdAt ? format(new Date(task.createdAt), 'MMM d') : ''}
                     </div>
               </div>
             )
@@ -334,6 +339,7 @@ export default function TaskSidebar() {
         taskId={selectedTaskId || ''}
         onCancel={handleConfirmCancel}
         onConfirm={handleConfirmMarkAsDone}
+        isLoading={isUpdating}
       />
     </div>
   )

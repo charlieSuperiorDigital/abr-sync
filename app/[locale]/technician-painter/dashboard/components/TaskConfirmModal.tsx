@@ -1,11 +1,12 @@
 import React from 'react';
-import { X } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 
 interface TaskConfirmModalProps {
   isOpen: boolean;
   taskId: string;
   onCancel: () => void;
   onConfirm: (taskId: string) => void;
+  isLoading?: boolean;
 }
 
 const TaskConfirmModal: React.FC<TaskConfirmModalProps> = ({
@@ -13,6 +14,7 @@ const TaskConfirmModal: React.FC<TaskConfirmModalProps> = ({
   taskId,
   onCancel,
   onConfirm,
+  isLoading = false,
 }) => {
   if (!isOpen) return null;
 
@@ -24,6 +26,7 @@ const TaskConfirmModal: React.FC<TaskConfirmModalProps> = ({
           <button 
             onClick={onCancel}
             className="p-1 rounded-full hover:bg-gray-200"
+            disabled={isLoading}
           >
             <X size={18} />
           </button>
@@ -41,15 +44,24 @@ const TaskConfirmModal: React.FC<TaskConfirmModalProps> = ({
         <div className="flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 disabled:opacity-50"
+            disabled={isLoading}
           >
             Cancel
           </button>
           <button
             onClick={() => onConfirm(taskId)}
-            className="px-4 py-2 text-sm font-medium text-white bg-black rounded-md hover:bg-gray-800"
+            className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-black rounded-md hover:bg-gray-800 disabled:opacity-70 disabled:cursor-not-allowed min-w-[100px]"
+            disabled={isLoading}
           >
-            Confirm
+            {isLoading ? (
+              <>
+                <Loader2 size={14} className="animate-spin" />
+                Processing...
+              </>
+            ) : (
+              'Confirm'
+            )}
           </button>
         </div>
       </div>

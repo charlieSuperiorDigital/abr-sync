@@ -238,6 +238,8 @@ export interface UpdateTaskPayload {
   recurringDays?: string[];
   recurringEndDateTime?: string;
   timezone?: string;
+  completedDate?: string;
+  lastUpdatedDate?: string;
 }
 
 export async function updateTask(taskData: UpdateTaskPayload): Promise<any> {
