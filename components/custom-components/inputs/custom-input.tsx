@@ -17,6 +17,7 @@ export function CustomInput({
   type,
   ref,
   id,
+  value = '',  
   ...props
 }: CustomInputProps & { ref?: React.Ref<HTMLInputElement> }) {
   const [showPassword, setShowPassword] = useState(false)
@@ -53,6 +54,7 @@ export function CustomInput({
             error && 'text-red-500',
             className
           )}
+          value={value} // Add value prop to input
           {...props}
         />
         {isPassword && (
