@@ -81,6 +81,10 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                 link={'/shop-manager/dashboard/ai'}
                 icons={[{ newNotificationsQuantity: 2, Icon: TrendingUp }]}
               />
+               <SideBarIconGroup
+                link={'/shop-manager/dashboard/users'}
+                icons={[{ newNotificationsQuantity: 0, Icon: User }]}
+              />
             </div>
             <div className="flex flex-col space-y-4">
               <SideBarIconGroup

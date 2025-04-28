@@ -1,26 +1,9 @@
 import { useMutation } from '@tanstack/react-query'
 import { register } from '@/app/api/functions/authentication'
 
-interface RegisterCredentials {
-  tenantId: string
-  firstName: string
-  lastName: string
-  email: string
-  password: string
-  confirmPassword: string
-  ssoToken: string
-}
+import { RegisterCredentials } from '../functions/authentication'
 
-interface RegisterResponse {
-  userId: string
-  token: string
-  email: string
-  firstName: string
-  lastName: string
-  roles: string[]
-  errorMessage: string
-  tokenExpiration: string
-}
+import { RegisterResponse } from '../functions/authentication'
 
 export const useRegister = () => {
   const mutation = useMutation<RegisterResponse, unknown, RegisterCredentials>({

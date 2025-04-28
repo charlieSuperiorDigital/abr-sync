@@ -143,7 +143,7 @@ export default function Sublets() {
         <VehicleCell
           make={row.original.vehicle.make}
           model={row.original.vehicle.model}
-          year={row.original.vehicle.year}
+          year={row.original.vehicle.year.toString()}
           imageUrl={row.original.vehicle.vehiclePicturesUrls[0] || `https://picsum.photos/seed/${row.original.workfileId}/200/100`}
         />
       ),
