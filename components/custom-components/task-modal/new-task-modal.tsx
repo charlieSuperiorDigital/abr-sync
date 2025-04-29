@@ -1,41 +1,39 @@
 'use client'
 
+import { TaskCreateVM } from '@/app/api/functions/tasks'
+import { useGetTenant } from '@/app/api/hooks/useGetTenant'
+import { useGetUsersByTenant } from '@/app/api/hooks/useGetUsersByTenant'
+import { Location } from '@/app/types/location'
+import { getUserFullName } from '@/app/types/user'
+import { Button } from '@/components/ui/button'
+import { createLocalISOString } from '@/lib/utils/date'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Plus } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import { useTranslations } from 'next-intl'
 import * as React from 'react'
 import { useEffect, useState } from 'react'
-import { Plus } from 'lucide-react'
 import { Controller, useForm } from 'react-hook-form'
-import { CustomSelect } from '../selects/custom-select'
-import { CustomButtonSelect, CustomButtonSelectField } from '../selects/custom-button-select'
-import { useTranslations } from 'next-intl'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { 
-  getTaskFormSchema,
-  TaskFormData,
-  TaskPriorities,
-  TaskTypes,
-  TaskRoles,
-  TaskPriority,
-  TaskType,
-  RecurringFrequencies,
-  DaysOfWeek,
-  RecurringFrequency,
-  DayOfWeek
-} from './schema'
-import { createLocalISOString } from '@/lib/utils/date'
+import { toast } from 'react-toastify'
 import { CustomInput } from '../inputs/custom-input'
 import { CustomTextarea } from '../inputs/custom-textarea'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Button } from '@/components/ui/button'
-import { Task } from '@/app/types/task'
 import { OpportunityInfoCard } from '../opportunity-info-card/opportunity-info-card'
-import { useCreateTask } from '@/app/api/hooks/useCreateTask'
-import { TaskCreateVM } from '@/app/api/functions/tasks'
-import { toast } from 'react-toastify'
-import { useGetUsersByTenant } from '@/app/api/hooks/useGetUsersByTenant'
-import { useGetTenant } from '@/app/api/hooks/useGetTenant'
-import { Location } from '@/app/types/location'
-import { useSession } from 'next-auth/react'
-import { getUserFullName } from '@/app/types/user'
+import { CustomButtonSelectField } from '../selects/custom-button-select'
+import { CustomSelect } from '../selects/custom-select'
+import {
+  DayOfWeek,
+  DaysOfWeek,
+  getTaskFormSchema,
+  RecurringFrequencies,
+  RecurringFrequency,
+  TaskFormData,
+  TaskPriorities,
+  TaskPriority,
+  TaskType,
+  TaskTypes
+} from './schema'
+import { TASK_TEMPLATES } from './mock-tasks-templates'
+import { useCreateTask } from '@/app/api/hooks/useTasks'
 
 interface NewTaskModalProps {
   children: React.ReactNode
@@ -47,102 +45,7 @@ interface NewTaskModalProps {
   }
 }
 
-// Define task templates
-const TASK_TEMPLATES = [
-  {
-    id: 'template-none',
-    name: '[NONE] No Template',
-    data: {
-      priority: 'Normal' as TaskPriority,
-      taskTitle: '',
-      description: '',
-      type: 'One-time' as TaskType,
-      dueDate: new Date().toISOString().split('T')[0], // Today's date
-      dueTime: '09:00',
-      location: '',
-      assignToUser: ''
-    }
-  },
-  {
-    id: 'template-1',
-    name: '[DAILY] Daily Vehicle Inspection',
-    data: {
-      priority: 'Normal' as TaskPriority,
-      taskTitle: 'Daily Vehicle Inspection',
-      description: 'Perform a comprehensive inspection of the vehicle including: fluid levels, tire pressure, lights, and general condition.',
-      type: 'Recurring' as TaskType,
-      dueDate: new Date().toISOString().split('T')[0], // Today's date
-      dueTime: '09:00',
-      recurringFrequency: 'Every Day' as RecurringFrequency,
-      recurringDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] as DayOfWeek[],
-      recurringEndDate: new Date(new Date().setMonth(new Date().getMonth() + 3)).toISOString().split('T')[0], // 3 months from now
-      recurringEndTime: '17:00'
-    }
-  },
-  {
-    id: 'template-2',
-    name: '[MONTHLY] Monthly Maintenance Check',
-    data: {
-      priority: 'High' as TaskPriority,
-      taskTitle: 'Monthly Maintenance Check',
-      description: 'Conduct a thorough maintenance check including: engine diagnostics, brake inspection, and all major systems.',
-      type: 'Recurring' as TaskType,
-      dueDate: new Date().toISOString().split('T')[0], // Today's date
-      dueTime: '10:00',
-      recurringFrequency: 'Every Month' as RecurringFrequency,
-      recurringEndDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0], // 1 year from now
-      recurringEndTime: '17:00'
-    }
-  },
-  {
-    id: 'template-3',
-    name: '[ONE-TIME] Urgent Repair Request',
-    data: {
-      priority: 'Urgent' as TaskPriority,
-      taskTitle: 'Urgent Repair Request',
-      description: 'Address critical repair issue immediately. Verify parts availability and schedule technician.',
-      type: 'One-time' as TaskType,
-      dueDate: new Date().toISOString().split('T')[0], // Today's date
-      dueTime: '14:00'
-    }
-  },
-  {
-    id: 'template-4',
-    name: '[YEARLY] Annual Christmas Service Special',
-    data: {
-      priority: 'Normal' as TaskPriority,
-      taskTitle: 'Annual Christmas Service Special',
-      description: 'Prepare and execute the annual Christmas service special promotion. Includes comprehensive vehicle check and holiday discount.',
-      type: 'Recurring' as TaskType,
-      dueDate: new Date(new Date().getFullYear(), 11, 15).toISOString().split('T')[0], // December 15th
-      dueTime: '09:00',
-      recurringFrequency: 'Every Year' as RecurringFrequency,
-      recurringEndDate: new Date(new Date().getFullYear() + 5, 11, 25).toISOString().split('T')[0], // 5 years from now, December 25th
-      recurringEndTime: '17:00'
-    }
-  },
-  {
-    id: 'template-5',
-    name: '[CUSTOM] Quarterly Staff Training',
-    data: {
-      priority: 'High' as TaskPriority,
-      taskTitle: 'Quarterly Staff Training',
-      description: 'Conduct quarterly staff training on new procedures, safety protocols, and customer service standards.',
-      type: 'Recurring' as TaskType,
-      dueDate: new Date().toISOString().split('T')[0], // Today's date
-      dueTime: '13:00',
-      recurringFrequency: 'Custom' as RecurringFrequency,
-      // Set three specific dates for the year
-      customDays: [
-        new Date(new Date().getFullYear(), 2, 15).toISOString(), // March 15th
-        new Date(new Date().getFullYear(), 6, 15).toISOString(), // July 15th
-        new Date(new Date().getFullYear(), 10, 15).toISOString() // November 15th
-      ],
-      recurringEndDate: new Date(new Date().getFullYear(), 11, 31).toISOString().split('T')[0], // End of year
-      recurringEndTime: '17:00'
-    }
-  }
-];
+
 
 export function NewTaskModal({
   children,
@@ -154,30 +57,30 @@ export function NewTaskModal({
   const t = useTranslations('Task')
   const validationMessage = useTranslations('Validation')
   const { createTask, isLoading: isCreatingTask, error: createTaskError } = useCreateTask()
-  
+
   // Get session for tenant ID
   const { data: session } = useSession()
   const tenantId = session?.user?.tenantId
-  
+
   // Use hooks directly instead of providers
   const { users, isLoading: isLoadingUsers, totalCount } = useGetUsersByTenant({
     tenantId: tenantId!,
     page: 1,
     perPage: 100 // Fetch a larger number to have all users available
   })
-  
+
   const { tenant, locations: tenantLocations, isLoading: isLoadingTenant } = useGetTenant({
     tenantId: tenantId!
   })
-  
+
   // Transform users into format needed for select components
   const usersForSelect = users.map(user => ({
     value: user.id,
     label: getUserFullName(user),
     avatar: '/placeholder.svg' // Default avatar, could be replaced with actual user avatar
   }))
-  
-  const [locations, setLocations] = useState<{value: string, label: string}[]>([])
+
+  const [locations, setLocations] = useState<{ value: string, label: string }[]>([])
 
   // Add function to handle template selection
   const handleTemplateChange = (templateId: string) => {
@@ -231,7 +134,7 @@ export function NewTaskModal({
 
       // Populate form with template data
       reset(formData);
-      
+
       // Log for debugging
       console.log('Template selected:', selectedTemplate.name);
       console.log('Form data after template selection:', formData);
@@ -273,12 +176,12 @@ export function NewTaskModal({
     // This effect will run whenever tenantLocations changes
     if (tenantLocations && tenantLocations.length > 0) {
       console.log(`Processing ${tenantLocations.length} locations for dropdown`)
-      
+
       const locationOptions = tenantLocations.map((location: Location) => ({
         value: location.id,
         label: location.address || location.name || 'Unknown location'
       }))
-      
+
       setLocations(locationOptions)
     } else {
       console.log('No locations available from tenant context')
@@ -311,7 +214,7 @@ export function NewTaskModal({
   const onSubmit = async (data: TaskFormData) => {
     try {
       setIsLoading(true)
-      
+
       // Map priority to the correct task variants
       const priorityMap = {
         Urgent: { variant: 'danger', text: 'Urgent' },
@@ -322,7 +225,7 @@ export function NewTaskModal({
 
       // Combine date and time into ISO string preserving local time
       const dueDateTime = createLocalISOString(data.dueDate, data.dueTime)
-      
+
       // Create API task data
       const taskCreateData: TaskCreateVM = {
         tenantId: session?.user?.tenantId || '', // Get tenant ID from session
@@ -344,7 +247,7 @@ export function NewTaskModal({
         monthDays: 0, // Default value
         customDays: [] // Default value
       }
-      
+
       // Handle recurring task specific fields
       if (data.type === 'Recurring' && data.recurringFrequency) {
         // Map recurring frequency to recurringType
@@ -393,13 +296,13 @@ export function NewTaskModal({
             break;
         }
       }
-      
+
       // Log form data for debugging
       console.log('Form submission:', {
         rawFormData: data,
         apiTaskData: taskCreateData
       })
-      
+
       // Call the API to create the task
       createTask(taskCreateData, {
         onSuccess: (response) => {
@@ -415,7 +318,7 @@ export function NewTaskModal({
           toast.error("Failed to create task: " + (error instanceof Error ? error.message : "Unknown error"));
         }
       });
-      
+
     } catch (error) {
       console.error('Error submitting form:', error)
       toast.error("Failed to process form: " + (error instanceof Error ? error.message : "Unknown error"));
@@ -468,7 +371,7 @@ export function NewTaskModal({
               {defaultRelation?.type === 'opportunity' && (
                 <OpportunityInfoCard opportunityId={defaultRelation.id} />
               )}
-              <form 
+              <form
                 onSubmit={(e) => {
                   e.preventDefault()
                   console.log('Form submission started')
@@ -502,7 +405,7 @@ export function NewTaskModal({
                       })
                     }
                   )(e)
-                }} 
+                }}
                 className="mt-6 space-y-6"
               >
                 <div>
@@ -532,7 +435,7 @@ export function NewTaskModal({
 
                 <div>
                   <h3 className="mb-4 text-lg font-bold">{t('task-information')}</h3>
-                  
+
                   <div className="mb-4">
                     <label className="block mb-2 font-semibold">{t('priority')}</label>
                     <Controller
@@ -589,7 +492,7 @@ export function NewTaskModal({
                             options={locations.length > 0 ? locations : [{ value: '', label: t('no-locations-available') }]}
                             value={field.value ? [field.value] : []}
                             onChange={(values) => field.onChange(values[0] || '')}
-                            // isDisabled={isLoadingTenant}
+                          // isDisabled={isLoadingTenant}
                           />
                         )}
                       />
@@ -631,7 +534,7 @@ export function NewTaskModal({
                           {errors.recurringFrequency && (
                             <p className="mt-1 text-sm text-red-500">{errors.recurringFrequency.message}</p>
                           )}
-                          
+
                           {/* Only show weekdays selection for Weekly or Custom recurring tasks */}
                           {(watch('recurringFrequency') === 'Every Week' || watch('recurringFrequency') === 'Custom') && (
                             <>
@@ -651,7 +554,7 @@ export function NewTaskModal({
                               )}
                             </>
                           )}
-                          
+
                           <Controller
                             control={control}
                             name="recurringEndDate"
@@ -754,7 +657,7 @@ export function NewTaskModal({
                                   field.onChange(session.user.userId)
                                 }
                               }}
-                              className="mt-2 px-4 py-2 bg-gray-200 rounded-md font-semibold text-black hover:bg-gray-300 transition-colors text-base"
+                              className="px-4 py-2 mt-2 text-base font-semibold text-black bg-gray-200 rounded-md transition-colors hover:bg-gray-300"
                             >
                               {t('assign-to-me')}
                             </button>

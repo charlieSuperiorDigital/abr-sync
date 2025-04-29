@@ -1,14 +1,11 @@
 'use client'
-
-import { useState } from 'react'
+import { addDays, format, isPast, isToday, isTomorrow, isWithinInterval } from 'date-fns'
+import { Check } from 'lucide-react'
 import { useSession } from 'next-auth/react'
-import { useGetTasksByAssignedUser } from '@/app/api/hooks/useGetTasksByAssignedUser'
-import { useUpdateTask } from '@/app/api/hooks/useUpdateTask'
-import { Check, Loader2 } from 'lucide-react'
-import Image from 'next/image'
-import { format, isToday, isTomorrow, addDays, isPast, isWithinInterval } from 'date-fns'
-import TaskConfirmModal from './TaskConfirmModal'
+import { useState } from 'react'
 import { toast } from 'react-toastify'
+import TaskConfirmModal from './TaskConfirmModal'
+import { useGetTasksByAssignedUser, useUpdateTask } from '@/app/api/hooks/useTasks'
 
 // Priority levels with corresponding styling
 const PRIORITY_STYLES = {
@@ -255,11 +252,11 @@ export default function TaskSidebar() {
 
   if (isLoading) {
     return (
-      <div className="h-full min-h-screen p-4 bg-gray-100 shadow-md w-72">
+      <div className="p-4 w-72 h-full min-h-screen bg-gray-100 shadow-md">
         <h2 className="mb-4 text-2xl font-bold">Tasks</h2>
         <div className="animate-pulse">
-          <div className="h-24 mb-4 bg-gray-200 rounded-md"></div>
-          <div className="h-24 mb-4 bg-gray-200 rounded-md"></div>
+          <div className="mb-4 h-24 bg-gray-200 rounded-md"></div>
+          <div className="mb-4 h-24 bg-gray-200 rounded-md"></div>
         </div>
       </div>
     )
@@ -267,7 +264,7 @@ export default function TaskSidebar() {
 
   if (error) {
     return (
-      <div className="h-full min-h-screen p-4 bg-gray-100 shadow-md w-72">
+      <div className="p-4 w-72 h-full min-h-screen bg-gray-100 shadow-md">
         <h2 className="mb-4 text-2xl font-bold">Tasks</h2>
         <div className="text-red-500">Error loading tasks</div>
       </div>
@@ -275,7 +272,7 @@ export default function TaskSidebar() {
   }
 
   return (
-    <div className="h-full min-h-screen py-4 overflow-y-auto bg-white border-r-2 border-gray-200 shadow-md w-72">
+    <div className="overflow-y-auto py-4 w-72 h-full min-h-screen bg-white border-r-2 border-gray-200 shadow-md">
       <h2 className="px-4 mt-8 mb-4 text-2xl font-bold">Tasks</h2>
       
       {incompleteTasks?.length === 0 ? (
@@ -288,11 +285,11 @@ export default function TaskSidebar() {
             return (
               <div 
                 key={task.id} 
-                className="p-4 bg-white border-b-2 border-gray-300 "
+                className="p-4 bg-white border-b-2 border-gray-300"
               >
-                <div className="flex items-start justify-between">
+                <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex gap-2 items-center mb-1">
                       <span className="font-semibold rounded-full text-md">
                         {task.id}
                       </span>
@@ -312,7 +309,7 @@ export default function TaskSidebar() {
                 {!isDone && (
                   <button
                     onClick={(e) => handleDoneClick(task.id, e)}
-                    className="flex items-center gap-1 px-3 py-1 mt-3 text-sm text-white transition-colors bg-black rounded-full hover:bg-gray-800"
+                    className="flex gap-1 items-center px-3 py-1 mt-3 text-sm text-white bg-black rounded-full transition-colors hover:bg-gray-800"
                     disabled={isUpdating && selectedTaskId === task.id}
                   >
                     <Check size={14} /> Done
@@ -320,7 +317,7 @@ export default function TaskSidebar() {
                 )}
                 
                 {isDone && (
-                  <div className="flex items-center gap-1 px-3 py-1 mt-3 text-sm text-gray-700 bg-gray-200 rounded-full">
+                  <div className="flex gap-1 items-center px-3 py-1 mt-3 text-sm text-gray-700 bg-gray-200 rounded-full">
                     <Check size={14} /> Done
                   </div>
                 )}

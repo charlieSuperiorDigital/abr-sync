@@ -1,16 +1,13 @@
 'use client'
+import { useGetTasksByAssignedUser, useGetTasksByCreator } from '@/app/api/hooks/useTasks'
+import { TasksContext, TasksContextType } from '@/app/context/tasks-context'
 import DraggableNav, {
   NavItem,
 } from '@/components/custom-components/draggable-nav/draggable-nav'
-import type React from 'react'
-import { Plus } from 'lucide-react'
 import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
+import { Plus } from 'lucide-react'
 import { useSession } from 'next-auth/react'
-import { useGetTasksByAssignedUser } from '@/app/api/hooks/useGetTasksByAssignedUser'
-import { useGetTasksByCreator } from '@/app/api/hooks/useGetTasksByCreator'
-import { Task as ApiTask } from '@/app/api/functions/tasks'
-import { Task } from '@/app/types/task'
-import { TasksContext, TasksContextType } from '@/app/context/tasks-context'
+import type React from 'react'
 
 
 export default function TasksLayout({

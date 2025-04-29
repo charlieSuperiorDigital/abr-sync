@@ -1,28 +1,24 @@
 'use client'
 
-import * as React from 'react';
-import { useState, useEffect } from 'react';
+import { useWeather } from '@/app/api/hooks/useWeather';
+import { useGetWorkfilesByUserId } from '@/app/api/hooks/useWorkfiles';
+import EditProfileModal from '@/app/components/custom-components/edit-profile-modal';
+import { WorkfileApiResponse } from '@/app/types/workfile';
+import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Opportunity } from '@/app/types/opportunity';
-import TableContent from './components/TableContent';
-import PartsButton from './components/PartsButton';
-import PartsModal from './components/PartsModal';
-import TaskSidebar from './components/TaskSidebar';
-import { technicianPainterMockData } from '@/app/mocks/technician-painter-dashboard';
-import { CalendarDays, Car, CloudRain, Sun, Cloud, AlertCircle } from 'lucide-react';
-import { TimeDisplay } from './components/TimeDisplay';
-import { UserCircle } from 'lucide-react';
+import { AlertCircle, CalendarDays, Car, UserCircle } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-import WeatherDropdown from './components/WeatherDropdown';
+import Image from 'next/image';
+import * as React from 'react';
+import { useEffect, useState } from 'react';
 import HoursButton from './components/HoursButton';
 import HoursModal from './components/HoursModal';
-import EditProfileModal from '@/app/components/custom-components/edit-profile-modal';
-import { useGetWorkfilesByUserId } from '@/app/api/hooks/useWorkfiles';
-import { Workfile, WorkfileApiResponse } from '@/app/types/workfile';
-import { useWeather } from '@/app/api/hooks/useWeather';
-import { Button } from '@/components/ui/button';
-import { useGetTasksByAssignedUser } from '@/app/api/hooks/useGetTasksByAssignedUser';
-import Image from 'next/image';
+import PartsButton from './components/PartsButton';
+import PartsModal from './components/PartsModal';
+import TableContent from './components/TableContent';
+import TaskSidebar from './components/TaskSidebar';
+import { TimeDisplay } from './components/TimeDisplay';
+import WeatherDropdown from './components/WeatherDropdown';
 
 // Define types for workfile extended properties
 interface WorkfileWithParts extends WorkfileApiResponse {

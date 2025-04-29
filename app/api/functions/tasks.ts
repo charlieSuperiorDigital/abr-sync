@@ -17,7 +17,7 @@ export interface TaskCreateVM {
   type: number
   endDate: string | Date
   roles: string
-  recurringType: number
+
   weekDays: number
   monthDays: number
   customDays: string[]
