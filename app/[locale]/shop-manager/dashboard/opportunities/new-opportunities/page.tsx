@@ -1,29 +1,26 @@
 'use client'
 
+import ContactInfo from '@/app/[locale]/custom-components/contact-info'
+import DarkButton from '@/app/[locale]/custom-components/dark-button'
+import DateTimePicker from '@/app/[locale]/custom-components/date-time-picker'
+import { useGetOpportunities } from '@/app/api/hooks/useOpportunities'
+import { Opportunity } from '@/app/types/opportunity'
+import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
+import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
+import ConfirmationModal from '@/components/custom-components/confirmation-modal/confirmation-modal'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import {
-  AutoCell,
-  StatusBadgeCell,
   SummaryCell,
   UploadTimeCell,
-  VehicleCell,
+  VehicleCell
 } from '@/components/custom-components/custom-table/table-cells'
-import ContactInfo from '@/app/[locale]/custom-components/contact-info'
-import { ColumnDef } from '@tanstack/react-table'
-import { ClipboardPlus, Archive, Plus } from 'lucide-react'
-import { Opportunity, OpportunityStatus, PartsWarningStatus } from '@/app/types/opportunity'
-import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
-import { useState, useCallback, useEffect } from 'react'
-import { useOpportunityStore } from '@/app/stores/opportunity-store'
 import { StatusBadge } from '@/components/custom-components/status-badge/status-badge'
-import DarkButton from '@/app/[locale]/custom-components/dark-button'
-import ConfirmationModal from '@/components/custom-components/confirmation-modal/confirmation-modal'
 import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
-import DateTimePicker from '@/app/[locale]/custom-components/date-time-picker'
+import { ColumnDef } from '@tanstack/react-table'
+import { Archive, Plus } from 'lucide-react'
 import { useSession } from 'next-auth/react'
-import { useGetOpportunities } from '@/app/api/hooks/useGetOpportunities'
-import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
+import { useCallback, useEffect, useState } from 'react'
 
 export default function NewOpportunities() {
   const { data: session } = useSession()

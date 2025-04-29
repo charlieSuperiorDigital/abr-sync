@@ -1,27 +1,23 @@
 'use client'
+import DarkButton from '@/app/[locale]/custom-components/dark-button'
+import { useGetOpportunities } from '@/app/api/hooks/useOpportunities'
+import { Opportunity } from '@/app/types/opportunity'
+import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
+import { showArchiveToast } from '@/app/utils/toast-utils'
+import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
+import ConfirmationModal from '@/components/custom-components/confirmation-modal/confirmation-modal'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import {
-  AutoCell,
-  StatusBadgeCell,
   SummaryCell,
-  UploadTimeCell,
-  VehicleCell,
+  VehicleCell
 } from '@/components/custom-components/custom-table/table-cells'
-import ContactInfo from '@/app/[locale]/custom-components/contact-info'
-import { ColumnDef } from '@tanstack/react-table'
-import { Archive, ClipboardPlus, Plus } from 'lucide-react'
-import { Opportunity, OpportunityStatus, PartsWarningStatus } from '@/app/types/opportunity'
-import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
-import { useState, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
-import { useGetOpportunities } from '@/app/api/hooks/useGetOpportunities'
-import DarkButton from '@/app/[locale]/custom-components/dark-button'
-import ConfirmationModal from '@/components/custom-components/confirmation-modal/confirmation-modal'
 import { StatusBadge } from '@/components/custom-components/status-badge/status-badge'
-import { showArchiveToast } from '@/app/utils/toast-utils'
 import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
-import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
+import { ColumnDef } from '@tanstack/react-table'
+import { Archive, Plus } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import { useCallback, useState } from 'react'
 
 export default function SecondCallOpportunities() {
   const { data: session } = useSession()
@@ -132,9 +128,9 @@ export default function SecondCallOpportunities() {
       cell: ({ row }) => (
         <div className="flex gap-2 items-center">
           {row.original.lastUpdatedBy?.avatar && (
-            <img 
-              src={row.original.lastUpdatedBy.avatar} 
-              alt="" 
+            <img
+              src={row.original.lastUpdatedBy.avatar}
+              alt=""
               className="w-6 h-6 rounded-full"
             />
           )}
@@ -249,7 +245,7 @@ export default function SecondCallOpportunities() {
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
       />
-      <BottomSheetModal 
+      <BottomSheetModal
         isOpen={isModalOpen}
         onOpenChange={setIsModalOpen}
         title={selectedOpportunity ? `${selectedOpportunity.vehicle.year} ${selectedOpportunity.vehicle.make} ${selectedOpportunity.vehicle.model}` : ''}
