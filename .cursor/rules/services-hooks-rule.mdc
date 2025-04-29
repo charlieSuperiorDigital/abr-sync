@@ -1,0 +1,11 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+When we need to implement a call to an endpoint in an external api, we'll always follow this proccess:
+- Begin by creating a function for it inside the folder app/api/functions. If the function is related to X, create the function inside the file called X. Example: if the function is getWorkfiles, create it inside workfiles file. If the function is getUsersByTenantId, create it in users file.
+- Then we create a hook using react query, that uses this function on the services folder.  If the hook is related to X, create the hook inside the file called X. Example: if the function is getWorkfiles, create a hook in useWorkfiles file. If the function is getUsersByTenantId, create it in useUsers hook.
+- The hook then exports the data, the loading state, and the error state. If it's a mutation (for post and put calls), it'll return the mutate method of that mutation.
+- Then on the pages where the hook is used, we'll call the imported hook, and make the places that utilize the hook's data use a loading animation until the hook loading status is false.
+

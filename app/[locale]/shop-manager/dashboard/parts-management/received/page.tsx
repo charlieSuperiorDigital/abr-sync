@@ -37,12 +37,13 @@ interface PartsReceived {
 export default function Received() {
   const { data: session } = useSession();
   const {
-    ordersWithPartsToBeReceived,
+
+    ordersWithReceivedParts,
     isLoading,
     error
   } = useGetTenantPartOrders({ tenantId: session?.user?.tenantId || '' });
 
-  const data = ordersWithPartsToBeReceived;
+  const data = ordersWithReceivedParts;
 
   // Find a workfile by RO number
   const findWorkfileByRoNumber = (roNumber: string) => {
@@ -109,8 +110,8 @@ export default function Received() {
       cell: ({ row }) => (
         <div className="flex justify-center">
           <ViewPartsModal opportunityId={row.original.opportunityId}>
-            <DarkButton 
-              buttonText="View Parts" 
+            <DarkButton
+              buttonText="View Parts"
             />
           </ViewPartsModal>
         </div>
@@ -143,49 +144,9 @@ export default function Received() {
     },
   ]
 
-  // Mock object for DataTable columns
-  const mockData: PartsReceived[] = [
-    {
-      receivedId: '1',
-      roNumber: 'RO12345',
-      vehicle: {
-        make: 'Toyota',
-        model: 'Camry',
-        year: 2022,
-        imageUrl: 'https://via.placeholder.com/100x60.png?text=Toyota+Camry',
-      },
-      partsCount: 3,
-      assignedTech: 'John Doe',
-      status: 'Received',
-      lastUpdated: '2025-04-20T14:32:00Z',
-      receivedDate: '2025-04-19T10:00:00Z',
-      receivedBy: 'Jane Smith',
-      vendor: 'OEM Parts Inc.',
-      opportunityId: 'oppty-1',
-    },
-    {
-      receivedId: '2',
-      roNumber: 'RO67890',
-      vehicle: {
-        make: 'Honda',
-        model: 'Civic',
-        year: 2021,
-        imageUrl: 'https://via.placeholder.com/100x60.png?text=Honda+Civic',
-      },
-      partsCount: 5,
-      assignedTech: 'Alice Johnson',
-      status: 'Received',
-      lastUpdated: '2025-04-21T09:15:00Z',
-      receivedDate: '2025-04-20T16:30:00Z',
-      receivedBy: 'Bob Lee',
-      vendor: 'Aftermarket World',
-      opportunityId: 'oppty-2',
-    }
-  ];
-
   return (
     <div>
-      <DataTable columns={columns} data={mockData} />
+      <DataTable columns={columns} data={data} />
     </div>
   )
 }

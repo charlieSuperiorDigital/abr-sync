@@ -14,9 +14,13 @@ export interface TaskCreateVM {
   locationId: string
   dueDate: string | Date
   priority: string
-  type: string
+  type: number
   endDate: string | Date
   roles: string
+
+  weekDays: number
+  monthDays: number
+  customDays: string[]
 }
 
 /**
@@ -43,6 +47,10 @@ export interface Task {
   roles: string
   createdBy: string
   createdByUser?: any
+  recurringType: number
+  weekDays: number
+  monthDays: number
+  customDays: string[]
 }
 
 /**
@@ -222,6 +230,7 @@ export async function markTaskasDone(taskId: string): Promise<any> {
 
 export interface UpdateTaskPayload {
   id: string;
+  tenantId?: string;
   title?: string;
   description?: string;
   status?: string;
@@ -230,7 +239,7 @@ export interface UpdateTaskPayload {
   locationId?: string;
   dueDate?: string;
   priority?: string;
-  type?: string;
+  type?: number;
   endDate?: string;
   roles?: string;
   assignedToRoles?: string[];
@@ -238,6 +247,12 @@ export interface UpdateTaskPayload {
   recurringDays?: string[];
   recurringEndDateTime?: string;
   timezone?: string;
+  completedDate?: string;
+  lastUpdatedDate?: string;
+  recurringType?: number;
+  weekDays?: number;
+  monthDays?: number;
+  customDays?: string[];
 }
 
 export async function updateTask(taskData: UpdateTaskPayload): Promise<any> {

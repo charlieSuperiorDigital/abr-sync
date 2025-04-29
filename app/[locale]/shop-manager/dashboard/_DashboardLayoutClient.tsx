@@ -81,11 +81,12 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                 link={'/shop-manager/dashboard/ai'}
                 icons={[{ newNotificationsQuantity: 2, Icon: TrendingUp }]}
               />
-               <SideBarIconGroup
+              <SideBarIconGroup
                 link={'/shop-manager/dashboard/users'}
                 icons={[{ newNotificationsQuantity: 0, Icon: User }]}
               />
             </div>
+
             <div className="flex flex-col space-y-4">
               <SideBarIconGroup
                 link={'/shop-manager/dashboard/search'}
@@ -101,6 +102,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                 />
               </div>
             </div>
+
           </nav>
         </aside>
         <main className="flex flex-col py-8 w-full min-h-screen items-center">

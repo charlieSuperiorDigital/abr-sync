@@ -19,8 +19,7 @@ export const TaskPriorities = [
 
 export const TaskTypes = [
   'One-time',
-  'Recurring',
-  'Automated'
+  'Recurring'
 ] as const
 
 export const RecurringFrequencies = [
@@ -72,7 +71,9 @@ export function getTaskFormSchema() {
     dueTime: z.string().min(1, {
       message: 'Due time is required'
     }),
-    assignToUser: z.string().optional(),
+    assignToUser: z.string().min(1, {
+      message: 'User assignment is required'
+    }),
     assignToRoles: z.array(z.enum(TaskRoles)).optional(),
     assignToMe: z.boolean().optional(),
     recurringFrequency: z.enum(RecurringFrequencies).optional(),
@@ -82,14 +83,27 @@ export function getTaskFormSchema() {
   }).refine(
     (data) => {
       if (data.type === 'Recurring') {
-        return (
-          !!data.recurringFrequency && 
-          (data.recurringDays?.length ?? 0) > 0 &&
-          !!data.recurringEndDate &&
-          !!data.recurringEndTime
-        )
+        // Basic validation for all recurring types
+        if (!data.recurringFrequency || !data.recurringEndDate || !data.recurringEndTime) {
+          return false;
+        }
+        
+        // Specific validation based on recurring frequency
+        switch (data.recurringFrequency) {
+          case 'Every Week':
+            // Weekly tasks need weekdays selected
+            return (data.recurringDays?.length ?? 0) > 0;
+          case 'Every Day':
+          case 'Every Month':
+          case 'Every Year':
+          case 'Custom':
+            // These types don't require recurringDays
+            return true;
+          default:
+            return false;
+        }
       }
-      return true
+      return true;
     },
     {
       message: 'Frequency, days, end date and time are required for recurring tasks',

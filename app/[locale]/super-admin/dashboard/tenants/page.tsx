@@ -1,15 +1,13 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useParams } from 'next/navigation'
-import { DataTable } from '@/components/custom-components/custom-table/data-table'
-import { ColumnDef } from '@tanstack/react-table'
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Plus, UserCircle2 } from 'lucide-react'
-import { FriendlyDateCell, StatusBadgeCell, UserAvatarCell } from '@/components/custom-components/custom-table/table-cells'
-import { useGetTenantList } from '@/app/api/hooks/useGetTenantList'
+import { useGetTenantList } from '@/app/api/hooks/useTenant'
 import { TenantListItem } from '@/app/types/tenant'
-import { CustomButton } from '@/components/custom-components/buttons/custom-button'
+import { DataTable } from '@/components/custom-components/custom-table/data-table'
+import { FriendlyDateCell, StatusBadgeCell, UserAvatarCell } from '@/components/custom-components/custom-table/table-cells'
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ColumnDef } from '@tanstack/react-table'
+import { Plus } from 'lucide-react'
+import { useParams, useRouter } from 'next/navigation'
 
 // Default revenue value for tenants (since it's not in the API response)
 const DEFAULT_REVENUE = 0
@@ -65,7 +63,7 @@ export default function Tenants() {
         // Safely access name with null check
         const name = row.original.name || 'Unknown';
         return (
-          <div className="flex items-center gap-3">
+          <div className="flex gap-3 items-center">
             <Avatar className="h-[22px] w-[22px]">
               {row.original.logoUrl ? (
                 <AvatarImage src={row.original.logoUrl} alt={name} />
@@ -97,7 +95,7 @@ export default function Tenants() {
       accessorKey: 'locationCount',
       header: 'Locations',
       cell: ({ row }) => {
-        return <div className="text-center font-medium">{row.original.locationCount}</div>;
+        return <div className="font-medium text-center">{row.original.locationCount}</div>;
       },
     },
     {
@@ -179,25 +177,25 @@ export default function Tenants() {
         <div className='flex justify-between items-center p-5'>
           <h1 className="text-3xl font-semibold">Tenants</h1>
           <button 
-            className="w-10 h-10 rounded-full flex items-center justify-center  transition-colors duration-200 hover:bg-black hover:border-black group" 
+            className="flex justify-center items-center w-10 h-10 rounded-full transition-colors duration-200 hover:bg-black hover:border-black group" 
             onClick={() => router.push(`/${locale}/super-admin/dashboard/tenants/register`)}
           >
             <Plus size={18} className="group-hover:text-white" />
           </button>
         </div>
       {isLoading ? (
-        <div className="text-center p-10 text-muted-foreground">Loading tenants...</div>
+        <div className="p-10 text-center text-muted-foreground">Loading tenants...</div>
       ) : (
         <>
           {isError && (
-            <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-md text-amber-800">
+            <div className="p-4 mb-4 text-amber-800 bg-amber-50 rounded-md border border-amber-200">
               <p className="font-medium">Unable to fetch tenant data from the API</p>
               <p className="text-sm">Showing fallback data for demonstration purposes.</p>
             </div>
           )}
           
           {!isError && tenants && tenants.length === 0 && (
-            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md text-blue-800">
+            <div className="p-4 mb-4 text-blue-800 bg-blue-50 rounded-md border border-blue-200">
               <p className="font-medium">No tenants found</p>
               <p className="text-sm">There are no {onlyActives ? 'active ' : ''}tenants in the system.</p>
             </div>
