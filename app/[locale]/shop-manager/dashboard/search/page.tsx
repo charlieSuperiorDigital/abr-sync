@@ -50,7 +50,7 @@ export default function SearchPage() {
 
   // Type guard to check if a row is a WorkfileApiResponse
   const isWorkfile = (row: OpportunityResponse | WorkfileApiResponse): row is WorkfileApiResponse => {
-    return (row as WorkfileApiResponse).id !== undefined;
+    return (row as WorkfileApiResponse).workfile.id !== undefined;
   };
 
   const searchFields = (row: OpportunityResponse | WorkfileApiResponse) => {
@@ -72,10 +72,10 @@ export default function SearchPage() {
       ];
     } else if (isWorkfile(row)) {
       return [
-        row.id,
-        row.status,
-        row.opportunity.vehicleId,
-        row.opportunity.vehicleId,
+        row.workfile.id,
+        row.workfile.status,
+        row.workfile.opportunity.vehicle,
+        row.workfile.opportunity.vehicleId,
         '',
         '',
         '',
@@ -171,16 +171,16 @@ export default function SearchPage() {
     {
       accessorKey: 'status',
       header: 'Status',
-      cell: ({ row }) => <StatusBadgeCell status={row.original.status} />
+      cell: ({ row }) => <StatusBadgeCell status={row.original.workfile.status} />
     },
     {
       accessorKey: 'opportunity',
       header: 'Opportunity',
       cell: ({ row }) => (
         <div className="flex flex-col gap-1">
-          <span>{row.original.opportunityId}</span>
+          <span>{row.original.workfile.opportunityId}</span>
           <span className="text-sm text-muted-foreground">
-            {row.original.opportunity.status}
+            {row.original.workfile.opportunity.status}
           </span>
         </div>
       )
@@ -189,9 +189,9 @@ export default function SearchPage() {
       header: 'Vehicle',
       cell: ({ row }) => (
         <div className="flex flex-col gap-1">
-          <span>{row.original.opportunity.vehicleId}</span>
+          <span>{row.original.workfile.opportunity.vehicleId}</span>
           <span className="text-sm text-muted-foreground">
-            {row.original.opportunity.vehicleId}
+            {row.original.workfile.opportunity.vehicleId}
           </span>
         </div>
       )

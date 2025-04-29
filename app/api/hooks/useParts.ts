@@ -72,12 +72,14 @@ export function useGetTenantPartOrders({ tenantId }: UseGetTenantPartOrdersOptio
     ) || []
 
     const ordersWhichExceedAmountSpecifiedByTenant = data?.filter(order =>
-        order.partsOrders.some((po: PartsOrderSummary) => po.partsToOrderCount > 0)
+        order.partsOrders.some((po: PartsOrderSummary) => po.partsToOrderCount > 0 || po.partsToOrderCount == 0)
     ) || []
 
     const ordersWithPartsToBeReturned = data?.filter(order =>
         order.partsOrders.some((po: PartsOrderSummary) => po.totalAmount > 0)
     ) || []
+
+    
 
     // Extract unique vendors from all part orders
     const getUniqueVendors = () => {
@@ -123,11 +125,18 @@ export function useGetTenantPartOrders({ tenantId }: UseGetTenantPartOrdersOptio
             0);
     };
 
+    const calculateOrderTotalAmount = (order: TenantPartOrder) => {
+        return order.partsOrders.reduce((total: number, po: PartsOrderSummary) =>
+            total + (po.totalAmount || 0),
+            0);
+    };
+
     // Filter orders with core parts
     const ordersWithCoreParts = data?.filter(order => order.partsOrders.some((po: PartsOrderSummary) => po.hasCorePart)) || [];
 
     // Return categorized and raw data similar to other hooks
     return {
+        calculateOrderTotalAmount,
         ordersWithPartsToBeOrdered,
         ordersWithPartsToBeReceived,
         ordersWithPartsToBeReturned,
