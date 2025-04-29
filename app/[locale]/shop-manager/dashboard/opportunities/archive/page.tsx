@@ -1,23 +1,18 @@
 'use client'
+import { useGetOpportunities } from '@/app/api/hooks/useOpportunities'
+import { Opportunity } from '@/app/types/opportunity'
+import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
+import { showUnarchiveToast } from '@/app/utils/toast-utils'
+import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import {
-  AutoCell,
-  StatusBadgeCell,
   SummaryCell,
-  UploadTimeCell,
-  VehicleCell,
+  VehicleCell
 } from '@/components/custom-components/custom-table/table-cells'
-import ContactInfo from '@/app/[locale]/custom-components/contact-info'
-import { ColumnDef } from '@tanstack/react-table'
-import { ClipboardPlus } from 'lucide-react'
-import { Opportunity, OpportunityStatus, RepairStage } from '@/app/types/opportunity'
-import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
-import { useState, useCallback } from 'react'
+import { ColumnDef } from '@tanstack/react-table'
 import { useSession } from 'next-auth/react'
-import { useGetOpportunities } from '@/app/api/hooks/useGetOpportunities'
-import { showUnarchiveToast } from '@/app/utils/toast-utils'
-import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
+import { useCallback, useState } from 'react'
 
 export default function ArchivedOpportunities() {
   const { data: session } = useSession()

@@ -1,11 +1,12 @@
 'use client'
 
-import { useGetOpportunities } from '@/app/api/hooks/useGetOpportunities'
+
 import DraggableNav, {
   NavItem,
 } from '@/components/custom-components/draggable-nav/draggable-nav'
 import { useState, useMemo } from 'react'
 import { useSession } from 'next-auth/react'
+import { useGetOpportunities } from '@/app/api/hooks/useOpportunities'
 
 
 export default function OpportunitiesLayout({

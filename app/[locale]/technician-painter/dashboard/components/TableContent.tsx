@@ -48,8 +48,8 @@ const TableContent: React.FC<TableContentProps> = ({ workfileId }) => {
   // Show loading state
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 p-8">
-        <div className="w-8 h-8 mb-4 border-4 rounded-full border-t-blue-500 border-b-blue-700 border-l-blue-500 border-r-blue-700 animate-spin"></div>
+      <div className="flex flex-col justify-center items-center p-8 h-64">
+        <div className="mb-4 w-8 h-8 rounded-full border-4 animate-spin border-t-blue-500 border-b-blue-700 border-l-blue-500 border-r-blue-700"></div>
         <p className="text-gray-500">Loading workfile details...</p>
       </div>
     );
@@ -58,7 +58,7 @@ const TableContent: React.FC<TableContentProps> = ({ workfileId }) => {
   // Show error state
   if (error || !workfile) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 p-8">
+      <div className="flex flex-col justify-center items-center p-8 h-64">
         <p className="mb-4 text-lg font-semibold text-red-500">Error loading workfile</p>
         <p className="text-gray-500">{error ? (error as Error).message : 'Workfile not found'}</p>
       </div>
@@ -72,7 +72,7 @@ const TableContent: React.FC<TableContentProps> = ({ workfileId }) => {
   // If opportunity data is not available, show a message
   if (!opportunity || !vehicle) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 p-8">
+      <div className="flex flex-col justify-center items-center p-8 h-64">
         <p className="text-gray-500">No vehicle data available for this workfile</p>
       </div>
     );
@@ -81,8 +81,8 @@ const TableContent: React.FC<TableContentProps> = ({ workfileId }) => {
   return (
     <div className="max-w-[99.99vw] bg-gray-200 ">
       {/* First Row: RO, Car details, ECD, action buttons */}
-      <div className="flex flex-row items-center justify-between gap-0 py-4">
-        <div className="flex flex-row items-center gap-6">
+      <div className="flex flex-row gap-0 justify-between items-center py-4">
+        <div className="flex flex-row gap-6 items-center">
           <div className="px-4 text-2xl font-bold text-black">RO #{workfile.id}</div>  {/* Comment: RO number not available in workfile */}
           <div className="text-xl font-semibold text-black">
             {vehicle.year} {vehicle.make} {vehicle.model} ({vehicle.exteriorColor})
@@ -117,14 +117,16 @@ const TableContent: React.FC<TableContentProps> = ({ workfileId }) => {
       </div>
 
       {/* Second Row: Car image, info blocks, damage, parts, repair plan */}
-      <div className="flex flex-row items-stretch justify-between gap-0 bg-gray-200">
+      <div className="flex flex-row gap-0 justify-between items-stretch bg-gray-200">
         <div className='flex flex-[4]'>
           {/* Car Image */}
-          <div className="w-48 h-full overflow-hidden bg-red-200">
+          <div className="overflow-hidden w-48 h-full bg-red-200">
             <Image
-              src={vehicle.vehiclePicturesUrls && vehicle.vehiclePicturesUrls.length > 0 
-                ? vehicle.vehiclePicturesUrls[0] 
-                : `https://picsum.photos/seed/${vehicle.vin}/320/240`}
+              src={
+              // vehicle.vehiclePicturesUrls && vehicle.vehiclePicturesUrls.length > 0 
+              //   ? vehicle.vehiclePicturesUrls[0] 
+              //   : 
+              `https://picsum.photos/seed/${vehicle.vin}/320/240`}
               alt="Vehicle"
               width={320}
               height={320}

@@ -59,85 +59,110 @@ export type Sublet = {
 
 // Represents the API response format for workfiles
 export type WorkfileApiResponse = {
-  id: string;
-  opportunityId: string;
-  opportunity: {
+  workfile: {
     id: string;
-    tenantId: string;
-    inRental: boolean;
-    insuranceId: string;
-    insurance: null;
-    vehicleId: string;
-    vehicle: {
+    opportunityId: string;
+    opportunity: {
       id: string;
-      vin: string;
-      make: string;
-      model: string;
-      year: number;
-      licensePlate: string;
-      exteriorColor: string;
-      interiorColor: string;
-      mileageIn: number;
-      vehiclePicturesUrls: string[];
-      owner: {
+      tenantId: string;
+      insuranceId: string;
+      insurance: null;
+      vehicleId: string;
+      vehicle: {
         id: string;
-        name: string;
-        phone: string;
-        secondaryPhone?: string;
-        email: string;
-        address: string;
-        city?: string;
-        state?: string;
-        zip?: string;
-        company?: string;
+        ownerId: string;
+        owner: {
+          id: string;
+          firstName: string;
+          lastName: string;
+          phone: string;
+          email: string;
+          address: string;
+          createdAt: string;
+          updatedAt: string;
+        };
+        make: string;
+        model: string;
+        year: number;
+        vin: string;
+        licensePlate: string;
+        exteriorColor: string;
+        interiorColor: string;
+        mileageIn: number;
+        damageDescription: string;
+        isCommercial: boolean;
+        createdAt: string;
+        updatedAt: string;
       };
+      locationId: string | null;
+      location: null;
+      documentId: string | null;
+      document: null;
+      status: string;
+      roNumber: string;
+      labourHours: number | null;
+      createdAt: string;
+      updatedAt: string;
+      _1stCall: string;
+      _2ndCall: string;
+      dropDate: string | null;
+      summary: string;
+      inDate: string;
+      inRental: boolean;
+      estimatedCompletionDate: string;
+      partsOrders: any[];
     };
-    locationId: string | null;
-    location: null;
-    documentId: string | null;
-    document: null;
-    summary: string;
     status: string;
+    dropDate: string;
+    estimatedCompletionDate: string;
     createdAt: string;
     updatedAt: string;
-    _1stCall: string;
-    _2ndCall: string;
   };
-  qualityControl: QualityControl;
-  status: string;
-  dropDate: string;
-  estimatedCompletionDate: string;
-  createdAt: string;
-  updatedAt: string;
+  sublets: Array<{
+    id: string;
+    workfileId: string;
+    vendorId: string;
+    description: string;
+    cost: number;
+    createdAt: string;
+    updatedAt: string;
+    createdById: string | null;
+    status: string;
+    type: string;
+    dropOff: string;
+    due: string;
+    createdBy: any | null;
+    vendor: any | null;
+  }>;
 };
 
 // Maps API response to our Workfile type
 export const mapWorkfileApiResponseToWorkfile = (apiResponse: WorkfileApiResponse): Workfile => ({
-  id: apiResponse.id,
-  workfileId: apiResponse.id,
-  opportunityId: apiResponse.opportunityId,
-  status: apiResponse.status as WorkfileStatus,
-  createdDate: apiResponse.createdAt,
-  lastUpdatedDate: apiResponse.updatedAt,
-  dropDate: apiResponse.dropDate,
-  estimatedCompletionDate: apiResponse.estimatedCompletionDate,
-  inDate: apiResponse.dropDate,
+  id: apiResponse.workfile.id,
+  workfileId: apiResponse.workfile.id,
+  opportunityId: apiResponse.workfile.opportunityId,
+  status: apiResponse.workfile.status as WorkfileStatus,
+  createdDate: apiResponse.workfile.createdAt,
+  lastUpdatedDate: apiResponse.workfile.updatedAt,
+  dropDate: apiResponse.workfile.dropDate,
+  estimatedCompletionDate: apiResponse.workfile.estimatedCompletionDate,
+  inDate: apiResponse.workfile.opportunity.inDate,
   vehicle: {
-    vin: '',
-    make: '',
-    model: '',
-    year: 0,
-    licensePlate: '',
-    exteriorColor: '',
-    interiorColor: '',
-    mileageIn: 0,
+    vin: apiResponse.workfile.opportunity.vehicle.vin,
+    make: apiResponse.workfile.opportunity.vehicle.make,
+    model: apiResponse.workfile.opportunity.vehicle.model,
+    year: apiResponse.workfile.opportunity.vehicle.year,
+    licensePlate: apiResponse.workfile.opportunity.vehicle.licensePlate,
+    exteriorColor: apiResponse.workfile.opportunity.vehicle.exteriorColor,
+    interiorColor: apiResponse.workfile.opportunity.vehicle.interiorColor,
+    mileageIn: apiResponse.workfile.opportunity.vehicle.mileageIn,
     vehiclePicturesUrls: []
   },
   owner: {
-    name: '',
-    phone: '',
-    email: '',
-    address: ''
+    name: `${apiResponse.workfile.opportunity.vehicle.owner.firstName} ${apiResponse.workfile.opportunity.vehicle.owner.lastName}`,
+    phone: apiResponse.workfile.opportunity.vehicle.owner.phone,
+    email: apiResponse.workfile.opportunity.vehicle.owner.email,
+    address: apiResponse.workfile.opportunity.vehicle.owner.address
   },
   insurance: {
     company: '',
@@ -152,8 +177,8 @@ export const mapWorkfileApiResponseToWorkfile = (apiResponse: WorkfileApiRespons
     returnsAmount: 0,
     list: []
   },
-  repairStartDate: apiResponse.createdAt,
-  uploadDeadline: new Date(new Date(apiResponse.dropDate).getTime() + 24 * 60 * 60 * 1000).toISOString(),
+  repairStartDate: apiResponse.workfile.createdAt,
+  uploadDeadline: new Date(new Date(apiResponse.workfile.dropDate).getTime() + 24 * 60 * 60 * 1000).toISOString(),
   tasks: []
 });
 

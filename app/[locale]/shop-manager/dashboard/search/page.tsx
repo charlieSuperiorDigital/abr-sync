@@ -7,10 +7,10 @@ import { ColumnDef } from '@tanstack/react-table'
 import { OpportunityResponse } from '@/app/api/functions/opportunities'
 import { WorkfileApiResponse } from '@/app/types/workfile'
 import { useSession } from 'next-auth/react'
-import { useGetOpportunities } from '@/app/api/hooks/useGetOpportunities'
 import { useGetWorkfiles } from '@/app/api/hooks/useGetWorkfiles'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { useGetOpportunities } from '@/app/api/hooks/useOpportunities'
 
 export default function SearchPage() {
   const { data: session } = useSession()
