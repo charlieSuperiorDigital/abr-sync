@@ -1,8 +1,7 @@
 'use client'
 
 import { TaskCreateVM } from '@/app/api/functions/tasks'
-import { useGetTenant } from '@/app/api/hooks/useGetTenant'
-import { useGetUsersByTenant } from '@/app/api/hooks/useGetUsersByTenant'
+import { useGetTenant, useGetUsersByTenant } from '@/app/api/hooks/useTenant'
 import { Location } from '@/app/types/location'
 import { getUserFullName } from '@/app/types/user'
 import { Button } from '@/components/ui/button'
