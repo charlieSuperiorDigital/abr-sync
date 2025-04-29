@@ -9,6 +9,7 @@ import { useSession } from 'next-auth/react'
 import { useGetTasksByAssignedUser } from '@/app/api/hooks/useGetTasksByAssignedUser'
 import { useGetTasksByCreator } from '@/app/api/hooks/useGetTasksByCreator'
 import { useGetUserTabOrder } from '@/app/api/hooks/useGetUserTabOrder'
+import { useUpdateUserTabOrder } from '@/app/api/hooks/useUpdateUserTabOrder'
 import { Task as ApiTask } from '@/app/api/functions/tasks'
 import { Task } from '@/app/types/task'
 import { TasksContext, TasksContextType } from '@/app/context/tasks-context'
@@ -70,10 +71,17 @@ export default function TasksLayout({
   ]
 
   // Get user's preferred tab order
+  // Get user's preferred tab order
   const { tabOrder } = useGetUserTabOrder({
     userId,
     pageName: 'tasks',
     enabled: !!userId
+  })
+
+  // Setup tab order update mutation
+  const { updateTabOrder } = useUpdateUserTabOrder({
+    userId,
+    pageName: 'tasks',
   })
 
   // Order the nav items according to user's preference or use default order
@@ -111,7 +119,13 @@ export default function TasksLayout({
         <div className="px-5">
           <DraggableNav 
             navItems={taskNavItems} 
-            defaultTab={tabOrder?.[0] || 'my-tasks'} 
+            defaultTab={tabOrder?.[0] || 'my-tasks'}
+            onReorder={(reorderedItems) => {
+              // Extract the IDs in the new order
+              const newOrder = reorderedItems.map(item => item.id)
+              // Update the tab order in the database
+              updateTabOrder(newOrder)
+            }}
           />
         </div>
         <main className="w-full">{children}</main>
