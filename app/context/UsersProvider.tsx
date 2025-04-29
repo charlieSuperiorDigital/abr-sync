@@ -1,8 +1,8 @@
 'use client'
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { useGetUsersByTenant } from '../api/hooks/useGetUsersByTenant'
 import { User, getUserFullName, UserRole } from '../types/user'
 import { useTenant } from './TenantProvider'
+import { useGetUsersByTenant } from '../api/hooks/useTenant'
 
 interface UsersContextType {
   users: User[]
