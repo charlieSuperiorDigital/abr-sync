@@ -20,7 +20,7 @@ function UsersLayoutContent({ children }: { children: React.ReactNode }) {
   const taskNavItems: NavItem[] = [
     { id: 'body-techs', label: 'Body Techs', count: usersQuantity.bodyTechs },
     { id: 'paint-techs', label: 'Paint Techs', count: usersQuantity.paintTechs },
-    { id: 'csr', label: 'CSR', count: usersQuantity.csrs },
+    { id: 'csrs', label: 'CSRS', count: usersQuantity.csrs },
     { id: 'managers', label: 'Managers', count: usersQuantity.managers },
     { id: 'admins', label: 'Admins', count: usersQuantity.admins },
   ]

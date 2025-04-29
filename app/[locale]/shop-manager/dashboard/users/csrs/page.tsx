@@ -1,6 +1,6 @@
 'use client'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
-import { AutoCell, FriendlyDateCell } from '@/components/custom-components/custom-table/table-cells'
+import { ActionsCell, AutoCell, FriendlyDateCell } from '@/components/custom-components/custom-table/table-cells'
 import { ColumnDef } from '@tanstack/react-table'
 import { User, AVAILABLE_LOCATIONS, Location, UserRole } from '@/app/types/user'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -10,6 +10,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { UserCircle2 } from 'lucide-react'
 import { LocationSelect } from '@/components/custom-components/selects/location-select'
 import { useUsers } from '@/app/context/UsersProvider'
+import { EditUserModal } from '@/components/custom-components/user-modal/edit-user-modal'
 
 export default function CSRs() {
   const { csrs, isLoading } = useUsers()
@@ -103,6 +104,26 @@ export default function CSRs() {
         </div>
       ),
     },
+     {
+          id: 'actions',
+          cell: ({ row }) => (
+            <ActionsCell
+              actions={[
+                {
+                  label: 'Edit',
+                  onClick: () => console.log('Edit Task:', row.original.id),
+                  variant: 'secondary',
+                  icon: 'edit',
+                  _component:
+                    <EditUserModal
+                      title="Edit User"
+                      user={row.original}
+                    />
+                },
+              ]}
+            />
+          ),
+        },
   ]
 
   return (
