@@ -33,7 +33,7 @@ import {
 } from './schema'
 import { useUpdateTask } from '@/app/api/hooks/useTasks'
 import { TASK_TEMPLATES } from './mock-tasks-templates'
-import { useGetTenant, useGetUsersByTenant } from '@/app/api/hooks/useTenant'
+
 
 // Extended task type to handle both Task and ApiTask properties
 interface ExtendedTask {
