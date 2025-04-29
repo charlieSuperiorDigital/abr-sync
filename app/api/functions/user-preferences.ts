@@ -1,5 +1,10 @@
 import apiService from "@/app/utils/apiService";
 
+interface UpdateTabOrderRequest {
+  pageName: string;
+  tabOrder: string[];
+}
+
 /**
  * Get user's preferred tab order for a specific page
  * @param userId - The ID of the user
@@ -18,6 +23,30 @@ export async function getUserTabOrder(
     return data;
   } catch (error) {
     console.error('Error fetching user tab order:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update user's preferred tab order for a specific page
+ * @param userId - The ID of the user
+ * @param pageName - The name of the page to update tab order for
+ * @param tabOrder - The new order of tabs
+ * @returns Promise with the updated tab order
+ */
+export async function updateUserTabOrder(
+  userId: string,
+  request: UpdateTabOrderRequest
+): Promise<string[]> {
+  console.log(`Updating tab order for user ${userId}`, request);
+  try {
+    const { data } = await apiService.put<string[]>(
+      `/User/TabOrder/${userId}`,
+      request
+    );
+    return data;
+  } catch (error) {
+    console.error('Error updating user tab order:', error);
     throw error;
   }
 }

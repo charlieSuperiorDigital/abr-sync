@@ -13,9 +13,10 @@ export interface NavItem {
 interface DraggableNavProps {
   navItems?: NavItem[]
   defaultTab?: string
+  onReorder?: (items: NavItem[]) => void
 }
 
-export default function DraggableNav({ navItems, defaultTab }: DraggableNavProps) {
+export default function DraggableNav({ navItems, defaultTab, onReorder }: DraggableNavProps) {
   const [items, setItems] = useState<NavItem[]>([])
   const [draggedItem, setDraggedItem] = useState<number | null>(null)
   const [activeTab, setActiveTab] = useState<string | null>(null)
@@ -69,7 +70,10 @@ export default function DraggableNav({ navItems, defaultTab }: DraggableNavProps
 
   const handleDragEnd = () => {
     setDraggedItem(null)
+    // Save order to cookie for local persistence
     document.cookie = `navOrder=${encodeURIComponent(JSON.stringify(items))}; max-age=${60 * 60 * 24 * 365}; path=/`
+    // Notify parent component of the new order
+    onReorder?.(items)
   }
 
   const handleClick = (id: string) => {
