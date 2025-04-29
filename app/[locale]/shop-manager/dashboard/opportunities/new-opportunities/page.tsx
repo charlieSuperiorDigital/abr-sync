@@ -25,6 +25,7 @@ import DateTimePicker from '@/app/[locale]/custom-components/date-time-picker'
 import { useSession } from 'next-auth/react'
 import { useGetOpportunities } from '@/app/api/hooks/useGetOpportunities'
 import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
+import { set } from 'date-fns'
 
 export default function NewOpportunities() {
   const { data: session } = useSession()
@@ -93,7 +94,9 @@ export default function NewOpportunities() {
 
   const handleContactClick = useCallback((opportunity: Opportunity) => {
     // Handle contact info click based on opportunity state
-    console.log('Contact clicked for opportunity:', opportunity.opportunityId)
+    console.log('row:', opportunity.opportunityId)
+    setSelectedOpportunity(opportunity)
+    setIsModalOpen(true)
   }, [])
 
   const handleTaskClick = useCallback((opportunity: Opportunity) => {
@@ -258,10 +261,11 @@ export default function NewOpportunities() {
           className="cursor-pointer"
           onClick={(e) => {
             e.stopPropagation()
+
             handleContactClick(row.original)
           }}
         >
-          <ContactInfo />
+          <ContactInfo selectedOpportunity={selectedOpportunity} />
         </div>
       ),
     },

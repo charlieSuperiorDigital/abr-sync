@@ -1,0 +1,482 @@
+'use client'
+
+import { useState } from 'react'
+import { X, Plus, Trash2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
+import { DialogTitle } from '@radix-ui/react-dialog'
+
+// Define the interfaces based on what you provided
+interface CommunicationLog {
+  type: string
+  date: string
+  user: string
+  description?: string
+  isAutomatic: boolean
+}
+
+interface AttachmentOption {
+  name: string
+  category: string
+  checked?: boolean
+}
+
+interface ContactData {
+  communicationLogs: CommunicationLog[]
+  attachmentOptions: AttachmentOption[]
+  person: {
+    name: string
+    address: string
+    company: string
+    preferredContactType: string
+  }
+  insurance: {
+    company: string
+    representative: string
+    pendingEstimates: number
+    pendingReimbursements: number
+    updates: number
+  }
+}
+
+interface EmailItem {
+  id: number
+  address: string
+}
+
+interface Props {
+  contactData: ContactData
+}
+
+export default function ContactModal({ contactData }: Props) {
+  const [open, setOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<'message' | 'email'>('message')
+  const [emails, setEmails] = useState<EmailItem[]>([])
+  const [message, setMessage] = useState('')
+  const [isSending, setIsSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedFiles, setSelectedFiles] = useState<string[]>(() => {
+    return contactData.attachmentOptions
+      .filter((option) => option.checked)
+      .map((option) => option.name)
+  })
+  const [sentTo, setSentTo] = useState<string[]>([
+    'Vehicle Owner',
+    'Insurance',
+    'Custom',
+  ])
+
+  const toggleFile = (file: string) => {
+    if (selectedFiles.includes(file)) {
+      setSelectedFiles(selectedFiles.filter((f) => f !== file))
+    } else {
+      setSelectedFiles([...selectedFiles, file])
+    }
+  }
+
+  const toggleSentTo = (recipient: string) => {
+    if (sentTo.includes(recipient)) {
+      setSentTo(sentTo.filter((r) => r !== recipient))
+    } else {
+      setSentTo([...sentTo, recipient])
+    }
+  }
+
+  const addEmail = () => {
+    const newId =
+      emails.length > 0 ? Math.max(...emails.map((e) => e.id)) + 1 : 1
+    setEmails([...emails, { id: newId, address: '' }])
+  }
+
+  const removeEmail = (id: number) => {
+    setEmails(emails.filter((email) => email.id !== id))
+  }
+
+  const updateEmail = (id: number, address: string) => {
+    setEmails(
+      emails.map((email) => (email.id === id ? { ...email, address } : email))
+    )
+  }
+  const handleSend = async () => {
+    setError(null)
+    const recipientEmails = emails
+      .map((email) => email.address)
+      .filter((address) => address.trim() !== '')
+
+    if (activeTab === 'email' && recipientEmails.length === 0) {
+      setError('Por favor, añade al menos una dirección de correo válida.')
+      return
+    }
+    if (!message.trim()) {
+      setError('El cuerpo del mensaje no puede estar vacío.')
+      return
+    }
+
+    setIsSending(true)
+
+    try {
+      const emailData = {
+        to: recipientEmails,
+        messageBody: message,
+        attachments: selectedFiles,
+      }
+
+      const response = await sendEmailApi(emailData)
+
+      if (response.success) {
+        console.log('Email enviado exitosamente (simulado)')
+        setOpen(false)
+
+        setMessage('')
+        setEmails([])
+        setSelectedFiles(
+          contactData.attachmentOptions
+            .filter((o) => o.checked)
+            .map((o) => o.name)
+        )
+      } else {
+        setError('Hubo un problema al enviar el email. Inténtalo de nuevo.')
+      }
+    } catch (err) {
+      console.error('Error al enviar email:', err)
+      setError(
+        err instanceof Error ? err.message : 'Ocurrió un error desconocido.'
+      )
+    } finally {
+      setIsSending(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button
+          variant="ghost"
+          className="p-0 h-auto w-auto bg-transparent hover:bg-transparent"
+        >
+          <svg
+            width="36"
+            height="36"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M22 8V18C22 19.1046 21.1046 20 20 20H4C2.89543 20 2 19.1046 2 18V8L12 13L22 8Z"
+              fill="black"
+            />
+            <path d="M2 6L12 11L22 6" fill="black" />
+            <path
+              d="M20 4H4C2.89543 4 2 4.89543 2 6V18C2 19.1046 2.89543 20 4 20H20C21.1046 20 22 19.1046 22 18V6C22 4.89543 21.1046 4 20 4Z"
+              stroke="black"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="w-full max-w-[1000px] p-0 gap-0 max-h-[90vh] overflow-auto bg-[#F0F0F0]">
+        <div className="p-6 pb-0">
+          <div className="flex justify-between items-center">
+            <DialogTitle className="text-[22px] font-semibold">
+              Contact
+            </DialogTitle>
+          </div>
+
+          <div className="mt-4">
+            <h3 className="text-[20px] text-[#101010] font-semibold">
+              {contactData.person.name}, Vehicle Owner - Insured
+            </h3>
+
+            <div className="grid grid-cols-3 gap-4 mt-8 text-sm">
+              <div className="">
+                <p className="text-[15px] font-medium mb-2">Address:</p>
+                <p className="text-[15px]">{contactData.person.address}</p>
+              </div>
+              <div>
+                <p className="text-[15px] font-medium mb-2">Company:</p>
+                <p className="text-[15px]">{contactData.person.company}</p>
+              </div>
+              <div>
+                <p className="text-[15px] font-medium mb-2">
+                  Preferred Contact Type:
+                </p>
+                <p className="text-[15px]">
+                  {contactData.person.preferredContactType}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <h3 className="text-[20px] font-semibold">
+              Insurance - {contactData.insurance.company}
+            </h3>
+
+            <div className="grid grid-cols-4 gap-4 mt-2 text-sm">
+              <div>
+                <p className="text-[15px] font-medium mb-2">Representative</p>
+                <p className="text-[15px]">
+                  {contactData.insurance.representative}
+                </p>
+              </div>
+              <div>
+                <p className="text-[15px] font-medium mb-2">
+                  Pending Estimates:
+                </p>
+                <p className="text-[15px]">
+                  {contactData.insurance.pendingEstimates}
+                </p>
+              </div>
+              <div>
+                <p className="text-[15px] font-medium mb-2">
+                  Pending Reimbursements:
+                </p>
+                <p className="text-[15px]">
+                  {contactData.insurance.pendingReimbursements}
+                </p>
+              </div>
+              <div>
+                <p className="text-[15px] font-medium mb-2">Updates:</p>
+                <p className="text-[15px]">{contactData.insurance.updates}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium">Communication logs</h3>
+              {contactData.communicationLogs.length > 0 && (
+                <button className="text-sm text-gray-500 hover:underline">
+                  VIEW ALL
+                </button>
+              )}
+            </div>
+
+            <div className="mt-2">
+              <div className="grid grid-cols-3 text-sm text-gray-500 border-b pb-1">
+                <div>TYPE</div>
+                <div>DATE</div>
+                <div>USER</div>
+              </div>
+
+              {contactData.communicationLogs.length === 0 ? (
+                <div className="text-center py-4 text-gray-500">
+                  There are no communication logs to show
+                </div>
+              ) : (
+                contactData.communicationLogs.map((log, index) => (
+                  <div
+                    key={index}
+                    className="grid grid-cols-3 text-sm py-3 border-b"
+                  >
+                    <div>{log.type}</div>
+                    <div>{log.date}</div>
+                    <div className={log.isAutomatic ? '' : 'flex items-center'}>
+                      {!log.isAutomatic && (
+                        <div className="w-5 h-5 rounded-full bg-gray-300 mr-2"></div>
+                      )}
+                      {log.isAutomatic ? 'Automatic' : log.user}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <div className="relative h-[38px]  w-full max-w-[928px] rounded-full overflow-hidden bg-[#E3E3E3]">
+              <div
+                className={`absolute top-0 bottom-0 w-1/2 bg-black transition-transform duration-300 ease-in-out ${
+                  activeTab === 'email'
+                    ? 'translate-x-full rounded-l-full'
+                    : 'rounded-r-full'
+                }`}
+              ></div>
+              <div className="absolute top-0 left-0 right-0 bottom-0 flex">
+                <div
+                  className="flex-1 flex items-center justify-center cursor-pointer z-10"
+                  onClick={() => setActiveTab('message')}
+                >
+                  <span
+                    className={
+                      activeTab === 'message'
+                        ? 'text-white text-[15px]'
+                        : 'text-[15px]'
+                    }
+                  >
+                    Message
+                  </span>
+                </div>
+                <div
+                  className="flex-1 flex items-center justify-center cursor-pointer z-10"
+                  onClick={() => setActiveTab('email')}
+                >
+                  <span
+                    className={
+                      activeTab === 'email'
+                        ? 'text-white text-[15px]'
+                        : 'text-[15px]'
+                    }
+                  >
+                    Email
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 pt-4">
+          <h3 className="text-[18px] font-medium mb-4">Attach files</h3>
+
+          <div className="grid grid-cols-2 gap-y-4">
+            {contactData.attachmentOptions.length === 0 ? (
+              <div className="text-center py-4 text-gray-500 col-span-2">
+                There are no attachment options to show
+              </div>
+            ) : (
+              contactData.attachmentOptions.map((attachment, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between pr-4"
+                >
+                  <div className="flex items-center">
+                    <Checkbox
+                      id={`file-${index}`}
+                      checked={selectedFiles.includes(attachment.name)}
+                      onCheckedChange={() => toggleFile(attachment.name)}
+                      className="mr-2"
+                    />
+                    <label
+                      htmlFor={`file-${index}`}
+                      className="text-sm cursor-pointer"
+                    >
+                      {attachment.name}
+                    </label>
+                  </div>
+                  <button className="text-xs font-medium text-gray-500">
+                    PREVIEW
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+
+          {activeTab === 'email' && (
+            <>
+              <div className="mt-6">
+                <h3 className="text-[18px] font-medium mb-4">Sent to</h3>
+                <div className="flex gap-4">
+                  {['Vehicle Owner', 'Insurance', 'Custom'].map(
+                    (recipient, index) => (
+                      <div key={index} className="flex items-center">
+                        <Checkbox
+                          id={`recipient-${index}`}
+                          checked={sentTo.includes(recipient)}
+                          onCheckedChange={() => toggleSentTo(recipient)}
+                          className="mr-2"
+                        />
+                        <label
+                          htmlFor={`recipient-${index}`}
+                          className="text-sm cursor-pointer"
+                        >
+                          {recipient}
+                        </label>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-4 space-y-2">
+                {emails.length === 0 ? (
+                  <div className="flex justify-center mt-2 mb-2">
+                    <Button
+                      variant="ghost"
+                      onClick={addEmail}
+                      className="flex items-center text-gray-600 hover:text-gray-900"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Email
+                    </Button>
+                  </div>
+                ) : (
+                  emails.map((email) => (
+                    <div key={email.id} className="flex items-center gap-2">
+                      <div className="relative w-full max-w-[700px]">
+                        <div className="flex items-center h-10 px-3 rounded-full bg-[#E3E3E3]">
+                          <span className="text-[#1D1D1D] font-medium text-[15px]">
+                            Email
+                          </span>
+                          <input
+                            type="email"
+                            value={email.address}
+                            onChange={(e) =>
+                              updateEmail(email.id, e.target.value)
+                            }
+                            className="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 text-right pl-2"
+                            placeholder=""
+                          />
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeEmail(email.id)}
+                        className="h-8 w-8"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                      {email.id === emails[emails.length - 1].id && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={addEmail}
+                          className="h-8 w-8"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
+          )}
+
+          <div className="mt-6">
+            <div className="relative rounded-md bg-[#E3E3E3]">
+              <div className="absolute top-3 left-3 text-[#1D1D1D] text-[15px] font-medium">
+                Message
+              </div>
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                className="w-full min-h-[120px] pt-10 px-3 pb-3 bg-transparent border-none focus:outline-none focus:ring-0 resize-none"
+                placeholder=""
+              />
+            </div>
+          </div>
+
+          <div className="mt-6 flex justify-between">
+            <Button
+              variant="outline"
+              onClick={() => setOpen(false)}
+              className="px-8 rounded-full border-gray-300 w-full max-w-[250px] h-[45px]"
+            >
+              Cancel
+            </Button>
+            <Button className="px-8 rounded-full bg-black hover:bg-gray-800 text-white w-full max-w-[250px] h-[45px]">
+              Send
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}

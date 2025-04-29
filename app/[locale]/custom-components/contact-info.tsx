@@ -5,26 +5,25 @@ import {
   ContactData,
   ContactInfoProps,
   ContactMethod,
-  CommunicationLog,
 } from '@/app/types/contact-info.types'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
-import { Mail, MessagesSquare, Phone } from 'lucide-react'
+import { MessagesSquare, Phone } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import { toast } from 'react-toastify'
-import VehicleHeader from './vehicle-header'
 import { useCall } from '@/app/context/call-context'
+import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
+import EmailModal from './email-modal'
 
 export default function ContactInfo({
   preferredContactMethod,
   contactData: propContactData,
+  selectedOpportunity,
 }: ContactInfoProps) {
   const [shouldShowModal, setShouldShowModal] = useState(false)
-  const { callOut, status } = useCall()
+  const { callOut } = useCall()
   const [selectedTab, setSelectedTab] = useState<'message' | 'email'>('message')
   const [contactData, setContactData] = useState<ContactData>(
     propContactData || mockContactData
   )
-  const [selectedAttachments, setSelectedAttachments] = useState<string[]>([])
   const [selectedContactMethod, setSelectedContactMethod] =
     useState<ContactMethod | null>(null)
 
@@ -33,45 +32,6 @@ export default function ContactInfo({
       setContactData(propContactData)
     }
   }, [propContactData])
-
-  const handleAttachmentToggle = (attachmentName: string) => {
-    setSelectedAttachments((prev) =>
-      prev.includes(attachmentName)
-        ? prev.filter((name) => name !== attachmentName)
-        : [...prev, attachmentName]
-    )
-  }
-
-  const handleRemoveEmail = (index: number) => {
-    if (contactData.emailContacts.length > 1) {
-      setContactData((prev) => ({
-        ...prev,
-        emailContacts: prev.emailContacts.filter((_, i) => i !== index),
-      }))
-    }
-  }
-
-  const handleAddEmail = () => {
-    setContactData((prev) => ({
-      ...prev,
-      emailContacts: [...prev.emailContacts, { email: '', isPrimary: false }],
-    }))
-  }
-
-  const handleEmailChange = (index: number, value: string) => {
-    setContactData((prev) => ({
-      ...prev,
-      emailContacts: prev.emailContacts.map((contact, i) =>
-        i === index ? { ...contact, email: value } : contact
-      ),
-    }))
-  }
-
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      setShouldShowModal(false)
-    }
-  }
 
   useEffect(() => {
     const handleEscapeKey = (e: KeyboardEvent) => {
@@ -85,10 +45,9 @@ export default function ContactInfo({
   }, [])
 
   const handleSelectContactMethod = (method: ContactMethod) => {
-    setShouldShowModal(true)
-
     setSelectedContactMethod(method)
     if (method === ContactMethod.phone) {
+      setShouldShowModal(true)
       callOut(`${process.env.NEXT_PUBLIC_RECIEVER_NUMBER}`) // make dynamic for client number
     }
     if (method === ContactMethod.email) {
@@ -96,51 +55,6 @@ export default function ContactInfo({
     } else if (method === ContactMethod.message) {
       setSelectedTab('message')
     }
-  }
-
-  const handleSend = () => {
-    const method = selectedContactMethod || preferredContactMethod
-    const attachmentText = selectedAttachments.length
-      ? ` with ${selectedAttachments.length} attachment${selectedAttachments.length > 1 ? 's' : ''}`
-      : ''
-
-    let context = ''
-    if (contactData.insurance.updates.includes('Pending')) {
-      context = ' regarding pending insurance approval'
-    } else if (contactData.insurance.updates.includes('Approved')) {
-      context = ' to schedule repair work'
-    } else if (contactData.insurance.updates.includes('Rejected')) {
-      context = ' regarding estimate revision'
-    }
-
-    toast.success(
-      `Message sent to ${contactData.person.name} via ${method}${attachmentText}${context}`,
-      {
-        position: 'bottom-right',
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      }
-    )
-
-    const newLog: CommunicationLog = {
-      type: method?.toString() || 'message',
-      date: new Date().toISOString(),
-      user: 'Current User', // This would come from auth context in real implementation
-      isAutomatic: method === ContactMethod.email,
-      description: `Message sent${attachmentText}${context}`,
-    }
-
-    setContactData((prev) => ({
-      ...prev,
-      communicationLogs: [newLog, ...prev.communicationLogs],
-    }))
-
-    setShouldShowModal(false)
-    setSelectedAttachments([])
   }
 
   return (
@@ -164,21 +78,7 @@ export default function ContactInfo({
           </button>
         </div>
         <div className="flex items-center mr-3">
-          <button
-            onClick={() => handleSelectContactMethod(ContactMethod.email)}
-            className={`flex items-center rounded-full transition-colors duration-100 group
-                        ${preferredContactMethod === ContactMethod.email ? 'bg-black px-2' : 'hover:bg-black'}`}
-            aria-label="Email Contact"
-          >
-            <span className="p-2">
-              <Mail
-                className={`w-6 h-6 ${preferredContactMethod === ContactMethod.email ? 'text-white' : 'text-black hover:text-white'}`}
-              />
-            </span>
-            {preferredContactMethod === ContactMethod.email && (
-              <span className="pr-3 text-xs font-bold text-white">PREF</span>
-            )}
-          </button>
+          <EmailModal contactData={contactData} />
         </div>
         <div className="flex items-center">
           <button
@@ -201,17 +101,15 @@ export default function ContactInfo({
       <BottomSheetModal
         isOpen={shouldShowModal}
         onOpenChange={setShouldShowModal}
-        title="Contact"
+        title={
+          selectedOpportunity
+            ? `${selectedOpportunity.vehicle.year} ${selectedOpportunity.vehicle.make} ${selectedOpportunity.vehicle.model}`
+            : ''
+        }
       >
-        <VehicleHeader
-          carModel="2022 Toyota Corolla"
-          insuranceCompany="ALLIANZ"
-          rentalStatus="IN RENTAL"
-          insuranceStatus="APPROVED"
-          priority="HIGH"
-          status="IN PROGRESS"
-          roNumber="RO123456"
-        />
+        {selectedOpportunity && (
+          <OpportunityModal opportunity={selectedOpportunity} />
+        )}
       </BottomSheetModal>
 
       {/* {shouldShowModal && (
