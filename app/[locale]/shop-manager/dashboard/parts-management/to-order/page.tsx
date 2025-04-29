@@ -1,17 +1,15 @@
 'use client'
 
-import * as React from 'react'
-import {
-  StatusBadgeCell,
-  VehicleCell,
-  SummaryCell,
-} from '@/components/custom-components/custom-table/table-cells'
-import { ColumnDef } from '@tanstack/react-table'
-import { useState } from 'react'
-import { StatusBadge } from '@/components/custom-components/status-badge/status-badge'
-import { toOrderMockData, vendorDetailsMockData, VendorDetail } from '@/app/mocks/parts-management'
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
-import { Phone, Mail, ChevronDown } from 'lucide-react'
+import { ViewPartsModal } from '@/app/[locale]/custom-components/view-parts-modal'
+import { useGetTenantPartOrders } from '@/app/api/hooks/useParts'
+import { VendorDetail, vendorDetailsMockData } from '@/app/mocks/parts-management'
+import { TenantPartOrder } from '@/app/types/parts'
+import { calculateDaysUntil } from '@/app/utils/date-utils'
+import {
+  SummaryCell,
+  VehicleCell
+} from '@/components/custom-components/custom-table/table-cells'
 import {
   Table,
   TableBody,
@@ -20,11 +18,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { ViewPartsModal } from '@/app/[locale]/custom-components/view-parts-modal'
-import { useGetTenantPartOrders } from '@/app/api/hooks/useParts';
-import { useSession } from 'next-auth/react';
-import { TenantPartOrder } from '@/app/types/parts'
-import { calculateDaysUntil } from '@/app/utils/date-utils'
+import { Mail, Phone } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import * as React from 'react'
+import { useState } from 'react'
 
 
 export default function ToOrder() {
@@ -58,17 +55,6 @@ export default function ToOrder() {
   const formatDate = (date: string | undefined) => {
     if (!date) return '---'
     return new Date(date).toLocaleDateString()
-  }
-
-  // Find a workfile by RO number
-  const findWorkfileByRoNumber = (roNumber: string) => {
-  }
-
-
-
-
-  const getTotalEstimatedAmount = (partOrders: TenantPartOrder['partsOrders']) => {
-    return partOrders.reduce((sum, order) => sum + order.totalAmount, 0)
   }
 
 

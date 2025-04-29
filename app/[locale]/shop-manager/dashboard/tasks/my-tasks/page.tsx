@@ -228,6 +228,7 @@ export default function MyTasks() {
               <EditTaskModal 
                 title={'Edit Task'}
                 taskId={row.original.id}
+                task={row.original}
                 children={undefined} 
               />
           }

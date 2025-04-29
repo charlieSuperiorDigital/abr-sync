@@ -15,12 +15,12 @@ import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import { useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
-import { useGetOpportunities } from '@/app/api/hooks/useGetOpportunities'
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
 import ConfirmationModal from '@/components/custom-components/confirmation-modal/confirmation-modal'
 import { showPickupToast } from '@/app/utils/toast-utils'
 import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
 import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
+import { useGetOpportunities } from '@/app/api/hooks/useOpportunities'
 
 export default function TotalLossOpportunities() {
   const { data: session } = useSession()
@@ -137,7 +137,7 @@ export default function TotalLossOpportunities() {
         <div className="flex justify-center">
           <DarkButton
             buttonText="Mark as Picked Up"
-            buttonIcon={<Car className="w-4 h-4 mr-2" />}
+            buttonIcon={<Car className="mr-2 w-4 h-4" />}
             onClick={(e) => {
               e.stopPropagation()
               handlePickupClick(row.original)
@@ -180,7 +180,7 @@ export default function TotalLossOpportunities() {
               }
             }
             children={
-              <Plus className="w-5 h-5 m-auto" />
+              <Plus className="m-auto w-5 h-5" />
             }
           />
         </div>

@@ -30,11 +30,6 @@ export default function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
     
     const userRoles = session?.user?.roles || [];
     
-    // More detailed logging
-    console.log('[RoleGuard] Authentication status:', status);
-    console.log('[RoleGuard] Session data:', JSON.stringify(session, null, 2));
-    console.log('[RoleGuard] User roles (exact format):', JSON.stringify(userRoles));
-    console.log('[RoleGuard] Allowed roles (exact format):', JSON.stringify(allowedRoles));
     
     // Check if roles are strings and compare them case-insensitively
     const normalizedUserRoles = userRoles.map(role => 
@@ -42,8 +37,6 @@ export default function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
     );
     const normalizedAllowedRoles = allowedRoles.map(role => role.toLowerCase());
     
-    console.log('[RoleGuard] Normalized user roles:', normalizedUserRoles);
-    console.log('[RoleGuard] Normalized allowed roles:', normalizedAllowedRoles);
     
     // Check access both ways for debugging
     const hasAccess = userRoles.some((role: string) => allowedRoles.includes(role));
@@ -51,9 +44,7 @@ export default function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
       normalizedAllowedRoles.includes(role)
     );
     
-    console.log('[RoleGuard] Has access (exact match):', hasAccess);
-    console.log('[RoleGuard] Has access (normalized):', hasAccessNormalized);
-    
+  
     if (!hasAccessNormalized) {
       console.log('[RoleGuard] Access denied, redirecting to no-permission page');
       // Handle the case where pathname might be null

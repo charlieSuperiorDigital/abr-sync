@@ -25,10 +25,8 @@ export interface TenantWithLocations {
 }
 
 export async function getTenantById(id: string): Promise<TenantWithLocations> {
-    console.log('Fetching tenant by ID:', id)
     try {
         const { data } = await apiService.get<TenantWithLocations>(`/Tenant/${id}`)
-        console.log('Locations:', data.locations)
         return data;
     } catch (error) {
         console.error('Error fetching tenant:', error)
@@ -49,7 +47,6 @@ export async function getUsersByTenant(
   page: number = 1,
   perPage: number = 10
 ): Promise<GetUsersByTenantResponse> {
-  console.log(`Fetching users for tenant ${tenantId}, page ${page}, perPage ${perPage}`)
   try {
     const { data } = await apiService.get<GetUsersByTenantResponse>(
       `/Authorization/TenantUsers/${page}/${perPage}/${tenantId}`
@@ -68,7 +65,7 @@ export async function getUsersByTenant(
  * @returns Promise with array of tenant list items
  */
 export async function getTenantList(onlyActives: boolean): Promise<TenantListItem[]> {
-  console.log(`Fetching tenant list with onlyActives=${onlyActives}`)
+
   try {
     const response = await apiService.get<TenantListItem[] | string>(
       `/Tenant/List/${onlyActives}`

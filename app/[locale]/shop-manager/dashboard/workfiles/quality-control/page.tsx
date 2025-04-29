@@ -1,52 +1,45 @@
-// This file represents the quality-control route
-
 'use client'
-
+import ContactInfo from '@/app/[locale]/custom-components/contact-info'
+import DarkButton from '@/app/[locale]/custom-components/dark-button'
+import RoundButtonWithTooltip from '@/app/[locale]/custom-components/round-button-with-tooltip'
+import { useGetWorkfiles } from '@/app/api/hooks/useGetWorkfiles'
+import { useGetOpportunities } from '@/app/api/hooks/useOpportunities'
+import { Opportunity } from '@/app/types/opportunity'
+import { QualityControlStatus, WorkfileApiResponse } from '@/app/types/workfile'
+import { formatDate } from '@/app/utils/date-utils'
+import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
+import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import {
   VehicleCell,
 } from '@/components/custom-components/custom-table/table-cells'
-import ContactInfo from '@/app/[locale]/custom-components/contact-info'
-import { ColumnDef } from '@tanstack/react-table'
-import { ClipboardPlus, Calendar, Check, MessageSquareMore, ClipboardCheck } from 'lucide-react'
-import { Workfile, WorkfileStatus, QualityControlStatus, WorkfileApiResponse } from '@/app/types/workfile'
-import { useState, useCallback, useEffect } from 'react'
-import { useOpportunityStore } from '@/app/stores/opportunity-store'
-import RoundButtonWithTooltip from '@/app/[locale]/custom-components/round-button-with-tooltip'
-import { StatusBadge } from '@/components/custom-components/status-badge/status-badge'
-import DarkButton from '@/app/[locale]/custom-components/dark-button'
-import { formatDate } from '@/app/utils/date-utils'
-import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import QCChecklistBottomSheet from '@/components/custom-components/qc-checklist-modal'
+import { StatusBadge } from '@/components/custom-components/status-badge/status-badge'
+import { ColumnDef } from '@tanstack/react-table'
+import { ClipboardCheck, ClipboardPlus, MessageSquareMore } from 'lucide-react'
 import { useSession } from 'next-auth/react'
-import { useGetWorkfiles } from '@/app/api/hooks/useGetWorkfiles'
-import { useGetOpportunities } from '@/app/api/hooks/useGetOpportunities'
-import { Opportunity } from '@/app/types/opportunity'
-import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
+import { useCallback, useState } from 'react'
 
 export default function QualityControl() {
   const { data: session } = useSession();
   const tenantId = session?.user?.tenantId;
 
-  // Fetch opportunities for this tenant
+
   const { opportunities: allOpportunities, isLoading: isOpportunitiesLoading } = useGetOpportunities({ tenantId: tenantId || '' });
-
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isQCChecklistOpen, setIsQCChecklistOpen] = useState(false);
   const [selectedQCWorkfile, setSelectedQCWorkfile] = useState<WorkfileApiResponse | null>(null);
   const [selectedWorkfile, setSelectedWorkfile] = useState<WorkfileApiResponse | null>(null);
 
-  // Use real data from API
   const { qualityControl: qcWorkfiles, isLoading, error } = useGetWorkfiles({ tenantId: tenantId || '' });
 
   const handleRowClick = useCallback((workfile: WorkfileApiResponse) => {
     setSelectedWorkfile(workfile);
     // Find the matching opportunity by opportunityId
-    if (allOpportunities && workfile.opportunityId) {
-      const foundRaw = allOpportunities.find((opp) => opp.opportunityId === workfile.opportunityId);
+    if (allOpportunities && workfile.workfile.opportunityId) {
+      const foundRaw = allOpportunities.find((opp) => opp.opportunityId === workfile.workfile.opportunityId);
       setSelectedOpportunity(foundRaw ? mapApiResponseToOpportunity(foundRaw) : null);
     } else {
       setSelectedOpportunity(null);

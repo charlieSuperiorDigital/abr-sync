@@ -13,6 +13,7 @@ export interface UpdateUserRequest {
   notificationType?: number;
   notification?: number;
   profilePicture?: string;
+  roles?: string;
 }
 
 export interface GetUsersListResponse {

@@ -1,61 +1,85 @@
 'use client'
 
 import * as React from 'react'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
-import { UserFormData, userFormSchema, UserRoleOptions, LanguageOptions, NotificationTypeOptions } from './schema'
-import { CustomInput } from '../inputs/custom-input'
-import type { RegisterResponse } from '@/app/api/functions/authentication'
-import { useRegister } from '@/app/api/hooks/useRegister'
-import { useUpdateUser } from '@/app/api/hooks/useUpdateUser'
+import { EditUserFormData, editUserFormSchema, UserRoleOptions, LanguageOptions, NotificationTypeOptions } from './schema'
+import { useUpdateUser } from '@/app/api/hooks/useUpdateUser';
+import { UpdateUserRequest } from '@/app/api/functions/user';
 import { useFileUpload } from '@/app/api/hooks/useFileUpload'
 
+import { CustomInput } from '../inputs/custom-input'
 import { CustomSelect } from '../selects/custom-select'
 import { CustomButtonSelect, CustomButtonSelectField } from '../selects/custom-button-select'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { useUserStore } from '@/app/stores/user-store'
-import { User, ModuleAccess, CommunicationAccess, NotificationCategory, Language, NotificationType, Location, UserModules, UserCommunication } from '@/app/types/user'
-
-enum UserNotification{
-  None = 0, // 0000 0000
-  All = ~0, // 1111 1111
-  WorkfileECD = 1 // 0000 0001
-}
-import { Plus, Upload, X } from 'lucide-react'
+import { User, ModuleAccess, CommunicationAccess, NotificationCategory, Language, NotificationType, Location } from '@/app/types/user'
+import { Pencil, Upload, X, Plus } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { UserCircle2 } from 'lucide-react'
 import { CustomMaskedInput } from '../inputs/custom-masked-input'
 import { useTenant } from '@/app/context/TenantProvider'
 import Image from 'next/image'
 
-interface NewUserModalProps {
-  children: React.ReactNode
-  title: string
+
+enum UserModules {
+  None = 0,                     // 0000 0000
+  Workfiles = 1,                // 0000 0001
+  Users = 2,                    // 0000 0010
+  Locations = 4,                // 0000 0100
+  Opportunities = 8,            // 0000 1000
+  Parts = 16,                   // 0001 0000
+  Settings = 32,                // 0010 0000
+  InsuranceVehicleOwners = 64,  // 0100 0000
+  All = ~0                      // 1111 1111
 }
 
-export function NewUserModal({
+enum UserCommunication {
+  None = 0,                // 0000 0000
+  Vendors = 1,             // 0000 0001
+  Insurances = 2,          // 0000 0010
+  VehicleOwners = 4,       // 0000 0100
+  All = ~0                 // 1111 1111
+}
+
+enum UserNotificationType{
+  None = 0,                // 0000 0000
+  SMS = 1,                 // 0000 0001
+  Email = 2                // 0000 0010
+}
+
+enum UserNotification{
+  None = 0, // 0000 0000
+  All = ~0, // 1111 1111
+  WorkfileECD = 1 // 0000 0001
+}
+
+interface EditUserModalProps {
+  children?: React.ReactNode
+  title: string
+  user: User
+}
+
+export function EditUserModal({
   children,
-  title
-}: NewUserModalProps) {
+  title,
+  user
+}: EditUserModalProps) {
+
   const { tenant } = useTenant()
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const t = useTranslations('User')
-  const addUser = useUserStore((state) => state.addUser)
-
-  // File input reference
+  const updateUserInStore = useUserStore((state) => state.updateUser)
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  // Profile picture state
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null)
 
-  // File upload hook
   const { uploadFile, isUploading, error: uploadError } = useFileUpload({
     onSuccess: (data) => {
       console.log('Profile picture uploaded successfully:', data)
@@ -72,37 +96,104 @@ export function NewUserModal({
     }
   }
 
-  const validationMessage = useTranslations('Validation')
+  const hasModule = (moduleAccess: number, module: UserModules): boolean => {
+    return hasFlag(moduleAccess, module);
+  }
 
+  const hasCommunication = (communicationAccess: number, communication: UserCommunication): boolean => {
+    return hasFlag(communicationAccess, communication);
+  }
 
-  const {
-    register,
-    handleSubmit,
-    control,
-    reset,
-    formState: { errors },
-  } = useForm<UserFormData>({
-    resolver: zodResolver(userFormSchema),
-    defaultValues: {
-      fullName: '',
-      email: '',
-      phoneNumber: '',
-      password: '',
-      role: undefined,
-      hourlyRate: 0,
-      isActive: true,
-      preferredLanguage: Language.English,
-      moduleAccess: [],
-      communicationAccess: [],
-      notificationType: NotificationType.None,
-      notification: 0,
-      locations: []
-    }
-  })
+  const hasNotificationType = (notificationAccess: number, type: UserNotificationType): boolean => {
+    return hasFlag(notificationAccess, type);
+  }
 
+  const hasNotification = (notificationAccess: number, notification: UserNotification): boolean => {
+    return hasFlag(notificationAccess, notification);
+  }
+  
   const toBinary = (num: number): number => {
     return parseInt(num.toString(2), 2);
   }
+
+  const hasFlag = <T extends number>(access: number, flag: T): boolean => {
+    const normalizedAccess = toBinary(access);
+    const normalizedFlag = toBinary(flag);
+    return (normalizedAccess & normalizedFlag) !== 0;
+  }
+
+  const getNameParts = (fullName: string) => {
+    const nameParts = fullName.trim().split(/\\s+/)
+    const firstName = nameParts[0] || ''
+    const lastName = nameParts.slice(1).join(' ') || ''
+    return { firstName, lastName }
+  }
+
+  const handleModuleAccess = (moduleAccessValue: number): ModuleAccess[] => {
+    const selectedModules: ModuleAccess[] = [];
+    const moduleMapping = [
+      { flag: UserModules.Workfiles, access: ModuleAccess.Workfiles },
+      { flag: UserModules.Users, access: ModuleAccess.Users },
+      { flag: UserModules.Locations, access: ModuleAccess.Locations },
+      { flag: UserModules.Opportunities, access: ModuleAccess.Opportunities },
+      { flag: UserModules.Parts, access: ModuleAccess.Parts },
+      { flag: UserModules.Settings, access: ModuleAccess.Settings },
+      { flag: UserModules.InsuranceVehicleOwners, access: ModuleAccess.InsuranceVehicleOwners },
+    ];
+
+    moduleMapping.forEach(({ flag, access }) => {
+      if (hasModule(moduleAccessValue, flag)) {
+        selectedModules.push(access);
+      }
+    });
+
+    return selectedModules;
+  };
+
+  const handleCommunicationAccess = (communicationAccessValue: number): CommunicationAccess[] => {
+    const selectedCommunications: CommunicationAccess[] = [];
+    const communicationMapping = [
+      { flag: UserCommunication.Vendors, access: CommunicationAccess.Vendors },
+      { flag: UserCommunication.Insurances, access: CommunicationAccess.Insurances },
+      { flag: UserCommunication.VehicleOwners, access: CommunicationAccess.VehicleOwners },
+    ];
+    communicationMapping.forEach(({ flag, access }) => {
+      if (hasCommunication(communicationAccessValue, flag)) {
+        selectedCommunications.push(access);
+      }
+    });
+
+    return selectedCommunications;
+  };
+
+  const handleNotificationTypeAccess = (notificationTypeValue: number): NotificationType[] => {
+    const selectedTypes: NotificationType[] = [];
+    const typeMapping = [
+      { flag: UserNotificationType.SMS, type: NotificationType.SMS },
+      { flag: UserNotificationType.Email, type: NotificationType.Email },
+    ];
+    typeMapping.forEach(({ flag, type }) => {
+      if (hasNotificationType(notificationTypeValue, flag)) {
+        selectedTypes.push(type);
+      }
+    });
+    return selectedTypes;
+  };
+
+  const handleNotificationAccess = (notificationValue: number): NotificationCategory[] => {
+    const selectedNotifications: NotificationCategory[] = [];
+    const notificationMapping = [
+      { flag: UserNotification.WorkfileECD, category: NotificationCategory.WorkfileECD },
+    ];
+
+    notificationMapping.forEach(({ flag, category }) => {
+      if (hasNotification(notificationValue, flag)) {
+        selectedNotifications.push(category);
+      }
+    });
+
+    return selectedNotifications;
+  };
 
   const getModuleAccessValue = (selectedModules: ModuleAccess[]): number => {
     let value = toBinary(UserModules.None);
@@ -125,7 +216,7 @@ export function NewUserModal({
         value |= toBinary(flag);
       }
     });
-
+    
     return value;
   };
 
@@ -150,14 +241,72 @@ export function NewUserModal({
     return value;
   };
 
-  const hasNotification = (notificationAccess: number, notification: UserNotification): boolean => {
-    return notification === UserNotification.All ? notificationAccess === UserNotification.All : (notificationAccess & notification) === notification;
-  };
+  const handleSetProfilePicture = (user: User) => {
+    if (user.profilePicture) {
+      setProfilePictureUrl(user.profilePicture);
+      setLogoPreview(user.profilePicture)
+    }
+  }
 
-  const { register: registerUser } = useRegister()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, dirtyFields },
+    reset,
+    setValue,
+    control
+  } = useForm<EditUserFormData>({
+    resolver: zodResolver(editUserFormSchema),
+    defaultValues: {
+      fullName: '',
+      email: '',
+      phoneNumber: '',
+      role: undefined,
+      hourlyRate: 0,
+      isActive: true,
+      preferredLanguage: Language.English,
+      moduleAccess: [],
+      communicationAccess: [],
+      notificationType: undefined,
+      notification: 0,
+      locations: []
+    }
+  })
+
+  useEffect(() => {
+    if (user) {
+      console.log('EditUserModal: user', user)
+      const userRoles = user.roles ? JSON.parse(user.roles) : [];
+      const primaryRole = userRoles.length > 0 ? userRoles[0] : '';
+
+      const selectedModules = handleModuleAccess(user.modules);
+      const selectedCommunications = handleCommunicationAccess(user.communication);
+      const selectedNotificationTypes = handleNotificationTypeAccess(user.notificationType);
+      const selectedNotifications = user.notification || 0;
+
+      handleSetProfilePicture(user);
+
+      reset({
+        fullName: `${user.firstName} ${user.lastName}`,
+        email: user.email,
+        phoneNumber: user.phoneNumber || '',
+        role: primaryRole,
+        hourlyRate: user.hourlyRate || 0,
+        isActive: user.isActive,
+        preferredLanguage: user.preferredLanguage as Language || Language.English,
+        moduleAccess: selectedModules,
+        communicationAccess: selectedCommunications,
+        notificationType: user.notificationType,
+        notification: selectedNotifications,
+        locations: user.locations || []
+      });
+
+    }
+  }, [isOpen, user, setValue])
+
   const { updateUser } = useUpdateUser()
 
-  const onSubmit = async (data: UserFormData) => {
+  const onSubmit = async (data: EditUserFormData) => {
     console.log('Form submitted with data:', data)
     try {
       if (!tenant?.id) {
@@ -169,7 +318,6 @@ export function NewUserModal({
       let profilePictureURL = '';
       if (logoFile) {
         try {
-          // Use user's name as the namePrefix for the file
           const namePrefix = data.fullName.replace(/\s+/g, '-').toLowerCase() || 'user-profile';
           console.log(`Uploading profile picture with prefix: ${namePrefix}`);
 
@@ -178,109 +326,77 @@ export function NewUserModal({
           if (uploadResult) {
             profilePictureURL = uploadResult.fileUrl;
             console.log(`Profile picture uploaded successfully. URL: ${profilePictureURL}`);
-          } else {
-            console.warn('Profile picture upload returned no result');
           }
-        } catch (uploadError) {
-          console.error('Failed to upload profile picture:', uploadError);
-          // Continue with user creation even if profile picture upload fails
+        } catch (error) {
+          console.error('Error uploading profile picture:', error);
+          // Continue with user update even if profile picture upload fails
         }
       }
 
-      // Split full name into first and last name
-      const nameParts = data.fullName.trim().split(/\s+/)
-      if (nameParts.length < 2) {
-        throw new Error('Please enter both first and last name')
+      // Only include fields that have been changed
+      const updateData: UpdateUserRequest = {};
+
+      // Check each field in dirtyFields and add to updateData if changed
+      if (dirtyFields.fullName) {
+        const { firstName, lastName } = getNameParts(data.fullName);
+        updateData.firstName = firstName;
+        updateData.lastName = lastName;
       }
-      const firstName = nameParts[0]
-      const lastName = nameParts.slice(1).join(' ')
+      if (dirtyFields.email) updateData.email = data.email;
+      if (dirtyFields.phoneNumber) updateData.phoneNumber = data.phoneNumber;
+      if (dirtyFields.hourlyRate) updateData.hourlyRate = data.hourlyRate;
+      if (dirtyFields.preferredLanguage) updateData.preferredLanguage = data.preferredLanguage || undefined;
+      if (dirtyFields.role) {
+        // Convert role to JSON string array
+        updateData.roles = JSON.stringify([data.role]);
+      }
+      if (dirtyFields.moduleAccess) updateData.modules = getModuleAccessValue(data.moduleAccess);
+      if (dirtyFields.communicationAccess) updateData.communication = getCommunicationAccessValue(data.communicationAccess);
+      if (dirtyFields.notificationType) {
+        // notificationType is already a binary number
+        updateData.notificationType = data.notificationType;
+      }
+      if (dirtyFields.notification) updateData.notification = data.notification; // Already a binary number
 
-      // Validate name parts
-      if (!firstName || !lastName) {
-        throw new Error('Both first and last name are required')
+      // Add profile picture if it was changed
+      if (profilePictureURL) {
+        updateData.profilePicture = profilePictureURL;
       }
 
-      // Register the user first
-      console.log('Attempting to register user with:', { firstName, lastName, email: data.email, role: data.role })
-      let registerResponse: RegisterResponse
-      try {
-        const registerResult = await new Promise<RegisterResponse>((resolve, reject) => {
-          registerUser(
-            {
-              tenantId: tenant?.id,
-              firstName,
-              lastName,
-              email: data.email,
-              password: data.password,
-              confirmPassword: data.password,
-              ssoToken: '',
-              roles: [data.role] // Convert the single role to an array
-            },
-            {
-              onSuccess: (data) => resolve(data),
-              onError: (error) => reject(error)
-            }
-          )
-        })
+      // Only proceed with update if there are changes
+      if (Object.keys(updateData).length === 0) {
+        setIsLoading(false);
+        setIsOpen(false);
+        return;
+      }
 
-        if (!registerResult || !registerResult.userId) {
-          throw new Error('Registration failed - no user ID returned')
+      // Update user
+      updateUser(
+        {
+          userId: user.id,
+          data: updateData
+        },
+        {
+          onSuccess: () => {
+            console.log('User updated successfully');
+            setIsOpen(false);
+            reset();
+            // Update user in store with only the changed fields
+            updateUserInStore({
+              ...user,
+              ...updateData
+            });
+          },
+          onError: (error) => {
+            console.error('Error updating user:', error);
+            throw error;
+          }
         }
+      );
 
-        registerResponse = registerResult
-        console.log('User registered successfully:', registerResponse)
-      } catch (error) {
-        console.error('Error registering user:', error)
-        throw new Error('Failed to register user. Please try again.')
-      }
-
-      // Update the user with additional information
-      try {
-        if (!registerResponse?.userId) {
-          throw new Error('User registration did not return a user ID')
-        }
-
-        // The updateUser hook expects a different parameter structure
-        const updateResult = await new Promise<User>((resolve, reject) => {
-          updateUser(
-            {
-              userId: registerResponse.userId,
-              data: {
-                firstName,
-                lastName,
-                email: data.email,
-                preferredLanguage: data.preferredLanguage,
-                phoneNumber: data.phoneNumber,
-                hourlyRate: data.hourlyRate,
-                modules: getModuleAccessValue(data.moduleAccess),
-                communication: getCommunicationAccessValue(data.communicationAccess),
-                notificationType: data.notificationType,
-                notification: data.notification,
-                profilePicture: profilePictureURL || undefined, // Add the profile picture URL
-              }
-            },
-            {
-              onSuccess: (data) => resolve(data),
-              onError: (error) => reject(error)
-            }
-          )
-        })
-
-        console.log('User updated successfully with additional info:', updateResult)
-      } catch (error) {
-        console.error('Error updating user with additional info:', error)
-        // Continue even if update fails, as the user has been created
-      }
-
-      // Log success
-      console.log('User created and updated successfully')
-
-      // Reset form
-      reset()
-      setIsOpen(false)
-      setIsLoading(false)
+      setIsLoading(false);
     } catch (error) {
-      console.error('Error creating user:', error)
+      console.error('Error updating user:', error)
       setIsLoading(false)
       // Re-throw the error to trigger form error state
       throw error
@@ -289,7 +405,6 @@ export function NewUserModal({
 
   const handleLogoUpload = () => {
     // Trigger the hidden file input
-    console.log('Logo upload triggered');
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
@@ -306,13 +421,12 @@ export function NewUserModal({
     const previewUrl = URL.createObjectURL(file);
     setLogoPreview(previewUrl);
 
-    // In a real implementation, you would upload the file to your server here
-    console.log('File selected:', file.name, file.type, file.size);
   };
 
   const handleRemoveLogo = () => {
     setLogoPreview(null);
     setLogoFile(null);
+    setProfilePictureUrl(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -337,7 +451,9 @@ export function NewUserModal({
           onClick={() => setIsOpen(true)}
           className="flex items-center justify-center h-8 w-8 rounded-full transition-colors duration-200 hover:bg-black hover:text-white"
         >
-          {children}
+          <span className="p-2 group-hover:text-white">
+            <Pencil className="w-4 h-4" />
+          </span>
         </button>
       </div>
 
@@ -350,11 +466,10 @@ export function NewUserModal({
             <div className="flex justify-between items-center p-6 ">
               <h2 className="text-xl font-bold">{title}</h2>
               <button
-                type="button"
                 onClick={() => setIsOpen(false)}
-                className="p-2 rounded-full transition-colors duration-200 hover:bg-black hover:text-white"
+                className="rounded-full p-2 hover:bg-gray-100 transition-colors duration-200"
               >
-                <Plus className="w-6 h-6 rotate-45" />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
@@ -388,6 +503,7 @@ export function NewUserModal({
                               width={80}
                               height={80}
                               className="object-cover w-full h-full"
+                              unoptimized={true}
                             />
                             <button
                               type="button"
@@ -428,33 +544,29 @@ export function NewUserModal({
                     render={({ field }) => (
                       <CustomMaskedInput
                         label={t('phone')}
-                        value={field.value}
+                        value={field.value || ''}
                         onChange={field.onChange}
                         error={errors.phoneNumber?.message}
+                        mask="(999) 999-9999"
                       />
                     )}
                   />
 
-                  <CustomInput
-                    label={t('password')}
-                    type="password"
-                    error={errors.password?.message}
-                    {...register('password')}
-                  />
-
-                  <Controller
-                    name="role"
-                    control={control}
-                    render={({ field }) => (
-                      <CustomSelect
-                        placeholder={t('role')}
-                        options={UserRoleOptions}
-                        value={field.value ? [field.value] : []}
-                        onChange={(values) => field.onChange(values[0])}
-
-                      />
-                    )}
-                  />
+                  <div className="space-y-2">
+                    <Label>{t('role')}</Label>
+                    <Controller
+                      name="role"
+                      control={control}
+                      render={({ field }) => (
+                        <CustomSelect
+                          placeholder={t('role')}
+                          options={UserRoleOptions}
+                          value={field.value ? [field.value] : []}
+                          onChange={(values) => field.onChange(values[0])}
+                        />
+                      )}
+                    />
+                  </div>
 
                   <CustomInput
                     label={t('hourly-rate')}
@@ -471,10 +583,28 @@ export function NewUserModal({
                       name="preferredLanguage"
                       control={control}
                       render={({ field }) => (
-                        <CustomButtonSelectField
-                          field={field}
+                        <CustomButtonSelect
                           options={LanguageOptions}
+                          value={field.value}
+                          onChange={field.onChange}
                         />
+                      )}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Controller
+                      name="isActive"
+                      control={control}
+                      render={({ field }) => (
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="is-active"
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                          <Label htmlFor="is-active">Active Access</Label>
+                        </div>
                       )}
                     />
                   </div>
@@ -487,14 +617,17 @@ export function NewUserModal({
                       render={({ field }) => (
                         <div className="grid grid-cols-2 gap-2">
                           {Object.values(ModuleAccess).map((module) => (
-                            <div key={module} className="flex items-center space-x-2">
+                            <div
+                              key={module}
+                              className="flex items-center space-x-2"
+                            >
                               <Checkbox
                                 id={`module-${module}`}
                                 checked={field.value.includes(module)}
                                 onCheckedChange={(checked) => {
                                   const newValue = checked
                                     ? [...field.value, module]
-                                    : field.value.filter((m: ModuleAccess) => m !== module)
+                                    : field.value.filter((m) => m !== module)
                                   field.onChange(newValue)
                                 }}
                               />
@@ -507,25 +640,28 @@ export function NewUserModal({
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="font-semibold">{t('communication.title')}</Label>
+                    <Label className="font-semibold">Communication</Label>
                     <Controller
                       name="communicationAccess"
                       control={control}
                       render={({ field }) => (
                         <div className="grid grid-cols-2 gap-2">
-                          {Object.values(CommunicationAccess).map((access) => (
-                            <div key={access} className="flex items-center space-x-2">
+                          {Object.values(CommunicationAccess).map((comm) => (
+                            <div
+                              key={comm}
+                              className="flex items-center space-x-2"
+                            >
                               <Checkbox
-                                id={`communication-${access}`}
-                                checked={field.value.includes(access)}
+                                id={`comm-${comm}`}
+                                checked={field.value.includes(comm)}
                                 onCheckedChange={(checked) => {
                                   const newValue = checked
-                                    ? [...field.value, access]
-                                    : field.value.filter((a: CommunicationAccess) => a !== access)
+                                    ? [...field.value, comm]
+                                    : field.value.filter((c) => c !== comm)
                                   field.onChange(newValue)
                                 }}
                               />
-                              <Label htmlFor={`communication-${access}`}>{access}</Label>
+                              <Label htmlFor={`comm-${comm}`}>{comm}</Label>
                             </div>
                           ))}
                         </div>
@@ -543,13 +679,26 @@ export function NewUserModal({
                           <div className="flex items-center space-x-2">
                             <Checkbox
                               id="notification-sms"
-                              checked={field.value === NotificationType.SMS || field.value === NotificationType.Both}
+                              checked={
+                                field.value === NotificationType.SMS ||
+                                field.value === NotificationType.Both
+                              }
                               onCheckedChange={(checked) => {
-                                const emailChecked = field.value === NotificationType.Email || field.value === NotificationType.Both
+                                const emailChecked =
+                                  field.value === NotificationType.Email ||
+                                  field.value === NotificationType.Both
                                 if (checked) {
-                                  field.onChange(emailChecked ? NotificationType.Both : NotificationType.SMS)
+                                  field.onChange(
+                                    emailChecked
+                                      ? NotificationType.Both
+                                      : NotificationType.SMS
+                                  )
                                 } else {
-                                  field.onChange(emailChecked ? NotificationType.Email : '')
+                                  field.onChange(
+                                    emailChecked
+                                      ? NotificationType.Email
+                                      : ''
+                                  )
                                 }
                               }}
                             />
@@ -558,13 +707,24 @@ export function NewUserModal({
                           <div className="flex items-center space-x-2">
                             <Checkbox
                               id="notification-email"
-                              checked={field.value === NotificationType.Email || field.value === NotificationType.Both}
+                              checked={
+                                field.value === NotificationType.Email ||
+                                field.value === NotificationType.Both
+                              }
                               onCheckedChange={(checked) => {
-                                const smsChecked = field.value === NotificationType.SMS || field.value === NotificationType.Both
+                                const smsChecked =
+                                  field.value === NotificationType.SMS ||
+                                  field.value === NotificationType.Both
                                 if (checked) {
-                                  field.onChange(smsChecked ? NotificationType.Both : NotificationType.Email)
+                                  field.onChange(
+                                    smsChecked
+                                      ? NotificationType.Both
+                                      : NotificationType.Email
+                                  )
                                 } else {
-                                  field.onChange(smsChecked ? NotificationType.SMS : '')
+                                  field.onChange(
+                                    smsChecked ? NotificationType.SMS : ''
+                                  )
                                 }
                               }}
                             />

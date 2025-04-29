@@ -5,6 +5,7 @@ import { ContactData, ContactInfoProps, ContactMethod, CommunicationLog } from "
 import { Mail, MessagesSquare, Phone, Plus, Trash, X } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { toast } from 'react-toastify';
+import { createPortal } from 'react-dom';
 
 export default function ContactInfo({ preferredContactMethod, contactData: propContactData }: ContactInfoProps) {
     const [shouldShowModal, setShouldShowModal] = useState(false);
@@ -12,6 +13,12 @@ export default function ContactInfo({ preferredContactMethod, contactData: propC
     const [contactData, setContactData] = useState<ContactData>(propContactData || mockContactData);
     const [selectedAttachments, setSelectedAttachments] = useState<string[]>([]);
     const [selectedContactMethod, setSelectedContactMethod] = useState<ContactMethod | null>(null);
+    const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
+
+    // Set up portal container on mount
+    useEffect(() => {
+        setPortalContainer(document.body);
+    }, []);
 
     // Update contactData when prop changes
     useEffect(() => {
@@ -103,7 +110,7 @@ export default function ContactInfo({ preferredContactMethod, contactData: propC
             `Message sent to ${contactData.person.name} via ${method}${attachmentText}${context}`, 
             {
                 position: "bottom-right",
-                autoClose: 3000,
+                autoClose: 5000,
                 hideProgressBar: false,
                 closeOnClick: true,
                 pauseOnHover: true,
@@ -111,84 +118,35 @@ export default function ContactInfo({ preferredContactMethod, contactData: propC
                 progress: undefined,
             }
         );
-        
-        // Add to communication logs
-        const newLog: CommunicationLog = {
-            type: method?.toString() || 'message',
-            date: new Date().toISOString(),
-            user: "Current User", // This would come from auth context in real implementation
-            isAutomatic: method === ContactMethod.email,
-            description: `Message sent${attachmentText}${context}`
-        };
-        
-        setContactData(prev => ({
-            ...prev,
-            communicationLogs: [newLog, ...prev.communicationLogs]
-        }));
-        
         setShouldShowModal(false);
-        setSelectedAttachments([]);
     };
 
     return (
         <>
-        <div className="flex items-center h-full">
-            <div className="flex items-center mr-3">
-                <button 
-                    onClick={() => handleSelectContactMethod(ContactMethod.message)}
-                    className={`flex items-center rounded-full transition-colors duration-100 group
-                        ${preferredContactMethod === ContactMethod.message ? "bg-black px-2" : "hover:bg-black"}`}
-                    aria-label="Contact Information"
-                >
-                    <span className="p-2">
-                        <MessagesSquare 
-                            className={`w-6 h-6 ${preferredContactMethod === ContactMethod.message ? "text-white" : "text-black hover:text-white"}`}
-                        />
-                    </span>
-                    {preferredContactMethod === ContactMethod.message && (
-                        <span className="pr-3 text-xs font-bold text-white">PREF</span>
-                    )}
-                </button>
-            </div>
-            <div className="flex items-center mr-3">
-                <button 
-                    onClick={() => handleSelectContactMethod(ContactMethod.email)}
-                    className={`flex items-center rounded-full transition-colors duration-100 group
-                        ${preferredContactMethod === ContactMethod.email ? "bg-black px-2" : "hover:bg-black"}`}
-                    aria-label="Email Contact"
-                >
-                    <span className="p-2">
-                        <Mail 
-                            className={`w-6 h-6 ${preferredContactMethod === ContactMethod.email ? "text-white" : "text-black hover:text-white"}`}
-                        />
-                    </span>
-                    {preferredContactMethod === ContactMethod.email && (
-                        <span className="pr-3 text-xs font-bold text-white">PREF</span>
-                    )}
-                </button>
-            </div>
-            <div className="flex items-center">
-                <button 
-                    onClick={() => handleSelectContactMethod(ContactMethod.phone)}
-                    className={`flex items-center rounded-full transition-colors duration-100 group
-                        ${preferredContactMethod === ContactMethod.phone ? "bg-black px-2" : "hover:bg-black"}`}
-                    aria-label="Phone Contact"
-                >
-                    <span className="p-2">
-                        <Phone 
-                            className={`w-6 h-6 ${preferredContactMethod === ContactMethod.phone ? "text-white" : "text-black hover:text-white"}`}
-                        />
-                    </span>
-                    {preferredContactMethod === ContactMethod.phone && (
-                        <span className="pr-3 text-xs font-bold text-white">PREF</span>
-                    )}
-                </button>
-            </div>
+        <div className="flex gap-2 justify-center">
+            <button 
+                onClick={() => handleSelectContactMethod(ContactMethod.email)}
+                className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+            >
+                <Mail className="w-5 h-5" />
+            </button>
+            <button 
+                onClick={() => handleSelectContactMethod(ContactMethod.phone)}
+                className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+            >
+                <Phone className="w-5 h-5" />
+            </button>
+            <button 
+                onClick={() => handleSelectContactMethod(ContactMethod.message)}
+                className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+            >
+                <MessagesSquare className="w-5 h-5" />
+            </button>
         </div>
-
-        {shouldShowModal && (
+        {/* Portal for modal */}
+        {shouldShowModal && portalContainer && createPortal(
             <div 
-                className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+                className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
                 onClick={handleOverlayClick}
             >
                 <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col">
@@ -410,7 +368,8 @@ export default function ContactInfo({ preferredContactMethod, contactData: propC
                         </div>
                     </div>
                 </div>
-            </div>
+            </div>,
+            portalContainer
         )}
         </>
     );

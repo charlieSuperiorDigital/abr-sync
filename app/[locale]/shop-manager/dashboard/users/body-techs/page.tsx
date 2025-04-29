@@ -1,23 +1,25 @@
 'use client'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
-import { AutoCell, FriendlyDateCell } from '@/components/custom-components/custom-table/table-cells'
+import { ActionsCell, AutoCell, FriendlyDateCell } from '@/components/custom-components/custom-table/table-cells'
 import { ColumnDef } from '@tanstack/react-table'
 import { User, AVAILABLE_LOCATIONS, Location, UserRole } from '@/app/types/user'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { UserCircle2 } from 'lucide-react'
+import { UserCircle2, Pencil } from 'lucide-react'
 import { LocationSelect } from '@/components/custom-components/selects/location-select'
 import { useUsers } from '@/app/context/UsersProvider'
 import { useTenant } from '@/app/context/TenantProvider'
+import { EditUserModal } from '@/components/custom-components/user-modal/edit-user-modal'
+import { Button } from '@/components/ui/button'
 
 export default function BodyTechs() {
   const { tenant, isLoading: isTenantLoading } = useTenant()
   const { bodyTechs, isLoading: isUsersLoading } = useUsers({
     tenantId: tenant?.id
   })
-  
+
   const isLoading = isTenantLoading || isUsersLoading;
 
   const columns: ColumnDef<User>[] = [
@@ -28,9 +30,9 @@ export default function BodyTechs() {
         <div className="flex items-center gap-3">
           <Avatar className="h-[22px] w-[22px]">
             {row.original.profilePicture ? (
-              <AvatarImage 
-                src={row.original.profilePicture} 
-                alt={row.original.fullName} 
+              <AvatarImage
+                src={row.original.profilePicture}
+                alt={row.original.fullName}
               />
             ) : null}
             <AvatarFallback>
@@ -63,12 +65,12 @@ export default function BodyTechs() {
       cell: ({ row }) => (
         <div onClick={(e) => e.stopPropagation()}>
           <LocationSelect
-            selectedLocations={(row.original.locations || []).filter(loc => 
+            selectedLocations={(row.original.locations || []).filter(loc =>
               AVAILABLE_LOCATIONS.includes(loc as Location)
             ) as Location[]}
             onLocationsChange={(locations: Location[]) => {
               // Ensure only valid locations are saved
-              const validLocations = locations.filter(loc => 
+              const validLocations = locations.filter(loc =>
                 AVAILABLE_LOCATIONS.includes(loc as Location)
               ) as Location[]
 
@@ -88,7 +90,7 @@ export default function BodyTechs() {
       header: 'Access',
       cell: ({ row }) => (
         <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
-          <Checkbox 
+          <Checkbox
             id={`active-${row.original.id}`}
             checked={row.original.isActive}
             onCheckedChange={(checked) => {
@@ -104,7 +106,7 @@ export default function BodyTechs() {
               "border-muted"
             )}
           />
-          <Label 
+          <Label
             htmlFor={`active-${row.original.id}`}
             className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
           >
@@ -113,7 +115,26 @@ export default function BodyTechs() {
         </div>
       ),
     },
-    
+    {
+      id: 'actions',
+      cell: ({ row }) => (
+        <ActionsCell
+          actions={[
+            {
+              label: 'Edit',
+              onClick: () => console.log('Edit Task:', row.original.id),
+              variant: 'secondary',
+              icon: 'edit',
+              _component:
+                <EditUserModal
+                  title="Edit User"
+                  user={row.original}
+                />
+            },
+          ]}
+        />
+      ),
+    },
   ]
 
   return (

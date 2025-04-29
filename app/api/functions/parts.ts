@@ -70,7 +70,8 @@ export async function getPartsByOpportunityId(opportunityId: string): Promise<Pa
     );
     return response.data;
   } catch (error) {
-    console.error('Error fetching parts by opportunity ID:', error);
+    console.error('Error name:', (error as Error).name);
+    console.error('Error fetching parts by opportunity ID:', (error as Error).message);
     throw error;
   }
 }

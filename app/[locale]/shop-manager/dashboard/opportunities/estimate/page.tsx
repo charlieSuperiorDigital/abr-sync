@@ -1,26 +1,24 @@
 'use client'
+import ContactInfo from '@/app/[locale]/custom-components/contact-info'
+import { useGetOpportunities } from '@/app/api/hooks/useOpportunities'
+import { ContactData, ContactMethod } from '@/app/types/contact-info.types'
+import { Opportunity } from '@/app/types/opportunity'
+import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
+import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import {
   AutoCell,
-  StatusBadgeCell,
   SummaryCell,
-  UploadTimeCell,
-  VehicleCell,
+  VehicleCell
 } from '@/components/custom-components/custom-table/table-cells'
-import ContactInfo from '@/app/[locale]/custom-components/contact-info'
-import { ContactData, ContactMethod } from '@/app/types/contact-info.types'
-import { ColumnDef } from '@tanstack/react-table'
-import { ClipboardPlus, Paperclip, Plus } from 'lucide-react'
-import { Opportunity, OpportunityStatus, PartsWarningStatus } from '@/app/types/opportunity'
-import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
-import { useState, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
-import { useGetOpportunities } from '@/app/api/hooks/useGetOpportunities'
-import dynamic from "next/dynamic";
-import { StatusBadge } from '@/components/custom-components/status-badge/status-badge';
+import { StatusBadge } from '@/components/custom-components/status-badge/status-badge'
 import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
-import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
+import { ColumnDef } from '@tanstack/react-table'
+import { Plus } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import dynamic from "next/dynamic"
+import { useCallback, useState } from 'react'
 
 const PdfPreview = dynamic(() => import("@/app/[locale]/custom-components/pdf-preview"), {
   ssr: false,
@@ -77,7 +75,7 @@ export default function EstimateOpportunities() {
       accessorKey: 'file',
       header: 'FILE',
       cell: ({ row }) => (
-        <PdfPreview  />
+        <PdfPreview />
       )
     },
     {
@@ -86,7 +84,7 @@ export default function EstimateOpportunities() {
       cell: ({ row }) => {
         const parts = row.original.parts
         if (!parts) return '---'
-        
+
         return (
           <div className="flex gap-2 items-center">
             <span>{parts.count}</span>
@@ -179,7 +177,7 @@ export default function EstimateOpportunities() {
         const opportunity = row.original;
         const owner = opportunity.owner;
         const insurance = opportunity.insurance;
-        
+
         // Determine preferred contact method based on opportunity data
         let preferredContactMethod;
         if (owner.email) preferredContactMethod = ContactMethod.email;
@@ -200,7 +198,7 @@ export default function EstimateOpportunities() {
             pendingEstimates: 1, // Default to 1 since this is an active opportunity
             pendingReimbursements: 0, // Could be updated based on actual data
             updates: insurance.approved === undefined ? 'Pending Approval' :
-                    insurance.approved ? 'Estimate Approved' : 'Estimate Rejected'
+              insurance.approved ? 'Estimate Approved' : 'Estimate Rejected'
           },
           communicationLogs: (opportunity.logs || []).map(log => ({
             ...log,
@@ -231,15 +229,15 @@ export default function EstimateOpportunities() {
         };
 
         return (
-          <div 
-            data-testid="contact-info" 
+          <div
+            data-testid="contact-info"
             className="cursor-pointer"
             onClick={(e) => {
               e.stopPropagation()
               handleContactClick(opportunity)
             }}
           >
-            <ContactInfo 
+            <ContactInfo
               preferredContactMethod={preferredContactMethod}
               contactData={contactData}
             />

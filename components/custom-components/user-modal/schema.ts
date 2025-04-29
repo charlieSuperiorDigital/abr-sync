@@ -13,11 +13,14 @@ export const userFormSchema = z.object({
   moduleAccess: z.array(z.nativeEnum(ModuleAccess)),
   communicationAccess: z.array(z.nativeEnum(CommunicationAccess)),
   notificationType: z.nativeEnum(NotificationType),
-  notificationCategories: z.array(z.nativeEnum(NotificationCategory)),
+  notification: z.number(),
   locations: z.array(z.string()),
 })
 
+export const editUserFormSchema = userFormSchema.omit({ password: true })
+
 export type UserFormData = z.infer<typeof userFormSchema>
+export type EditUserFormData = z.infer<typeof editUserFormSchema>
 
 export const UserRoleOptions = Object.entries(UserRole).map(([key, value]) => ({
   label: value,
