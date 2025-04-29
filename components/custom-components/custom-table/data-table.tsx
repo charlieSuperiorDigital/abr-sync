@@ -35,6 +35,14 @@ interface DataTableProps<TData, TValue> {
     id: string;
     details: React.ReactNode;
   }[]
+  /**
+   * Optional Tailwind or CSS class for table row height, e.g. 'h-20' for 80px.
+   */
+  rowHeightClass?: string
+  /**
+   * Controls visibility of PaginationControls. Default: true
+   */
+  showPaginationControls?: boolean
 }
 
 export function DataTable<TData, TValue>({
@@ -46,6 +54,8 @@ export function DataTable<TData, TValue>({
   pageSizeOptions,
   showPageSize,
   getSubRows,
+  rowHeightClass = '',
+  showPaginationControls = true,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [pageIndex, setPageIndex] = React.useState(0)
@@ -83,7 +93,7 @@ export function DataTable<TData, TValue>({
                     )}
                     onClick={header.column.getToggleSortingHandler()}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex gap-2 items-center">
                       {flexRender(
                         header.column.columnDef.header,
                         header.getContext()
@@ -91,9 +101,9 @@ export function DataTable<TData, TValue>({
                       {header.column.getCanSort() && (
                         <div className="w-4">
                           {header.column.getIsSorted() === 'asc' ? (
-                            <ChevronUp className="h-4 w-4" />
+                            <ChevronUp className="w-4 h-4" />
                           ) : header.column.getIsSorted() === 'desc' ? (
-                            <ChevronDown className="h-4 w-4" />
+                            <ChevronDown className="w-4 h-4" />
                           ) : null}
                         </div>
                       )}
@@ -111,6 +121,7 @@ export function DataTable<TData, TValue>({
                     key={row.id}
                     data-state={row.getIsSelected() && 'selected'}
                     className={cn(
+                      rowHeightClass,
                       onRowClick && 'cursor-pointer hover:bg-muted/50'
                     )}
                     onClick={(e) => {
@@ -126,7 +137,7 @@ export function DataTable<TData, TValue>({
                     }}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell key={cell.id} className={rowHeightClass}>
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
@@ -135,8 +146,8 @@ export function DataTable<TData, TValue>({
                     ))}
                   </TableRow>
                   {getSubRows && getSubRows(row.original).map((subRow) => (
-                    <TableRow key={subRow.id} className="bg-gray-50">
-                      <TableCell colSpan={columns.length}>
+                    <TableRow key={subRow.id} className={cn('bg-gray-50', rowHeightClass)}>
+                      <TableCell colSpan={columns.length} className={rowHeightClass}>
                         {subRow.details}
                       </TableCell>
                     </TableRow>
@@ -156,15 +167,17 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      <PaginationControls
-        pageCount={table.getPageCount()}
-        pageIndex={pageIndex}
-        pageSize={pageSize}
-        setPageIndex={setPageIndex}
-        setPageSize={setPageSize}
-        pageSizeOptions={pageSizeOptions}
-        showPageSize={showPageSize}
-      />
+      {showPaginationControls && (
+        <PaginationControls
+          pageCount={table.getPageCount()}
+          pageIndex={pageIndex}
+          pageSize={pageSize}
+          setPageIndex={setPageIndex}
+          setPageSize={setPageSize}
+          pageSizeOptions={pageSizeOptions}
+          showPageSize={showPageSize}
+        />
+      )}
     </div>
   )
 }

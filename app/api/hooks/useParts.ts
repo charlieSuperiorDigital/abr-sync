@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getAllPartsFromTenant, getPartOrdersByTenantId, updatePartOrder, getPartsByOpportunityId } from '../functions/parts'
 import { PartsOrderSummary, TenantPartOrder, UpdatePartOrderRequest, PartWithFullDetails } from '../../types/parts';
+import { useMemo } from 'react';
 
 interface UseGetTenantPartOrdersOptions {
     tenantId: string
@@ -37,13 +38,42 @@ export function useGetTenantPartOrders({ tenantId }: UseGetTenantPartOrdersOptio
         order.partsOrders.some((po: PartsOrderSummary) => po.partsToOrderCount > 0)
     ) || []
 
+    const ordersWithReceivedParts = data?.filter(order =>
+        order.partsOrders.some((po: PartsOrderSummary) => po.partsToReceiveCount > 0)
+    ) || []
+
+
     const ordersWithPartsToBeReceived = data?.filter(order =>
         order.partsOrders.some((po: PartsOrderSummary) => po.partsToReceiveCount > 0)
     ) || []
 
-    const ordersWithPartsToBeReturned = data?.filter(order =>
-        order.partsOrders.some((po: PartsOrderSummary) => po.partsToReturnCount > 0)
+    const ordersWhichExceedAmountSpecifiedByTenant = data?.filter(order =>
+        order.partsOrders.some((po: PartsOrderSummary) => po.partsToOrderCount > 0)
     ) || []
+
+    const ordersWithPartsToBeReturned = data?.filter(order =>
+        order.partsOrders.some((po: PartsOrderSummary) => po.totalAmount > 0)
+    ) || []
+
+    // Extract unique vendors from all part orders
+    const getUniqueVendors = () => {
+        const uniqueVendorsMap = new Map();
+        
+        if (!data) return [];
+        
+        // Iterate through all orders and their part orders
+        data.forEach(order => {
+            order.partsOrders.forEach(partOrder => {
+                // Use vendor ID as the unique key
+                if (!uniqueVendorsMap.has(partOrder.vendor.id)) {
+                    uniqueVendorsMap.set(partOrder.vendor.id, partOrder.vendor);
+                }
+            });
+        });
+        
+        // Convert map values to array
+        return Array.from(uniqueVendorsMap.values());
+    };
 
     const calculateOrderTotalParts = (order: TenantPartOrder) => {
         return order.partsOrders.reduce((total: number, po: PartsOrderSummary) =>
@@ -77,11 +107,14 @@ export function useGetTenantPartOrders({ tenantId }: UseGetTenantPartOrdersOptio
         ordersWithPartsToBeOrdered,
         ordersWithPartsToBeReceived,
         ordersWithPartsToBeReturned,
+        ordersWithReceivedParts,
+        ordersWhichExceedAmountSpecifiedByTenant,
         calculateOrderTotalParts,
         calculateOrderToOrderParts,
         calculateOrderToReceiveParts,
         calculateOrderToReturnParts,
         ordersWithCoreParts,
+        getUniqueVendors,
         data,
         isLoading,
         error
@@ -112,6 +145,27 @@ export function useGetAllPartsFromTenant(tenantId: string) {
         retry: 0,
         refetchOnWindowFocus: false,
     });
+
+    // Extract unique vendors from all parts data
+    const getUniqueVendors = () => {
+        const uniqueVendorsMap = new Map();
+        
+        if (!data) return [];
+        
+        // Iterate through all parts details
+        data.forEach(part => {
+            part.partsDetails.forEach(detail => {
+                const vendor = detail.vendor;
+                // Use vendor ID as the unique key
+                if (!uniqueVendorsMap.has(vendor.id)) {
+                    uniqueVendorsMap.set(vendor.id, vendor);
+                }
+            });
+        });
+        
+        // Convert map values to array
+        return Array.from(uniqueVendorsMap.values());
+    };
 
     const filterPartsByOpportunityId = (opportunityId: string) => {
         return data?.filter(part => part.opportunity.id === opportunityId) || [];
@@ -146,16 +200,50 @@ export function useGetAllPartsFromTenant(tenantId: string) {
     };
 
     function debugLog() {
-        console.log('[debugLog]', groupedPartsByOpportunity);
+        console.log('[debugLog]', partsCount);
     }
+
+    // --- PARTS COUNT OBJECT ---
+    // Returns an object with the count of items for each category, filtering out completed opportunities
+    const partsCount = useMemo(() => {
+        const counts = {
+            backorder: 0,
+            pending: 0,
+            missed: 0,
+            returns: 0,
+            inToday: 0
+        };
+        if (!data) return counts;
+        const today = new Date();
+        const todayStr = today.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+        for (const item of data) {
+            if (item.opportunity.status === 'archived') continue;
+            for (const partDetail of item.partsDetails) {
+                const part = partDetail.part;
+                // Status-based counts
+                if (part.status === 6) counts.backorder++;
+                if (part.status === 0) counts.pending++;
+                if (part.status === 3) counts.missed++;
+                if (part.status === 4) counts.returns++;
+                // inToday: expectedDeliveryDate matches today
+                if (part.expectedDeliveryDate) {
+                    const expectedDate = part.expectedDeliveryDate.slice(0, 10); // 'YYYY-MM-DD'
+                    if (expectedDate === todayStr) counts.inToday++;
+                }
+            }
+        }
+        return counts;
+    }, [data]);
 
     return {
         parts: data || [],
         filterPartsByOpportunityId,
         groupedPartsByOpportunity,
+        partsCount,
         isLoading,
         debugLog,
         error,
+        getUniqueVendors
     };
 }
 
@@ -174,13 +262,8 @@ export function useGetPartsByOpportunityId(opportunityId: string) {
         refetchOnWindowFocus: false,
     });
 
-    function returnPartsWithOpportunityId(opportunityId: string): PartWithFullDetails[] {
-        return data?.filter(part => part.opportunity.id === opportunityId) || [];
-    }
-
     return {
         parts: data || [],
-        returnPartsWithOpportunityId,
         isLoading,
         error,
     };
