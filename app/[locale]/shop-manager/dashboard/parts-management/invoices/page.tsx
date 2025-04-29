@@ -1,123 +1,122 @@
+// This file represents the invoices route
 'use client'
 
+import DarkButton from '@/app/[locale]/custom-components/dark-button'
+import { ViewPartsModal } from '@/app/[locale]/custom-components/view-parts-modal'
+import { useGetTenantPartOrders } from '@/app/api/hooks/useParts'
+import { TenantPartOrder } from '@/app/types/parts'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import {
-  StatusBadgeCell,
-  VehicleCell,
+    VehicleCell
 } from '@/components/custom-components/custom-table/table-cells'
-import { ColumnDef } from '@tanstack/react-table'
-import { useState } from 'react'
-import { invoicesMockData } from '@/app/mocks/parts-management'
-import DarkButton from '@/app/[locale]/custom-components/dark-button'
 import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
+import { ColumnDef } from '@tanstack/react-table'
 import { Plus } from 'lucide-react'
 import { useSession } from 'next-auth/react'
-import { useGetTenantPartOrders } from '@/app/api/hooks/useParts'
 
-interface PartsInvoice {
-  invoiceId: string
-  roNumber: string
-  vehicle: {
-    make: string
-    model: string
-    year: number
-    imageUrl?: string
-  }
-  partsCount: number
-  assignedTech: string
-  status: string
-  lastUpdated: string
-  invoiceNumber: string
-  amount: number
-  approvalStatus: 'pending' | 'approved' | 'rejected'
-}
 
 export default function Invoices() {
-  const { data: session } = useSession();
-  const {
-    ordersWhichExceedAmountSpecifiedByTenant,
-    isLoading,
-    error
-  } = useGetTenantPartOrders({ tenantId: session?.user?.tenantId || '' });
+    const { data: session } = useSession();
+    const {
+        ordersWhichExceedAmountSpecifiedByTenant,
+        calculateOrderTotalParts,
+        calculateOrderTotalAmount,
+        isLoading,
+        error,
+        
+    } = useGetTenantPartOrders({ tenantId: session?.user?.tenantId || '' });
 
-  const data = ordersWhichExceedAmountSpecifiedByTenant;
+    const columns: ColumnDef<TenantPartOrder, any>[] = [
+        {
+            accessorKey: 'roNumber',
+            header: 'RO #',
+        },
+        {
+            accessorKey: 'vehicle',
+            header: 'Vehicle',
+            cell: ({ row }) => (
+                <VehicleCell
+                    make={row.original.vehicle.make}
+                    model={row.original.vehicle.model}
+                    year={String(row.original.vehicle.year)}
+                    imageUrl={'https://via.placeholder.com/150'}
+                />
+            ),
+        },
+        {
+            accessorKey: 'totalPartsCount',
+            header: 'NUMBER OF PARTS',
+            cell: ({ row }) => {
+                return calculateOrderTotalParts(row.original);
+            },
+        },
 
-  const columns: ColumnDef<PartsInvoice, any>[] = [
-    {
-      accessorKey: 'roNumber',
-      header: 'RO #',
-    },
-    {
-      accessorKey: 'vehicle',
-      header: 'Vehicle',
-      cell: ({ row }) => (
-        <VehicleCell
-          make={row.original.vehicle.make}
-          model={row.original.vehicle.model}
-          year={String(row.original.vehicle.year)}
-          imageUrl={row.original.vehicle.imageUrl}
-        />
-      ),
-    },
-    {
-      accessorKey: 'partsCount',
-      header: 'Parts Count',
-    },
-    {
-      accessorKey: 'estimate',
-      header: 'ESTIMATE',
-    },
-    {
-      accessorKey: 'approvalStatus',
-      header: 'STATUS',
-      cell: ({ row }) => (
-        <StatusBadgeCell
-          status={row.original.approvalStatus.toUpperCase()}
-          variant={row.original.approvalStatus === 'approved' ? 'success' : row.original.approvalStatus === 'rejected' ? 'danger' : 'warning'}
-        />
-      ),
-    },
-    {
-      accessorKey: 'printCheck',
-      header: '',
-      cell: ({ row }) => (
-       <DarkButton buttonText="Print Check" onClick={() => { console.log('print check') }} />
-      ),
-    },
-    {
-      id: 'task',
-      header: 'Task',
-      cell: ({ row }) => (
-        <div
-        onClick={(e) => {
-          e.stopPropagation()
-        }}
-        >
+        {
+            accessorKey: 'amount',
+            header: '$ AMOUNT',
+            cell: ({ row }) => {
+                const amount = calculateOrderTotalAmount(row.original);
+                return new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD'
+                }).format(amount);
+            },
+        },
+        {
+            accessorKey: 'status',
+            header: 'STATUS',
+            cell: ({ row }) => (
+                <span className="whitespace-nowrap">
+                    {"PLACEHOLDER"}
+                </span>
+            ),
+        },
+       
+        {
+            accessorKey: 'viewParts',
+            header: 'VIEW PARTS',
+            cell: ({ row }) => (
+                <div className="flex justify-center">
+                  
+                        <DarkButton
+                            buttonText="Print Check"
+                        />
+                  
+                </div>
+            ),
+        },
+        {
+            id: 'task',
+            header: 'Task',
+            cell: ({ row }) => (
+                <div
+                    onClick={(e) => {
+                        e.stopPropagation()
+                    }}
+                >
+                    <NewTaskModal
+                        title="New Task"
+                        defaultRelation={
+                            {
+                                id: row.original.opportunityId,
+                                type: 'opportunity'
+                            }
+                        }
+                        children={
+                            <Plus className="m-auto w-5 h-5" />
+                        }
+                    />
+                </div>
+            ),
+        },
+    ]
 
-          <NewTaskModal
-            title="New Task"
-            defaultRelation={
-              {
-                id: row.original.invoiceId,
-                type: 'workfile'
-              }
-            }
-            children={
-              <Plus className="m-auto w-5 h-5" />
-            }
-          />
+    if (isLoading) return <div>Loading...</div>;
+    if (error) return <div>Error loading data</div>;
+
+    return (
+        <div>
+            <DataTable columns={columns} data={ordersWhichExceedAmountSpecifiedByTenant} />
         </div>
-      ),
-    },
-
-
-
-
-  ]
-
-  return (
-    <div>
-      <DataTable columns={columns} data={data} />
-    </div>
-  )
+    )
 }

@@ -17,7 +17,7 @@ interface QCChecklistModalProps {
 }
 
 export default function QCChecklistModal({ workfile, onClose }: QCChecklistModalProps) {
-  const { qualityCheck, checks, isLoading, error } = useGetQualityCheck({ workfileId: workfile?.id })
+  const { qualityCheck, checks, isLoading, error } = useGetQualityCheck({ workfileId: workfile?.workfile.id })
   const [settingsOpen, setSettingsOpen] = React.useState(false)
   const [updatingItemId, setUpdatingItemId] = React.useState<string | null>(null)
   const { updateItem, isLoading: isUpdating } = useUpdateQualityCheckItem()
@@ -26,11 +26,11 @@ export default function QCChecklistModal({ workfile, onClose }: QCChecklistModal
   const [uploadingId, setUploadingId] = React.useState<string | null>(null);
 
   // Defensive: fallback for missing vehicle
-  const safeVehicle = workfile?.opportunity.vehicle || { make: '---', model: '---', year: '---', vehiclePicturesUrls: [], vin: '---' };
+  const safeVehicle = workfile?.workfile.opportunity.vehicle || { make: '---', model: '---', year: '---', vehiclePicturesUrls: [], vin: '---' };
 
   React.useEffect(() => {
-    console.log('Current workfile ID:', workfile.id)
-  }, [workfile.id])
+    console.log('Current workfile ID:', workfile.workfile.id)
+  }, [workfile.workfile.id])
 
   // Only show enabled items
   const enabledChecks = checks.filter(item => item.enabled);
@@ -340,7 +340,7 @@ export default function QCChecklistModal({ workfile, onClose }: QCChecklistModal
         <QCChecklistSettingsModal
           open={settingsOpen}
           onClose={() => setSettingsOpen(false)}
-          workfileId={workfile.id}
+          workfileId={workfile.workfile.id}
           qualityCheckId={qualityCheck?.id || ''}
           checklist={checks}
           // status={qualityCheck?.status as QualityControlStatus}

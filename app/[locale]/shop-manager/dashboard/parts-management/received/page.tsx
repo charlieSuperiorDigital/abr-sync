@@ -14,6 +14,7 @@ import { NewTaskModal } from '@/components/custom-components/task-modal/new-task
 import { Plus } from 'lucide-react'
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
 import { ViewPartsModal } from '@/app/[locale]/custom-components/view-parts-modal'
+import { TenantPartOrder, PartsOrderSummary } from '@/app/types/parts'
 
 interface PartsReceived {
   receivedId: string
@@ -37,7 +38,7 @@ interface PartsReceived {
 export default function Received() {
   const { data: session } = useSession();
   const {
-
+    getMostRecentReceivedDate,
     ordersWithReceivedParts,
     isLoading,
     error
@@ -45,12 +46,9 @@ export default function Received() {
 
   const data = ordersWithReceivedParts;
 
-  // Find a workfile by RO number
-  const findWorkfileByRoNumber = (roNumber: string) => {
-    // return workfiles.find(workfile => workfile.roNumber === roNumber) || workfiles[0];
-  }
 
-  const columns: ColumnDef<PartsReceived, any>[] = [
+
+  const columns: ColumnDef<TenantPartOrder, any>[] = [
     {
       accessorKey: 'roNumber',
       header: 'RO #',
@@ -63,24 +61,29 @@ export default function Received() {
           make={row.original.vehicle.make}
           model={row.original.vehicle.model}
           year={String(row.original.vehicle.year)}
-          imageUrl={row.original.vehicle.imageUrl}
+          imageUrl={'https://via.placeholder.com/150'}
         />
       ),
     },
     {
       accessorKey: 'receivedDate',
       header: 'RECEIVED',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">
-          {new Date(row.original.receivedDate).toLocaleDateString()}
-        </span>
-      ),
+      cell: ({ row }) => {
+        const receivedDate = getMostRecentReceivedDate(row.original);
+        return (
+          <span className="whitespace-nowrap">
+            {receivedDate ? new Date(receivedDate).toLocaleDateString() : 'Not received'}
+          </span>
+        );
+      },
     },
     {
       accessorKey: 'assignedTech',
       header: 'PARTS MANAGER',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.assignedTech}</span>
+        <span className="whitespace-nowrap">
+          {row.original.assignedTech ? row.original.assignedTech.name : 'No Tech Assigned'}
+        </span>
       ),
     },
     {
@@ -131,7 +134,7 @@ export default function Received() {
             title="New Task"
             defaultRelation={
               {
-                id: row.original.receivedId,
+                id: row.original.opportunityId,
                 type: 'opportunity'
               }
             }

@@ -1,10 +1,9 @@
 'use client'
-import React, { createContext, useContext, useEffect, useState } from 'react'
-import { useGetTenant } from '../api/hooks/useGetTenant'
-import { Tenant } from '../types/tenant'
 import { useSession } from 'next-auth/react'
+import React, { createContext, useContext, useEffect, useState } from 'react'
+import { useGetTenant } from '../api/hooks/useTenant'
 import { Location } from '../types/location'
-import {jwtDecode} from 'jwt-decode'
+import { Tenant } from '../types/tenant'
 
 
 interface TenantContextType {

@@ -49,12 +49,12 @@ export default function QualityControl() {
 
   const handleContactClick = useCallback((workfile: WorkfileApiResponse) => {
     // Handle contact info click
-    console.log('Contact clicked for workfile:', workfile.id)
+    console.log('Contact clicked for workfile:', workfile.workfile.id)
   }, [])
 
   const handleTaskClick = useCallback((workfile: WorkfileApiResponse) => {
     // Handle task button click
-    console.log('Task clicked for workfile:', workfile.id)
+    console.log('Task clicked for workfile:', workfile.workfile.id)
   }, [])
 
   const handleQCChecklistClick = useCallback((workfile: WorkfileApiResponse, e: React.MouseEvent) => {
@@ -69,7 +69,7 @@ export default function QualityControl() {
       accessorKey: 'roNumber',
       header: 'RO',
       cell: ({ row }) => (
-        <span className="font-medium">{row.original.id || '---'}</span>
+        <span className="font-medium">{row.original.workfile.id || '---'}</span>
       ),
     },
     {
@@ -77,10 +77,10 @@ export default function QualityControl() {
       header: 'Vehicle',
       cell: ({ row }) => (
         <VehicleCell
-          make={row.original.opportunity.vehicle.make || 'No Make'}
-          model={row.original.opportunity.vehicle.model || 'No Model'}
-          year={String(row.original.opportunity.vehicle.year) || 'No Year'}
-          imageUrl={row.original.opportunity.vehicle.vehiclePicturesUrls[0] || `https://picsum.photos/seed/${row.original.opportunityId}/200/100`}
+          make={row.original.workfile.opportunity.vehicle.make || 'No Make'}
+          model={row.original.workfile.opportunity.vehicle.model || 'No Model'}
+          year={String(row.original.workfile.opportunity.vehicle.year) || 'No Year'}
+          imageUrl={`https://picsum.photos/seed/${row.original.workfile.opportunityId}/200/100`}
         />
       ),
     },
@@ -89,77 +89,77 @@ export default function QualityControl() {
       header: 'Owner',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
-          {row.original.opportunity.vehicle.owner?.name || '---'}
+          {row.original.workfile.opportunity.vehicle.owner.firstName + ' ' + row.original.workfile.opportunity.vehicle.owner.lastName || '---'}
         </span>
       ),
     },
-    {
-      accessorKey: 'qualityControl.status',
-      header: 'QC Status',
-      cell: ({ row }) => {
-        const status = row.original.status || QualityControlStatus.AWAITING;
-        return (
-          <div className="flex gap-2 items-center">
-            <StatusBadge 
-              variant={status === QualityControlStatus.COMPLETED ? 'success' : 'warning'} 
-              size="sm"
-            >
-              {status}
-            </StatusBadge>
-            {status === QualityControlStatus.AWAITING && (
-              <DarkButton 
-                buttonText="QC Checklist" 
-                buttonIcon={<ClipboardCheck size={16} />}
-                onClick={(e) => handleQCChecklistClick(row.original, e)}
-              />
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: 'opportunity.qualityControl.completionDate',
-      header: 'QC Date',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">
-          {formatDate(row.original.qualityControl?.completionDate) || '---'}
-        </span>
-      ),
-    },
-    {
-      accessorKey: 'estimatedCompletionDate',
-      header: 'ECD',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">
-          {formatDate(row.original.estimatedCompletionDate) || '---'}
-        </span>
-      ),
-    },
-    {
-      accessorKey: 'qualityControl.assignedTo',
-      header: 'QC Assigned To',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">
-          {row.original.qualityControl?.assignedTo || '---'}
-        </span>
-      ),
-    },
-    {
-      id: 'lastCommDate',
-      header: 'Last Comm Date',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">{formatDate(row.original.updatedAt)}</span>
-      ),
-    },
-    {
-      header: 'Summary',
-      cell: ({ row }) => (
-        <RoundButtonWithTooltip 
-          buttonIcon={<MessageSquareMore className="w-5 h-5" />}
-          tooltipText={row.original.opportunity.summary || 'No summary available'}
-        />
-      ),
-    },
+    // // {
+    // //   accessorKey: 'qualityControl.status',
+    // //   header: 'QC Status',
+    // //   cell: ({ row }) => {
+    // //     const status = row.original.workfile. || QualityControlStatus.AWAITING;
+    // //     return (
+    // //       <div className="flex gap-2 items-center">
+    // //         <StatusBadge 
+    // //           variant={status === QualityControlStatus.COMPLETED ? 'success' : 'warning'} 
+    // //           size="sm"
+    // //         >
+    // //           {status}
+    // //         </StatusBadge>
+    // //         {status === QualityControlStatus.AWAITING && (
+    // //           <DarkButton 
+    // //             buttonText="QC Checklist" 
+    // //             buttonIcon={<ClipboardCheck size={16} />}
+    // //             onClick={(e) => handleQCChecklistClick(row.original, e)}
+    // //           />
+    // //         )}
+    // //       </div>
+    // //     );
+    // //   },
+    // // },
+    // {
+    //   accessorKey: 'opportunity.qualityControl.completionDate',
+    //   header: 'QC Date',
+    //   cell: ({ row }) => (
+    //     <span className="whitespace-nowrap">
+    //       {formatDate(row.original.qualityControl?.completionDate) || '---'}
+    //     </span>
+    //   ),
+    // },
+    // {
+    //   accessorKey: 'estimatedCompletionDate',
+    //   header: 'ECD',
+    //   cell: ({ row }) => (
+    //     <span className="whitespace-nowrap">
+    //       {formatDate(row.original.estimatedCompletionDate) || '---'}
+    //     </span>
+    //   ),
+    // },
+    // {
+    //   accessorKey: 'qualityControl.assignedTo',
+    //   header: 'QC Assigned To',
+    //   cell: ({ row }) => (
+    //     <span className="whitespace-nowrap">
+    //       {row.original.qualityControl?.assignedTo || '---'}
+    //     </span>
+    //   ),
+    // },
+    // {
+    //   id: 'lastCommDate',
+    //   header: 'Last Comm Date',
+    //   cell: ({ row }) => (
+    //     <span className="whitespace-nowrap">{formatDate(row.original.updatedAt)}</span>
+    //   ),
+    // },
+    // {
+    //   header: 'Summary',
+    //   cell: ({ row }) => (
+    //     <RoundButtonWithTooltip 
+    //       buttonIcon={<MessageSquareMore className="w-5 h-5" />}
+    //       tooltipText={row.original.opportunity.summary || 'No summary available'}
+    //     />
+    //   ),
+    // },
     {
       id: 'contact',
       header: 'Contact',

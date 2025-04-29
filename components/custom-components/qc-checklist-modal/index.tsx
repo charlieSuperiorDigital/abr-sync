@@ -20,10 +20,10 @@ export default function QCChecklistBottomSheet({
   if (!workfile) return null
   
   // Defensive: fallback for missing vehicle
-  const safeVehicle = workfile.opportunity.vehicle || { make: '---', model: '---' };
+  const safeVehicle = workfile.workfile.opportunity.vehicle || { make: '---', model: '---' };
 
   const { qualityCheck, checks, isLoading, error } = useGetQualityCheck({
-    workfileId: workfile.id,
+    workfileId: workfile.workfile.id,
     enabled: isOpen
   })
   
