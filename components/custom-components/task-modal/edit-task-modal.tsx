@@ -34,6 +34,7 @@ import {
 import { useUpdateTask } from '@/app/api/hooks/useTasks'
 import { TASK_TEMPLATES } from './mock-tasks-templates'
 
+
 // Extended task type to handle both Task and ApiTask properties
 interface ExtendedTask {
   id?: string;

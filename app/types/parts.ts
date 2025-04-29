@@ -25,6 +25,7 @@ export interface PartsOrderSummary {
   partsToOrderCount: number;
   partsToReceiveCount: number;
   partsToReturnCount: number;
+  partsReceivedCount: number;
   totalAmount: number;
   lastCommunicationDate: string;
   summary: string;
@@ -33,6 +34,7 @@ export interface PartsOrderSummary {
   insuranceApprovalStatus: number;
   insuranceApprovalStatusName: string;
   coreParts: CorePart[];
+  lastReceivedDate: string | null;
 }
 
 export interface Tech {
@@ -94,6 +96,12 @@ export interface Part {
   refundAmount: number;
 }
 
+/**
+ * This is the type returned in the useGetAllPartsFromTenant hook.
+ * It groups parts by their respective opportunities,
+ * and for each opportunity, it groups the parts by their respective part orders.
+ * 
+ */
 export interface PartWithFullDetails {
   opportunity: {
     id: string;
