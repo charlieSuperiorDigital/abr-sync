@@ -6,6 +6,7 @@ import {
   useContext,
   type ReactNode,
   useEffect,
+  useRef,
 } from 'react'
 import { Device, Call } from '@twilio/voice-sdk'
 import { useSession } from 'next-auth/react'
@@ -13,10 +14,11 @@ import { connectAgentHub } from '../socket/agent-socket'
 import * as signalR from '@microsoft/signalr'
 
 interface CallContextType {
-  answerCall: () => void
-  rejectCall: () => void
+  answerCall: (callSid: string) => void
+  rejectCall: (callSid: string) => void
   toggleMute: () => void
   isMuted: boolean
+  incomingCalls: Call[]
   status:
     | 'ringing'
     | 'connected'
@@ -67,11 +69,10 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
   >('idle')
   const [isMuted, setIsMuted] = useState(false)
   const { data: session } = useSession()
-
   const [device, setDevice] = useState<any>(null)
   const [signalRConnection, setSignalRConnection] =
     useState<signalR.HubConnection | null>(null)
-  const [incomingCall, setIncomingCall] = useState<Call | null>(null)
+  const [incomingCalls, setIncomingCalls] = useState<Call[]>([])
 
   useEffect(() => {
     if (!session) return
@@ -95,7 +96,6 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
         )
 
         const res1 = await res.json()
-        console.log('Token:', res1)
         const token = res1.token
 
         const twilioDevice = new Device(token)
@@ -105,11 +105,9 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
         })
 
         twilioDevice.on('incoming', (call) => {
-          console.log('📞 Incoming call...')
-          setIncomingCall(call)
+          console.log('📞 Incoming call...', call.parameters.CallSid)
+          setIncomingCalls((prevCalls) => [...prevCalls, call])
           setStatus('ringing')
-          // call.accept()
-          // conn.invoke('SetAgentState', 'busy')
         })
 
         twilioDevice.on('disconnect', () => {
@@ -126,6 +124,22 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
           setStatus('Connection error')
         })
 
+        conn.on('callAccepted', (callSid: string) => {
+          // Reject all calls that weren't accepted
+          setIncomingCalls((prevCalls) => {
+            prevCalls.forEach((call) => {
+              if (call.parameters.CallSid !== callSid) {
+                call.reject()
+              }
+            })
+            // Mantener solo la llamada aceptada
+            return prevCalls.filter(
+              (call) => call.parameters.CallSid !== callSid
+            )
+          })
+          setStatus('connected')
+        })
+
         await twilioDevice.register()
         setDevice(twilioDevice)
       } catch (error) {
@@ -135,33 +149,64 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
     }
 
     init()
+
+    return () => {
+      if (device) {
+        device.disconnectAll()
+        device.destroy()
+      }
+      if (signalRConnection) {
+        signalRConnection.stop()
+      }
+    }
   }, [session])
 
-  const rejectCall = () => {
-    if (incomingCall) {
-      incomingCall.reject()
-      setStatus('ended')
-      setIncomingCall(null)
-    }
+  const rejectCall = async (callSid: string) => {
+    setIncomingCalls((prevCalls) => {
+      const updatedCalls = prevCalls.filter((call) => {
+        if (call.parameters.CallSid === callSid) {
+          call.reject()
+          // Reject the call
+          signalRConnection?.invoke('SetAgentState', 'available')
+          return false
+        }
+        return true
+      })
+
+      if (updatedCalls.length === 0) {
+        setStatus('idle')
+      }
+
+      return updatedCalls
+    })
   }
 
-  const answerCall = () => {
-    if (incomingCall) {
-      incomingCall.accept()
-      signalRConnection?.invoke('SetAgentState', 'busy')
-      setStatus('connected')
-      setIncomingCall(null)
-    }
+  const answerCall = (callSid: string) => {
+    setIncomingCalls((prevCalls) => {
+      const callToAnswer = prevCalls.find(
+        (call) => call.parameters.CallSid === callSid
+      )
+      if (callToAnswer) {
+        callToAnswer.accept()
+        signalRConnection?.invoke('SetAgentState', 'busy')
+        signalRConnection?.invoke('CallAccepted', callSid)
+        setStatus('connected')
+      }
+
+      // Return empty array to clear all incoming calls
+      return []
+    })
   }
+
   const callOut = (destination: string) => {
     if (device) {
       const normalized = destination.trim().replace(/\s+/g, '')
       setStatus('calling')
       device.connect({ params: { To: normalized } })
-      // setStatus('📞 Outgoing call...')
       signalRConnection?.invoke('SetAgentState', 'busy')
     }
   }
+
   const hangup = () => {
     if (device) {
       device.disconnectAll()
@@ -170,20 +215,13 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
     }
   }
 
-  const logout = async () => {
-    if (device) {
-      device.disconnectAll()
-      device.destroy()
-      setDevice(null)
+  const toggleMute = () => {
+    if (device && incomingCalls.length > 0) {
+      incomingCalls.forEach((call) => {
+        call.mute(!isMuted)
+      })
+      setIsMuted(!isMuted)
     }
-
-    if (signalRConnection) {
-      await signalRConnection.invoke('SetAgentState', 'available')
-      await signalRConnection.stop()
-      setSignalRConnection(null)
-    }
-
-    // setStatus("👤 Logged out");
   }
 
   return (
@@ -191,8 +229,9 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
       value={{
         answerCall,
         rejectCall,
-        toggleMute: () => setIsMuted(!isMuted),
+        toggleMute,
         isMuted,
+        incomingCalls,
         status,
         setStatus,
         callOut,

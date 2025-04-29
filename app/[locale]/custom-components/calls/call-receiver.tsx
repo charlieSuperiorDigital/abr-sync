@@ -1,15 +1,14 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { PhoneOff, Phone, Mic, MicOff } from 'lucide-react'
+import { PhoneOff, Phone, Mic, MicOff, Car } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { Car } from 'lucide-react'
 import { useCall } from '@/app/context/call-context'
 
 interface CallReceiverProps {
-  onAnswer?: () => void
-  onEnd?: () => void
+  onAnswer?: (callSid: string) => void
+  onEnd?: (callSid?: string) => void
   onMuteChange?: (isMuted: boolean) => void
   className?: string
 }
@@ -20,6 +19,24 @@ export function CallReceiver({
   onMuteChange,
   className,
 }: CallReceiverProps) {
+  const {
+    status,
+    setStatus,
+    answerCall,
+    hangup,
+    incomingCalls,
+    rejectCall,
+    isMuted,
+    toggleMute,
+  } = useCall()
+
+  const [duration, setDuration] = useState(0)
+  const [activeCallSid, setActiveCallSid] = useState<string | null>(null)
+
+  const prevShowRef = useRef(status)
+  const prevMutedRef = useRef(isMuted)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+
   const vehicleInfo = {
     roNumber: '113945',
     year: '2017',
@@ -27,22 +44,12 @@ export function CallReceiver({
     color: 'Blue',
     owner: 'Aiden Moore',
   }
-  const { status, setStatus, answerCall, hangup } = useCall()
-
-  const [duration, setDuration] = useState(0)
-
-  const [isMuted, setIsMuted] = useState(false)
-
-  const prevShowRef = useRef(status)
-  const prevMutedRef = useRef(isMuted)
-
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     if (prevShowRef.current !== status) {
       if (status === 'idle') {
         setDuration(0)
-        setIsMuted(false)
+        setActiveCallSid(null)
       }
       prevShowRef.current = status
     }
@@ -82,113 +89,150 @@ export function CallReceiver({
   }
 
   const handleEndCall = () => {
-    hangup()
+    if (activeCallSid) {
+      rejectCall(activeCallSid)
+    } else {
+      hangup()
+    }
     setStatus('idle')
+    onEnd?.()
   }
 
-  const handleAnswerCall = () => {
-    answerCall()
+  const handleAnswerCall = (callSid: string) => {
+    answerCall(callSid)
+    setActiveCallSid(callSid)
     setDuration(0)
+    onAnswer?.(callSid)
   }
 
-  const toggleMute = () => {
-    setIsMuted((prev) => !prev)
-  }
-
-  if (status !== 'ringing' && status !== 'connected') {
+  if ((status === 'idle' || incomingCalls.length === 0) && !activeCallSid) {
     return null
   }
 
   return (
-    <div
-      className={cn(
-        'flex items-center justify-between w-full bg-black text-white p-2 rounded-md max-w-[1600px] shadow-md',
-        className
-      )}
-    >
-      <div className="flex items-center gap-3 h-16">
-        <div className="h-8 w-8 bg-gray-700 rounded-sm flex items-center justify-center">
-          <Car className="h-5 w-5 text-gray-400" />
-        </div>
+    <div className="w-full max-w-[1600px] px-4 space-y-2">
+      {status === 'connected' && activeCallSid && (
+        <div
+          key={`active-${activeCallSid}`}
+          className={cn(
+            'flex items-center justify-between w-full bg-black text-white p-3 rounded-lg shadow-lg',
+            'animate-fade-in-up animate-duration-300',
+            className
+          )}
+        >
+          <div className="flex items-center gap-3 h-16">
+            <div className="h-9 w-9 bg-gray-700 rounded-md flex items-center justify-center">
+              <Car className="h-5 w-5 text-gray-400" />
+            </div>
 
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-xl">RO # {vehicleInfo.roNumber}</span>
-          <span className="font-bold text-xl">
-            {vehicleInfo.year} {vehicleInfo.make} {vehicleInfo.color}
-          </span>
-          <span className="font-medium text-xl text-gray-300">
-            Owner: {vehicleInfo.owner}
-          </span>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2">
-        {status === 'connected' && (
-          <div className="bg-green-600 h-[35px] rounded-full text-white px-5 py-1 text-xs font-medium inline-flex items-center">
-            <span>IN CALL: {formatDuration(duration)}</span>
+            <div className="flex items-center gap-3">
+              <span className="font-bold text-lg">
+                RO # {vehicleInfo.roNumber}
+              </span>
+              <span className="font-bold text-lg">
+                {vehicleInfo.year} {vehicleInfo.make} {vehicleInfo.color}
+              </span>
+              <span className="font-medium text-lg text-gray-300">
+                Owner: {vehicleInfo.owner}
+              </span>
+            </div>
           </div>
-        )}
 
-        {status === 'ringing' && (
-          <div className="bg-yellow-500 text-white h-[35px] rounded-full px-5 py-1 text-xs font-medium inline-flex items-center">
-            <span>INCOMING CALL</span>
-          </div>
-        )}
+          <div className="flex items-center gap-3">
+            <div className="bg-green-600 h-9 rounded-full text-white px-5 py-1 text-sm font-medium inline-flex items-center">
+              <span>IN CALL: {formatDuration(duration)}</span>
+            </div>
 
-        {status === 'connected' && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              'rounded-full h-8 w-8 p-0 flex items-center justify-center bg-[#F0F0F0] text-black hover:bg-gray-700',
-              isMuted && 'bg-gray-700'
-            )}
-            onClick={toggleMute}
-            aria-label={isMuted ? 'Unmute call' : 'Mute call'}
-          >
-            {isMuted ? (
-              <MicOff className="h-4 w-4" />
-            ) : (
-              <Mic className="h-4 w-4" />
-            )}
-          </Button>
-        )}
-
-        {status === 'ringing' ? (
-          <>
             <Button
-              variant="default"
+              variant="ghost"
               size="sm"
-              className="rounded-full h-8 w-8 p-0 flex items-center justify-center bg-green-600 hover:bg-green-700"
-              onClick={handleAnswerCall}
-              aria-label="Answer call"
+              className={cn(
+                'rounded-full h-9 w-9 p-0 flex items-center justify-center bg-gray-200 text-black hover:bg-gray-300',
+                isMuted && 'bg-gray-700 text-white'
+              )}
+              onClick={toggleMute}
+              aria-label={isMuted ? 'Unmute call' : 'Mute call'}
             >
-              <Phone className="h-4 w-4" />
+              {isMuted ? (
+                <MicOff className="h-4 w-4" />
+              ) : (
+                <Mic className="h-4 w-4" />
+              )}
             </Button>
+
             <Button
               variant="destructive"
               size="sm"
-              className="rounded-full h-8 w-8 p-0 flex items-center justify-center bg-red-600 hover:bg-red-700"
-              onClick={handleEndCall}
-              aria-label="Decline call"
-            >
-              <PhoneOff className="h-4 w-4" />
-            </Button>
-          </>
-        ) : (
-          status === 'connected' && (
-            <Button
-              variant="destructive"
-              size="sm"
-              className="rounded-full h-8 w-8 p-0 flex items-center justify-center bg-red-600 hover:bg-red-700"
+              className="rounded-full h-9 w-9 p-0 flex items-center justify-center bg-red-600 hover:bg-red-700"
               onClick={handleEndCall}
               aria-label="End call"
             >
               <PhoneOff className="h-4 w-4" />
             </Button>
-          )
-        )}
-      </div>
+          </div>
+        </div>
+      )}
+
+      {/* Incoming calls */}
+      {incomingCalls
+        .filter((call) => call.parameters.CallSid !== activeCallSid)
+        .map((call, index) => (
+          <div
+            key={call.parameters.CallSid}
+            className={cn(
+              'flex items-center justify-between w-full bg-gradient-to-r from-black to-gray-900 text-white p-3 rounded-lg shadow-lg border-l-4 border-yellow-500',
+              'animate-fade-in-up animate-duration-300',
+              className
+            )}
+            style={{ animationDelay: `${index * 100}ms` }}
+          >
+            <div className="flex items-center gap-3 h-16">
+              <div className="h-9 w-9 bg-gray-700 rounded-md flex items-center justify-center animate-pulse">
+                <Car className="h-5 w-5 text-gray-400" />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="font-bold text-lg">
+                  RO # {vehicleInfo.roNumber}
+                </span>
+                <span className="font-bold text-lg">
+                  {vehicleInfo.year} {vehicleInfo.make} {vehicleInfo.color}
+                </span>
+                <span className="font-medium text-lg text-gray-300">
+                  Owner: {vehicleInfo.owner}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="bg-yellow-500 text-white h-9 rounded-full px-5 py-1 text-sm font-medium inline-flex items-center animate-pulse">
+                <span>INCOMING CALL</span>
+              </div>
+
+              <Button
+                variant="default"
+                size="sm"
+                className="rounded-full h-9 w-9 p-0 flex items-center justify-center bg-green-600 hover:bg-green-700 "
+                onClick={() => handleAnswerCall(call.parameters.CallSid)}
+                aria-label="Answer call"
+              >
+                <Phone className="h-4 w-4" />
+              </Button>
+
+              <Button
+                variant="destructive"
+                size="sm"
+                className="rounded-full h-9 w-9 p-0 flex items-center justify-center bg-red-600 hover:bg-red-700"
+                onClick={() => {
+                  rejectCall(call.parameters.CallSid)
+                }}
+                aria-label="Decline call"
+              >
+                <PhoneOff className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ))}
     </div>
   )
 }

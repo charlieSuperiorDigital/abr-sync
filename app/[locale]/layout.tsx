@@ -58,7 +58,7 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang={locale}>
+    <html lang={locale} suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased bg-[#F0FOFO]`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <SessionAuthProvider>
