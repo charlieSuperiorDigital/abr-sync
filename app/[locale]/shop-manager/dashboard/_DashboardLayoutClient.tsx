@@ -42,7 +42,7 @@ export default function DashboardLayoutClient({ children }: { children: React.Re
             className="object-contain mt-3 mb-8"
           />
           <nav className="flex flex-col justify-between h-full py-2 w-full">
-            <div className="flex flex-col space-y-4">
+            <div className="flex flex-col space-y-2">
               {/* Gotta change those icons, they dont match the design */}
               <SideBarIconGroup
                 link={'/shop-manager/dashboard/tasks'}
