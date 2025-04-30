@@ -33,6 +33,30 @@ export function useGetTenantPartOrders({ tenantId }: UseGetTenantPartOrdersOptio
         refetchOnWindowFocus: false // Don't refetch when window gains focus
     })
 
+    /**
+     * Gets the most recent received date from a TenantPartOrder
+     * @param order - The TenantPartOrder to check
+     * @returns The most recent received date as a string, or null if no received dates found
+     */
+    const getMostRecentReceivedDate = (order: TenantPartOrder): string | null => {
+        // If there are no parts orders, return null
+        if (!order.partsOrders || order.partsOrders.length === 0) {
+            return null;
+        }
+
+        // Use the lastReceivedDate field if available, otherwise fall back to lastCommunicationDate
+        const dates = order.partsOrders
+            .map(po => po.lastReceivedDate)
+            .filter((date): date is string => !!date);  // Type predicate to tell TypeScript this removes nulls
+        
+        if (dates.length === 0) {
+            return null;
+        }
+
+        // Sort dates in descending order and return the most recent one
+        return dates.sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
+    };
+
     // Filter orders based on different parts statuses
     const ordersWithPartsToBeOrdered = data?.filter(order =>
         order.partsOrders.some((po: PartsOrderSummary) => po.partsToOrderCount > 0)
@@ -48,12 +72,14 @@ export function useGetTenantPartOrders({ tenantId }: UseGetTenantPartOrdersOptio
     ) || []
 
     const ordersWhichExceedAmountSpecifiedByTenant = data?.filter(order =>
-        order.partsOrders.some((po: PartsOrderSummary) => po.partsToOrderCount > 0)
+        order.partsOrders.some((po: PartsOrderSummary) => po.partsToOrderCount > 0 || po.partsToOrderCount == 0)
     ) || []
 
     const ordersWithPartsToBeReturned = data?.filter(order =>
         order.partsOrders.some((po: PartsOrderSummary) => po.totalAmount > 0)
     ) || []
+
+    
 
     // Extract unique vendors from all part orders
     const getUniqueVendors = () => {
@@ -99,11 +125,18 @@ export function useGetTenantPartOrders({ tenantId }: UseGetTenantPartOrdersOptio
             0);
     };
 
+    const calculateOrderTotalAmount = (order: TenantPartOrder) => {
+        return order.partsOrders.reduce((total: number, po: PartsOrderSummary) =>
+            total + (po.totalAmount || 0),
+            0);
+    };
+
     // Filter orders with core parts
     const ordersWithCoreParts = data?.filter(order => order.partsOrders.some((po: PartsOrderSummary) => po.hasCorePart)) || [];
 
     // Return categorized and raw data similar to other hooks
     return {
+        calculateOrderTotalAmount,
         ordersWithPartsToBeOrdered,
         ordersWithPartsToBeReceived,
         ordersWithPartsToBeReturned,
@@ -115,6 +148,7 @@ export function useGetTenantPartOrders({ tenantId }: UseGetTenantPartOrdersOptio
         calculateOrderToReturnParts,
         ordersWithCoreParts,
         getUniqueVendors,
+        getMostRecentReceivedDate,
         data,
         isLoading,
         error

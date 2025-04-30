@@ -1,13 +1,16 @@
 'use client'
 import { useGetTasksByAssignedUser, useGetTasksByCreator } from '@/app/api/hooks/useTasks'
-import { TasksContext, TasksContextType } from '@/app/context/tasks-context'
 import DraggableNav, {
   NavItem,
 } from '@/components/custom-components/draggable-nav/draggable-nav'
 import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
 import { Plus } from 'lucide-react'
 import { useSession } from 'next-auth/react'
-import type React from 'react'
+import { useGetUserTabOrder } from '@/app/api/hooks/useGetUserTabOrder'
+import { useUpdateUserTabOrder } from '@/app/api/hooks/useUpdateUserTabOrder'
+import { Task as ApiTask } from '@/app/api/functions/tasks'
+import { Task } from '@/app/types/task'
+import { TasksContext, TasksContextType } from '@/app/context/tasks-context'
 
 
 export default function TasksLayout({
@@ -58,11 +61,35 @@ export default function TasksLayout({
     .filter(task => task.status?.toLowerCase() !== 'done' && task.status?.toLowerCase() !== 'completed')
     .length
 
-  const taskNavItems: NavItem[] = [
+  // Define the base nav items
+  const baseNavItems: NavItem[] = [
     { id: 'my-tasks', label: 'My Tasks', count: myTasksCount },
     { id: 'created-by-me', label: 'Created By Me', count: createdByMeCount },
     { id: 'completed-tasks', label: 'Completed Tasks', count: completedTasksCount },
   ]
+
+  // Get user's preferred tab order
+  // Get user's preferred tab order
+  const { tabOrder } = useGetUserTabOrder({
+    userId,
+    pageName: 'tasks',
+    enabled: !!userId
+  })
+
+  // Setup tab order update mutation
+  const { updateTabOrder } = useUpdateUserTabOrder({
+    userId,
+    pageName: 'tasks',
+  })
+
+  // Order the nav items according to user's preference or use default order
+  const taskNavItems = tabOrder
+    ? [...baseNavItems].sort((a, b) => {
+        const aIndex = tabOrder.indexOf(a.id)
+        const bIndex = tabOrder.indexOf(b.id)
+        return aIndex - bIndex
+      })
+    : baseNavItems
 
   // Context value to share with child pages
   const contextValue: TasksContextType = {
@@ -88,7 +115,16 @@ export default function TasksLayout({
           />
         </div>
         <div className="px-5">
-          <DraggableNav navItems={taskNavItems} defaultTab='my-tasks' />
+          <DraggableNav 
+            navItems={taskNavItems} 
+            defaultTab={tabOrder?.[0] || 'my-tasks'}
+            onReorder={(reorderedItems) => {
+              // Extract the IDs in the new order
+              const newOrder = reorderedItems.map(item => item.id)
+              // Update the tab order in the database
+              updateTabOrder(newOrder)
+            }}
+          />
         </div>
         <main className="w-full">{children}</main>
       </div>

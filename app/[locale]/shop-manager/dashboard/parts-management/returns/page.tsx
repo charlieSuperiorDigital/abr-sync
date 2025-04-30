@@ -152,7 +152,7 @@ export default function Returns() {
             <TableHead className="font-semibold text-black whitespace-nowrap"></TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
+        {/* <TableBody>
           {ordersWithPartsToBeReturned.map((item: TenantPartOrder) => (
             <React.Fragment key={item.opportunityId}>
               <TableRow 
@@ -167,7 +167,7 @@ export default function Returns() {
                     make={item.vehicle.make}
                     model={item.vehicle.model}
                     year={item.vehicle.year.toString()}
-                    imageUrl={item.vehicle.imageUrl || ''}
+                    imageUrl={`https://picsum.photos/seed/${item.opportunityId}/200/100`}
                   />
                 </TableCell>
                 <TableCell>
@@ -193,7 +193,7 @@ export default function Returns() {
                     <button
                       ref={(el) => { dropdownButtonRefs.current[item.id] = el; }}
                       type="button"
-                      className="inline-flex items-center justify-between w-full px-4 py-2 text-sm font-medium bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500"
+                      className="inline-flex justify-between items-center px-4 py-2 w-full text-sm font-medium bg-white rounded-md border border-gray-300 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500"
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleDropdown(item.id);
@@ -202,7 +202,7 @@ export default function Returns() {
                       <span className={item.refundStatus === 'pending' ? 'text-amber-600' : 'text-green-600'}>
                         {item.refundStatus === 'pending' ? 'Pending Refund' : 'Refund Complete'}
                       </span>
-                      <ChevronDown className="w-4 h-4 ml-2" />
+                      <ChevronDown className="ml-2 w-4 h-4" />
                     </button>
                   </div>
                 </TableCell>
@@ -236,7 +236,7 @@ export default function Returns() {
                         }
                       }
                       children={
-                        <Plus className="w-5 h-5 m-auto" />
+                        <Plus className="m-auto w-5 h-5" />
                       }
                     />
                   </div>
@@ -266,34 +266,34 @@ export default function Returns() {
                           <tbody className="bg-gray-100 divide-y divide-gray-200">
                             {vendorDetails.map((vendor) => (
                               <tr key={vendor.vendorDetailId}>
-                                <td className="py-4 text-sm font-medium bg-gray-300 whitespace-nowrap">
+                                <td className="py-4 text-sm font-medium whitespace-nowrap bg-gray-300">
                                   {vendor.name}
                                 </td>
-                                <td className="py-4 text-sm text-gray-700 bg-gray-300 whitespace-nowrap">
+                                <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
                                   {vendor.representative}
                                 </td>
-                                <td className="py-4 text-sm text-gray-700 bg-gray-300 whitespace-nowrap">
+                                <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
                                   {vendor.toOrder}
                                 </td>
-                                <td className="py-4 text-sm text-gray-700 bg-gray-300 whitespace-nowrap">
+                                <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
                                   {vendor.toReceive}
                                 </td>
-                                <td className="py-4 text-sm text-gray-700 bg-gray-300 whitespace-nowrap">
+                                <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
                                   {vendor.toReturn}
                                 </td>
-                                <td className="py-4 text-sm text-gray-700 bg-gray-300 whitespace-nowrap">
+                                <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
                                   {vendor.total}
                                 </td>
-                                <td className="py-4 text-sm text-gray-700 bg-gray-300 whitespace-nowrap">
+                                <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
                                   {formatCurrency(vendor.totalAmount)}
                                 </td>
-                                <td className="py-4 text-sm text-gray-700 bg-gray-300 whitespace-nowrap">
+                                <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
                                   {formatDate(vendor.lastCommunicationDate)}
                                 </td>
                                 <td className="py-4 text-sm text-gray-700 bg-gray-300">
                                   <SummaryCell text={vendor.summary} />
                                 </td>
-                                <td className="py-4 text-sm text-gray-700 bg-gray-300 whitespace-nowrap">
+                                <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
                                   {vendor.contactInfo ? (
                                     <div className="flex space-x-2">
                                       <a 
@@ -326,7 +326,7 @@ export default function Returns() {
               )}
             </React.Fragment>
           ))}
-        </TableBody>
+        </TableBody> */}
       </Table>
       
       {/* Dropdown Portal */}
@@ -341,7 +341,7 @@ export default function Returns() {
         >
           <div className="py-1" role="menu" aria-orientation="vertical">
             <button
-              className="block w-full px-4 py-2 text-sm text-left text-amber-600 hover:bg-gray-100"
+              className="block px-4 py-2 w-full text-sm text-left text-amber-600 hover:bg-gray-100"
               role="menuitem"
               onClick={(e) => {
                 e.stopPropagation();
@@ -352,7 +352,7 @@ export default function Returns() {
               Pending Refund
             </button>
             <button
-              className="block w-full px-4 py-2 text-sm text-left text-green-600 hover:bg-gray-100"
+              className="block px-4 py-2 w-full text-sm text-left text-green-600 hover:bg-gray-100"
               role="menuitem"
               onClick={(e) => {
                 e.stopPropagation();
