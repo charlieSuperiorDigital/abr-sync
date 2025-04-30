@@ -27,6 +27,7 @@ export function CallReceiver({
     incomingCalls,
     rejectCall,
     isMuted,
+
     toggleMute,
   } = useCall()
 

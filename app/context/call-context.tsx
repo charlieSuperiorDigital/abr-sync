@@ -105,6 +105,7 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
         })
 
         twilioDevice.on('incoming', (call) => {
+          console.log('Incoming call:', call)
           console.log('📞 Incoming call...', call.parameters.CallSid)
           setIncomingCalls((prevCalls) => [...prevCalls, call])
           setStatus('ringing')
@@ -124,22 +125,31 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
           setStatus('Connection error')
         })
 
-        conn.on('callAccepted', (callSid: string) => {
-          // Reject all calls that weren't accepted
+        conn.on('callAccepted', (callNumber: string) => {
           setIncomingCalls((prevCalls) => {
-            prevCalls.forEach((call) => {
-              if (call.parameters.CallSid !== callSid) {
+            console.log('callPreve', prevCalls)
+
+            const updatedCalls = prevCalls.filter((call) => {
+              if (call.parameters.From === callNumber) {
+                console.log(
+                  `Call ${call.parameters.From} was accepted elsewhere. Rejecting locally and removing from UI list.`
+                )
                 call.reject()
+                return false
+              } else {
+                console.log(
+                  `Keeping other incoming call ${call.parameters.From} in the UI list.`
+                )
+                return true
               }
             })
-            // Mantener solo la llamada aceptada
-            return prevCalls.filter(
-              (call) => call.parameters.CallSid !== callSid
+            console.log(
+              'Updated incoming calls state (removed the accepted call):',
+              updatedCalls
             )
+            return updatedCalls
           })
-          setStatus('connected')
         })
-
         await twilioDevice.register()
         setDevice(twilioDevice)
       } catch (error) {
@@ -172,10 +182,11 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
         }
         return true
       })
-
+      signalRConnection?.invoke('SetAgentState', 'available')
       if (updatedCalls.length === 0) {
         setStatus('idle')
       }
+      signalRConnection?.invoke('SetAgentState', 'available')
 
       return updatedCalls
     })
@@ -189,7 +200,7 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
       if (callToAnswer) {
         callToAnswer.accept()
         signalRConnection?.invoke('SetAgentState', 'busy')
-        signalRConnection?.invoke('CallAccepted', callSid)
+        signalRConnection?.invoke('CallAccepted', callToAnswer.parameters.From)
         setStatus('connected')
       }
 
@@ -209,9 +220,10 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
 
   const hangup = () => {
     if (device) {
-      device.disconnectAll()
-      setStatus('ended')
       signalRConnection?.invoke('SetAgentState', 'available')
+      device.disconnectAll()
+
+      setStatus('ended')
     }
   }
 
