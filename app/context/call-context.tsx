@@ -107,8 +107,24 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
         twilioDevice.on('incoming', (call) => {
           console.log('Incoming call:', call)
           console.log('📞 Incoming call...', call.parameters.CallSid)
-          setIncomingCalls((prevCalls) => [...prevCalls, call])
-          setStatus('ringing')
+
+          setIncomingCalls((prevCalls) => {
+            const callExists = prevCalls.some(
+              (existingCall) =>
+                existingCall.parameters.CallSid === call.parameters.CallSid
+            )
+
+            if (!callExists) {
+              setStatus('ringing')
+              return [...prevCalls, call]
+            }
+
+            console.log(
+              'Call with same CallSid already exists, ignoring duplicate',
+              call.parameters.CallSid
+            )
+            return prevCalls
+          })
         })
 
         twilioDevice.on('disconnect', () => {
