@@ -274,13 +274,13 @@ export default function Home() {
 
       <Section title="Parts Summary Bar">
         <PartsSummaryBar 
-          draftInvoices={125}
-          backorders={4}
-          pending={1291}
-          changes={76}
-          missed={1}
-          inToday={58}
-          returns={3}
+          // draftInvoices={125}
+          // backorders={4}
+          // pending={1291}
+          // changes={76}
+          // missed={1}
+          // inToday={58}
+          // returns={3}
         />
       </Section>
 

@@ -32,44 +32,44 @@ export function DuplicateTaskModal({
   }
 
   const handleDuplicateTask = async () => {
-    try {
+    // try {
 
-            // here we'll ccreate a new task with the same data as the original
-      const newTaskData = {
-        title: `${task.title} #2`,
-        description: task.description,
-        dueDate: task.dueDate,
-        priority: typeof task.priority === 'object' ? task.priority.text : task.priority,
-        assignedTo: task.assignedTo || '',
-        workfileId: task.workfileId || '',
-        locationId: task.locationId || '',
-        //  0 for One-time, 1 for Recurring
-        type: typeof task.type === 'string' ? (task.type === 'Recurring' ? 1 : 0) : (task.type || 0),
-        status: 'open', 
-        tenantId: task.tenantId , 
-        endDate: task.endDate || '',
-        roles: task.roles || '',
+    //         // here we'll ccreate a new task with the same data as the original
+    //   const newTaskData = {
+    //     title: `${task.title} #2`,
+    //     description: task.description,
+    //     dueDate: task.dueDate,
+    //     priority: typeof task.priority === 'object' ? task.priority.text : task.priority,
+    //     assignedTo: task.assignedTo || '',
+    //     workfileId: task.workfileId || '',
+    //     locationId: task.locationId || '',
+    //     //  0 for One-time, 1 for Recurring
+    //     type: typeof task.type === 'string' ? (task.type === 'Recurring' ? 1 : 0) : (task.type || 0),
+    //     status: 'open', 
+    //     tenantId: task.tenantId , 
+    //     endDate: task.endDate || '',
+    //     roles: task.roles || '',
 
      
-        weekDays: task.weekDays || 0,
-        monthDays: task.monthDays || 0,
-        customDays: task.customDays || []
-      }
+    //     weekDays: task.weekDays || 0,
+    //     monthDays: task.monthDays || 0,
+    //     customDays: task.customDays || []
+    //   }
       
-      const result = await createTaskAsync(newTaskData)
+    //   const result = await createTaskAsync(newTaskData)
       
       
-      if (result.success) {
-        setIsOpen(false)
-        if (onComplete) {
-          onComplete()
-        }
-      } else {
-        console.error('Failed to duplicate task:', result.error)
-      }
-    } catch (error) {
-      console.error('Error duplicating task:', error)
-    }
+    //   if (result.success) {
+    //     setIsOpen(false)
+    //     if (onComplete) {
+    //       onComplete()
+    //     }
+    //   } else {
+    //     console.error('Failed to duplicate task:', result.error)
+    //   }
+    // } catch (error) {
+    //   console.error('Error duplicating task:', error)
+    // }
   }
 
   return (

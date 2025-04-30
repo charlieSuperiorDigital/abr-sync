@@ -1,8 +1,7 @@
 'use client'
 
 import { Task as ApiTask, UpdateTaskPayload } from '@/app/api/functions/tasks'
-import { useGetTenant } from '@/app/api/hooks/useGetTenant'
-import { useGetUsersByTenant } from '@/app/api/hooks/useGetUsersByTenant'
+import { useGetTenant, useGetUsersByTenant } from '@/app/api/hooks/useTenant'
 import { Location } from '@/app/types/location'
 import { Task } from '@/app/types/task'
 import { getUserFullName } from '@/app/types/user'
@@ -34,6 +33,7 @@ import {
 } from './schema'
 import { useUpdateTask } from '@/app/api/hooks/useTasks'
 import { TASK_TEMPLATES } from './mock-tasks-templates'
+
 
 // Extended task type to handle both Task and ApiTask properties
 interface ExtendedTask {

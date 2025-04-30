@@ -1,10 +1,9 @@
 'use client'
 
 import { TaskCreateVM } from '@/app/api/functions/tasks'
-import { useGetTenant } from '@/app/api/hooks/useGetTenant'
-import { useGetUsersByTenant } from '@/app/api/hooks/useGetUsersByTenant'
+import { useGetTenant, useGetUsersByTenant } from '@/app/api/hooks/useTenant'
 import { Location } from '@/app/types/location'
-import { getUserFullName } from '@/app/types/user'
+import { getUserFullName, User } from '@/app/types/user'
 import { Button } from '@/components/ui/button'
 import { createLocalISOString } from '@/lib/utils/date'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -74,7 +73,7 @@ export function NewTaskModal({
   })
 
   // Transform users into format needed for select components
-  const usersForSelect = users.map(user => ({
+  const usersForSelect = users.map((user : User )=> ({
     value: user.id,
     label: getUserFullName(user),
     avatar: '/placeholder.svg' // Default avatar, could be replaced with actual user avatar
