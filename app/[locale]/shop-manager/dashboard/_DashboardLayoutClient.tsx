@@ -13,7 +13,7 @@ import {
 import Image from 'next/image'
 import SideBarIconGroup from '../../custom-components/sidebar-icon-group'
 import type React from 'react'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import EditProfileModal from '@/app/components/custom-components/edit-profile-modal/edit-profile-modal'
 import RoleGuard from '@/app/components/RoleGuard'
 import { CallReceiver } from '../../custom-components/calls/call-receiver'
@@ -24,6 +24,7 @@ import { CallProvider } from '@/app/context/call-context'
 // Create a separate component for the dashboard content
 function DashboardContent({ children }: { children: React.ReactNode }) {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
+  const [isNavExpanded, setIsNavExpanded] = useState(false)
 
   return (
     <RoleGuard
@@ -46,44 +47,67 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
             height={70}
             className="object-contain mt-3 mb-8"
           />
-          <nav className="flex flex-col justify-between items-center h-full py-2 w-[45px]">
-            <div className="flex flex-col space-y-4">
+          <nav className="flex flex-col justify-between h-full py-2 w-full">
+            <div className="flex flex-col space-y-2">
               {/* Gotta change those icons, they dont match the design */}
               <SideBarIconGroup
                 link={'/shop-manager/dashboard/tasks'}
                 icons={[{ newNotificationsQuantity: 0, Icon: ClipboardList }]}
+                label="Tasks"
+                expanded={isNavExpanded}
               />
               <SideBarIconGroup
                 link={'/shop-manager/dashboard/opportunities'}
                 icons={[{ newNotificationsQuantity: 2, Icon: Mail }]}
+                label="Opportunities"
+                expanded={isNavExpanded}
               />
               <SideBarIconGroup
                 link={'/shop-manager/dashboard/workfiles'}
                 icons={[{ newNotificationsQuantity: 2, Icon: FolderOpen }]}
+                label="Workfiles"
+                expanded={isNavExpanded}
               />
               <SideBarIconGroup
                 link={'/shop-manager/dashboard/parts-management'}
                 icons={[
-                  { newNotificationsQuantity: 2, Icon: Settings },
+                  {
+                    newNotificationsQuantity: 2,
+                    Icon: Settings,
+                    label: 'Settings',
+                  },
                   {
                     newNotificationsQuantity: 2,
                     Icon: TruckIcon,
                     hasWarning: true,
+                    label: 'Delivery Issues',
                   },
-                  { newNotificationsQuantity: 2, Icon: TruckIcon },
+                  {
+                    newNotificationsQuantity: 2,
+                    Icon: TruckIcon,
+                    label: 'Shipments',
+                  },
                 ]}
+                label="Parts Management"
+                expanded={isNavExpanded}
               />
               <SideBarIconGroup
                 link={'/shop-manager/dashboard/insurances-and-vehicle-owners'}
                 icons={[{ newNotificationsQuantity: 2, Icon: SquareUser }]}
+                label="Insurances & Owners"
+                expanded={isNavExpanded}
               />
               <SideBarIconGroup
                 link={'/shop-manager/dashboard/ai'}
                 icons={[{ newNotificationsQuantity: 2, Icon: TrendingUp }]}
+                label="AI"
+                expanded={isNavExpanded}
               />
               <SideBarIconGroup
                 link={'/shop-manager/dashboard/users'}
                 icons={[{ newNotificationsQuantity: 0, Icon: User }]}
+                label="Users"
+                expanded={isNavExpanded}
               />
             </div>
 
@@ -91,6 +115,8 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
               <SideBarIconGroup
                 link={'/shop-manager/dashboard/search'}
                 icons={[{ newNotificationsQuantity: 0, Icon: Search }]}
+                label="Search"
+                expanded={isNavExpanded}
               />
               <div
                 className="cursor-pointer"
@@ -99,10 +125,11 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                 <SideBarIconGroup
                   link={'/shop-manager/dashboard/user-profile'}
                   icons={[{ newNotificationsQuantity: 0, Icon: User }]}
+                  label="Profile"
+                  expanded={isNavExpanded}
                 />
               </div>
             </div>
-
           </nav>
         </aside>
         <main className="flex flex-col py-8 w-full min-h-screen items-center">
@@ -118,7 +145,6 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   )
 }
 
-// Wrap the dashboard content with the CallProvider
 export default function DashboardLayoutClient({
   children,
 }: {
