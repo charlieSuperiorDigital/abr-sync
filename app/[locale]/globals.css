@@ -34,7 +34,6 @@ body {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-   
   }
 
   .dark {
@@ -71,7 +70,7 @@ body {
 }
 
 .rs-picker-toolbar-right .rs-btn-primary {
-  background: black !important;  
+  background: black !important;
   color: white !important;
   border: none !important;
   border-radius: 6px !important;
@@ -82,7 +81,7 @@ body {
 
 /* Hover state */
 .rs-picker-toolbar-right .rs-btn-primary:hover {
-  background: black !important;  
+  background: black !important;
 }
 
 /* Active (click) state */
@@ -91,7 +90,7 @@ body {
 }
 
 .rs-calendar-table-cell-selected .rs-calendar-table-cell-content {
-  background: black !important;  /* Purple */
+  background: black !important; /* Purple */
   color: white !important;
   border-radius: 6px !important;
   font-weight: bold !important;
@@ -105,23 +104,28 @@ body {
 /* Today's cell (optional) */
 .rs-calendar-table-cell-is-today .rs-calendar-table-cell-content {
   border: 2px solid black !important;
-
 }
 
 /* Selected time in the dropdown panel */
-.rs-picker-date .rs-picker-daterange-panel-show-time .rs-calendar-time-dropdown-cell-active {
-  color: #6e3bff !important;  /* Purple text */
+.rs-picker-date
+  .rs-picker-daterange-panel-show-time
+  .rs-calendar-time-dropdown-cell-active {
+  color: #6e3bff !important; /* Purple text */
   font-weight: bold !important;
 }
 
 /* Hover state */
-.rs-picker-date .rs-picker-daterange-panel-show-time .rs-calendar-time-dropdown-cell:hover {
-  background: #f3f0ff !important;  /* Light purple */
+.rs-picker-date
+  .rs-picker-daterange-panel-show-time
+  .rs-calendar-time-dropdown-cell:hover {
+  background: #f3f0ff !important; /* Light purple */
 }
 
 /* Active (selected) time cell background */
-.rs-picker-date .rs-picker-daterange-panel-show-time .rs-calendar-time-dropdown-cell-active {
-  background: rgba(110, 59, 255, 0.1) !important;  /* 10% purple tint */
+.rs-picker-date
+  .rs-picker-daterange-panel-show-time
+  .rs-calendar-time-dropdown-cell-active {
+  background: rgba(110, 59, 255, 0.1) !important; /* 10% purple tint */
 }
 
 @layer base {
@@ -131,5 +135,22 @@ body {
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in-up {
+    animation: fadeInUp 0.3s ease-out forwards;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }

@@ -7,8 +7,8 @@ import type { NextLayoutProps } from 'next'
 import type { Metadata } from 'next'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-import 'rsuite/dist/rsuite-no-reset.min.css';
-import { CustomProvider } from 'rsuite';
+import 'rsuite/dist/rsuite-no-reset.min.css'
+import { CustomProvider } from 'rsuite'
 import { QueryClientProvider } from '@/app/providers/query-client-provider'
 import SessionAuthProvider from '@/app/context/SessionAuthProvider'
 
@@ -58,14 +58,12 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang={locale}>
+    <html lang={locale} suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased bg-[#F0FOFO]`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <SessionAuthProvider>
             <QueryClientProvider>
-              <CustomProvider>
-                {children}
-              </CustomProvider>
+              <CustomProvider>{children}</CustomProvider>
             </QueryClientProvider>
           </SessionAuthProvider>
           <ToastContainer
