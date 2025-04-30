@@ -69,7 +69,7 @@ export default async function RootLayout({
             </QueryClientProvider>
           </SessionAuthProvider>
           <ToastContainer
-            position="bottom-right"
+            position="top-right"
             autoClose={3000}
             hideProgressBar={false}
             newestOnTop={false}

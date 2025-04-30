@@ -36,14 +36,14 @@ export function useGetWorkfiles({ tenantId, enabled = true }: UseGetWorkfilesOpt
   })
 
   // Filter workfiles by status
-  const upcoming = data?.filter(w => w.status.toLowerCase() === 'upcoming') || []
-  const inProgress = data?.filter(w => w.status.toLowerCase() === 'in progress') || []
-  const qualityControl = data?.filter(w => w.status.toLowerCase() === 'qc') || []
-  const readyForPickup = data?.filter(w => w.status.toLowerCase() === 'ready for pickup') || []
-  const sublets = data?.filter(w => w.status.toLowerCase() === 'sublets') || []
-  const labor = data?.filter(w => w.status.toLowerCase() === 'labor') || []
-  const reports = data?.filter(w => w.status.toLowerCase() === 'reports') || []
-  const archive = data?.filter(w => w.status.toLowerCase() === 'archive') || []
+  const upcoming = data?.filter(w => w.workfile.status.toLowerCase() === 'upcoming') || []
+  const inProgress = data?.filter(w => w.workfile.status.toLowerCase() === 'in progress') || []
+  const qualityControl = data?.filter(w => w.workfile.status.toLowerCase() === 'qc') || []
+  const readyForPickup = data?.filter(w => w.workfile.status.toLowerCase() === 'ready for pickup') || []
+  const sublets = data?.filter(w => w.workfile.status.toLowerCase() === 'sublets') || []
+  const labor = data?.filter(w => w.workfile.status.toLowerCase() === 'labor') || []
+  const reports = data?.filter(w => w.workfile.status.toLowerCase() === 'reports') || []
+  const archive = data?.filter(w => w.workfile.status.toLowerCase() === 'archive') || []
 
   const workfilesQuantity = {
     upcoming: upcoming.length,

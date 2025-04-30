@@ -19,10 +19,6 @@ export function EditProfileModal({ open, onOpenChange }: EditProfileModalProps) 
   const [language, setLanguage] = useState('English') // Default language
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
-  // Debug: Log the session when modal opens
-  console.log('EditProfileModal session:', session)
-
-  // Mock user data - replace with actual user data from session when available
   const userData = {
     username: session?.user?.firstName && session?.user?.lastName 
       ? `${session.user.firstName} ${session.user.lastName}`

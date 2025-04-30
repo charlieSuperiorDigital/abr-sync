@@ -6,7 +6,7 @@ import {
   VehicleCell,
   SummaryCell,
 } from '@/components/custom-components/custom-table/table-cells'
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { returnsMockData, vendorDetailsMockData, VendorDetail } from '@/app/mocks/parts-management'
 import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
 import { Plus, ChevronDown, Printer, Phone, Mail } from 'lucide-react'
@@ -21,9 +21,10 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useSession } from 'next-auth/react'
-import {  useUpdatePartOrder } from '@/app/api/hooks/useParts'
+import {  useGetTenantPartOrders, useUpdatePartOrder } from '@/app/api/hooks/useParts'
 import { toast } from 'react-toastify'
-import { Part } from '@/app/types/parts'
+import { Part, PartsOrderSummary, TenantPartOrder } from '@/app/types/parts'
+import { createPortal } from 'react-dom'
 
 interface PartsReturn {
   returnId: string
@@ -44,61 +45,28 @@ interface PartsReturn {
 
 export default function Returns() {
   const { data: session } = useSession();
-  // Replace useGetTenantPartOrders with usePartsOnReturnStatus for production data
+  const {  isLoading: isLoadingReturns, ordersWithPartsToBeReturned } = useGetTenantPartOrders({ tenantId: session?.user.tenantId! });
 
   const { updatePartOrder, isLoading: isUpdatingStatus } = useUpdatePartOrder();
 
-  // if (isLoading) return <div>Loading...</div>;
+  if (isLoadingReturns) return <div>Loading...</div>;
   
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number, left: number, width: number } | null>(null);
+  const dropdownButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   const [vendorDetails] = useState<VendorDetail[]>(vendorDetailsMockData)
 
   // Mock data for returns table
-  const mockReturnsData = [
-    {
-      id: 'ret-1',
-      roNumber: 'RO12345',
-      vehicle: {
-        make: 'Toyota',
-        model: 'Camry',
-        year: 2022,
-        imageUrl: 'https://via.placeholder.com/100x60.png?text=Toyota+Camry',
-      },
-      part: 'Front Bumper',
-      status: 'pending',
-      pickedUpDate: '2025-04-19T10:00:00Z',
-      returnedDate: '2025-04-20T14:00:00Z',
-      refundStatus: 'pending',
-      refundAmount: 150.25,
-      vendor: 'OEM Parts Inc.',
-    },
-    {
-      id: 'ret-2',
-      roNumber: 'RO67890',
-      vehicle: {
-        make: 'Honda',
-        model: 'Civic',
-        year: 2021,
-        imageUrl: 'https://via.placeholder.com/100x60.png?text=Honda+Civic',
-      },
-      part: 'Rear Door',
-      status: 'approved',
-      pickedUpDate: '2025-04-18T08:30:00Z',
-      returnedDate: '2025-04-19T13:00:00Z',
-      refundStatus: 'approved',
-      refundAmount: 220.00,
-      vendor: 'Aftermarket World',
-    }
-  ];
-
+  
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (openDropdownId !== null) {
         const target = event.target as HTMLElement;
-        if (!target.closest('.dropdown-container')) {
+        if (!target.closest('.dropdown-container') && 
+            !target.closest('.dropdown-menu-portal')) {
           setOpenDropdownId(null);
         }
       }
@@ -110,11 +78,26 @@ export default function Returns() {
     };
   }, [openDropdownId]);
 
+  const toggleDropdown = (id: string) => {
+    const buttonRef = dropdownButtonRefs.current[id];
+    
+    if (buttonRef) {
+      const rect = buttonRef.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width
+      });
+    }
+    
+    setOpenDropdownId(openDropdownId === id ? null : id);
+  };
+
   const handleRefundStatusChange = useCallback(
-    async (partOrderId: string, insuranceApprovalStatusName: string) => {
+    async (partOrderId: string, newStatus: string) => {
       try {
-        await updatePartOrder(
-          { partOrderId, data: { insuranceApprovalStatus: 1, insuranceApprovalStatusName } },
+        updatePartOrder(
+          { partOrderId, data: { insuranceApprovalStatus: 1, insuranceApprovalStatusName: newStatus } },
           {
             onSuccess: () => toast.success('Status updated successfully!'),
             onError: (error: any) => toast.error('Failed to update status: ' + (error?.message || 'Unknown error')),
@@ -160,7 +143,6 @@ export default function Returns() {
           <TableRow>
             <TableHead className="font-semibold text-black whitespace-nowrap">RO</TableHead>
             <TableHead className="font-semibold text-black whitespace-nowrap">VEHICLE</TableHead>
-            <TableHead className="font-semibold text-black whitespace-nowrap">RETURNED</TableHead>
             <TableHead className="font-semibold text-black whitespace-nowrap">PICKED-UP</TableHead>
             <TableHead className="font-semibold text-black whitespace-nowrap">RETURNED</TableHead>
             <TableHead className="font-semibold text-black whitespace-nowrap">REFUND STATUS</TableHead>
@@ -170,24 +152,23 @@ export default function Returns() {
             <TableHead className="font-semibold text-black whitespace-nowrap"></TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
-          {mockReturnsData.map((item) => (
-            <React.Fragment key={item.id}>
+        {/* <TableBody>
+          {ordersWithPartsToBeReturned.map((item: TenantPartOrder) => (
+            <React.Fragment key={item.opportunityId}>
               <TableRow 
                 className="cursor-pointer hover:bg-gray-50"
-                onClick={() => toggleRow(item.id)}
+                onClick={() => toggleRow(item.opportunityId)}
               >
-                <TableCell className="font-medium">{item.roNumber || '---'}</TableCell>
                 <TableCell>
-                  <VehicleCell
+                  {item.roNumber}
+                </TableCell>
+                <TableCell>
+                  <VehicleCell 
                     make={item.vehicle.make}
                     model={item.vehicle.model}
                     year={item.vehicle.year.toString()}
-                    // imageUrl={item.vehicle.imageUrl}
+                    imageUrl={`https://picsum.photos/seed/${item.opportunityId}/200/100`}
                   />
-                </TableCell>
-                <TableCell className="whitespace-nowrap">
-                  {formatDate(item.returnedDate)}
                 </TableCell>
                 <TableCell>
                   <div className="date-picker-container" onClick={(e) => e.stopPropagation()}>
@@ -210,11 +191,12 @@ export default function Returns() {
                 <TableCell>
                   <div className="relative dropdown-container" onClick={(e) => e.stopPropagation()}>
                     <button
+                      ref={(el) => { dropdownButtonRefs.current[item.id] = el; }}
                       type="button"
                       className="inline-flex justify-between items-center px-4 py-2 w-full text-sm font-medium bg-white rounded-md border border-gray-300 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setOpenDropdownId(openDropdownId === item.id ? null : item.id);
+                        toggleDropdown(item.id);
                       }}
                     >
                       <span className={item.refundStatus === 'pending' ? 'text-amber-600' : 'text-green-600'}>
@@ -222,34 +204,6 @@ export default function Returns() {
                       </span>
                       <ChevronDown className="ml-2 w-4 h-4" />
                     </button>
-                    
-                    {/* Dropdown Menu */}
-                    {openDropdownId === item.id && (
-                      <div className="absolute right-0 z-50 mt-2 w-full bg-white rounded-md ring-1 ring-black ring-opacity-5 shadow-lg origin-top-right focus:outline-none">
-                        <div className="py-1" role="menu" aria-orientation="vertical">
-                          <button
-                            className="block px-4 py-2 w-full text-sm text-left text-amber-600 hover:bg-gray-100"
-                            role="menuitem"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRefundStatusChange(item.id, 'Pending Refund');
-                            }}
-                          >
-                            Pending Refund
-                          </button>
-                          <button
-                            className="block px-4 py-2 w-full text-sm text-left text-green-600 hover:bg-gray-100"
-                            role="menuitem"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRefundStatusChange(item.id, 'Refund Complete');
-                            }}
-                          >
-                            Refund Complete
-                          </button>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </TableCell>
                 <TableCell className="whitespace-nowrap">
@@ -340,22 +294,26 @@ export default function Returns() {
                                   <SummaryCell text={vendor.summary} />
                                 </td>
                                 <td className="py-4 text-sm text-gray-700 whitespace-nowrap bg-gray-300">
-                                  <div className="flex space-x-2">
-                                    <a 
-                                      href={`tel:${vendor.contactInfo.phone}`} 
-                                      className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      <Phone className="w-4 h-4" />
-                                    </a>
-                                    <a 
-                                      href={`mailto:${vendor.contactInfo.email}`} 
-                                      className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      <Mail className="w-4 h-4" />
-                                    </a>
-                                  </div>
+                                  {vendor.contactInfo ? (
+                                    <div className="flex space-x-2">
+                                      <a 
+                                        href={`tel:${vendor.contactInfo.phone}`} 
+                                        className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <Phone className="w-4 h-4" />
+                                      </a>
+                                      <a 
+                                        href={`mailto:${vendor.contactInfo.email}`} 
+                                        className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <Mail className="w-4 h-4" />
+                                      </a>
+                                    </div>
+                                  ) : (
+                                    <span className="text-gray-500">No contact info</span>
+                                  )}
                                 </td>
                               </tr>
                             ))}
@@ -368,8 +326,46 @@ export default function Returns() {
               )}
             </React.Fragment>
           ))}
-        </TableBody>
+        </TableBody> */}
       </Table>
+      
+      {/* Dropdown Portal */}
+      {openDropdownId !== null && dropdownPosition && typeof document !== 'undefined' && createPortal(
+        <div 
+          className="dropdown-menu-portal fixed z-[99999] bg-white rounded-md ring-1 ring-black ring-opacity-5 shadow-lg origin-top-right focus:outline-none"
+          style={{
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
+            width: `${dropdownPosition.width}px`
+          }}
+        >
+          <div className="py-1" role="menu" aria-orientation="vertical">
+            <button
+              className="block px-4 py-2 w-full text-sm text-left text-amber-600 hover:bg-gray-100"
+              role="menuitem"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRefundStatusChange(openDropdownId, 'Pending Refund');
+                setOpenDropdownId(null);
+              }}
+            >
+              Pending Refund
+            </button>
+            <button
+              className="block px-4 py-2 w-full text-sm text-left text-green-600 hover:bg-gray-100"
+              role="menuitem"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRefundStatusChange(openDropdownId, 'Refund Complete');
+                setOpenDropdownId(null);
+              }}
+            >
+              Refund Complete
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }
