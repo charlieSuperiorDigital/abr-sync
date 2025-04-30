@@ -2,11 +2,12 @@ import { Opportunity } from '@/app/types/opportunity'
 import { Button } from '@/components/ui/button'
 import { Printer, Mail, Download } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
-import { useGetOpportunityLogs } from '@/app/api/hooks/useGetOpportunityLogs'
+
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { ContactMethod } from '@/app/types/contact-info.types'
 import { useCall } from '@/app/context/call-context'
 import CallDurationBadge from '@/app/[locale]/custom-components/calls/call-maker'
+import { useGetOpportunityLogs } from '@/app/api/hooks/useOpportunities'
 
 interface OpportunityModalProps {
   opportunity: Opportunity

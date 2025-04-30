@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { DialogTitle } from '@radix-ui/react-dialog'
+import apiService from '@/app/utils/apiService'
 
 // Define the interfaces based on what you provided
 interface CommunicationLog {
@@ -51,7 +52,7 @@ interface Props {
   contactData: ContactData
 }
 
-export default function ContactModal({ contactData }: Props) {
+export default function EmailModal({ contactData }: Props) {
   const [open, setOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'message' | 'email'>('message')
   const [emails, setEmails] = useState<EmailItem[]>([])
@@ -107,43 +108,43 @@ export default function ContactModal({ contactData }: Props) {
       .filter((address) => address.trim() !== '')
 
     if (activeTab === 'email' && recipientEmails.length === 0) {
-      setError('Por favor, añade al menos una dirección de correo válida.')
+      setError('Please add a valid mail')
       return
     }
     if (!message.trim()) {
-      setError('El cuerpo del mensaje no puede estar vacío.')
+      setError('Please the body should not be empty')
       return
     }
 
     setIsSending(true)
 
     try {
-      const emailData = {
-        to: recipientEmails,
-        messageBody: message,
-        attachments: selectedFiles,
+      for (const recipientEmail of recipientEmails) {
+        const emailData = {
+          from: 'officialauto360@gmail.com',
+          to: recipientEmail,
+          body: message,
+          subject: '',
+          //   attachments: selectedFiles,
+        }
+
+        const response = await apiService.post('/api/email', emailData)
+        console.log(`Email succesfull: ${recipientEmail}`, response)
       }
 
-      const response = await sendEmailApi(emailData)
-
-      if (response.success) {
-        console.log('Email enviado exitosamente (simulado)')
-        setOpen(false)
-
-        setMessage('')
-        setEmails([])
-        setSelectedFiles(
-          contactData.attachmentOptions
-            .filter((o) => o.checked)
-            .map((o) => o.name)
-        )
-      } else {
-        setError('Hubo un problema al enviar el email. Inténtalo de nuevo.')
-      }
+      setEmails([])
+      setMessage('')
+      setSelectedFiles(
+        contactData.attachmentOptions
+          .filter((option) => option.checked)
+          .map((option) => option.name)
+      )
     } catch (err) {
-      console.error('Error al enviar email:', err)
+      console.error('Error', err)
       setError(
-        err instanceof Error ? err.message : 'Ocurrió un error desconocido.'
+        err instanceof Error
+          ? err.message
+          : 'An error occurred while sending the email'
       )
     } finally {
       setIsSending(false)
@@ -461,18 +462,23 @@ export default function ContactModal({ contactData }: Props) {
                 placeholder=""
               />
             </div>
+            {error && <p className="mt-2 text-red-500 text-sm">{error}</p>}
           </div>
-
           <div className="mt-6 flex justify-between">
             <Button
               variant="outline"
               onClick={() => setOpen(false)}
               className="px-8 rounded-full border-gray-300 w-full max-w-[250px] h-[45px]"
+              disabled={isSending} // Deshabilitar el botón mientras se envía
             >
               Cancel
             </Button>
-            <Button className="px-8 rounded-full bg-black hover:bg-gray-800 text-white w-full max-w-[250px] h-[45px]">
-              Send
+            <Button
+              className="px-8 rounded-full bg-black hover:bg-gray-800 text-white w-full max-w-[250px] h-[45px]"
+              onClick={handleSend}
+              disabled={isSending}
+            >
+              {isSending ? 'Sending...' : 'Send'}
             </Button>
           </div>
         </div>
