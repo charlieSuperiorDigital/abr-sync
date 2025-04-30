@@ -2,8 +2,11 @@ import { Opportunity } from '@/app/types/opportunity'
 import { Button } from '@/components/ui/button'
 import { Printer, Mail, Download } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
+
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
-import { ContactData, ContactPerson, Insurance, EmailContact, AttachmentOption, ContactMethod, CommunicationLog } from '@/app/types/contact-info.types'
+import { ContactMethod } from '@/app/types/contact-info.types'
+import { useCall } from '@/app/context/call-context'
+import CallDurationBadge from '@/app/[locale]/custom-components/calls/call-maker'
 import { useGetOpportunityLogs } from '@/app/api/hooks/useOpportunities'
 
 interface OpportunityModalProps {
@@ -12,30 +15,31 @@ interface OpportunityModalProps {
 
 // Types for logs
 interface LogUser {
-  id: string;
-  name: string;
-  profilePicture?: string;
+  id: string
+  name: string
+  profilePicture?: string
 }
 
 interface LogEntry {
-  type: string;
-  date: string;
-  user: string | LogUser;
+  type: string
+  date: string
+  user: string | LogUser
   // ...other fields as needed
 }
 
 const OpportunityModal = ({ opportunity }: OpportunityModalProps) => {
   const { logs, isLoading } = useGetOpportunityLogs(opportunity.opportunityId)
+  const { status: CallSatus } = useCall()
 
   // Ensure logs is always an array
-  const safeLogs: LogEntry[] = Array.isArray(logs) ? logs : [];
+  const safeLogs: LogEntry[] = Array.isArray(logs) ? logs : []
 
   const qcItems: { label: string; checked: boolean }[] = [
     { label: 'SIGNATURE', checked: opportunity.status === 'Estimate' },
     { label: 'PRE-SCAN', checked: opportunity.preScanCompleted || false },
     { label: 'POST-SCAN', checked: opportunity.postScanCompleted || false },
     { label: 'SUBLETS', checked: opportunity.subletsCompleted || false },
-    { label: 'FINAL QC', checked: opportunity.qcCompleted || false }
+    { label: 'FINAL QC', checked: opportunity.qcCompleted || false },
   ]
 
   // Format date helper
@@ -44,7 +48,7 @@ const OpportunityModal = ({ opportunity }: OpportunityModalProps) => {
     return new Date(date).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
-      year: 'numeric'
+      year: 'numeric',
     })
   }
 
@@ -54,53 +58,63 @@ const OpportunityModal = ({ opportunity }: OpportunityModalProps) => {
     return new Date(date).toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
-      hour12: true
+      hour12: true,
     })
   }
 
   // Helper to safely get owner properties
   const getOwnerProp = (owner: any, prop: string, fallback = '') => {
-    if (typeof owner === 'object' && owner !== null) return owner[prop] ?? fallback;
-    return prop === 'name' ? owner || fallback : fallback;
-  };
+    if (typeof owner === 'object' && owner !== null)
+      return owner[prop] ?? fallback
+    return prop === 'name' ? owner || fallback : fallback
+  }
 
   return (
     <div className="overflow-y-auto">
       {/* Header Section */}
       <div className="flex justify-between items-start mb-6">
         <div>
-          <div className='flex flex-row gap-2 items-center mb-2'>
+          <div className="flex flex-row gap-2 items-center mb-2">
             <h2 className="text-xl font-bold">
-              {opportunity.vehicle.exteriorColor} {opportunity.vehicle.make} {opportunity.vehicle.year}
-
+              {opportunity.vehicle.exteriorColor} {opportunity.vehicle.make}{' '}
+              {opportunity.vehicle.year}
             </h2>
             <h2 className="ml-6 text-xl">
-              {opportunity.roNumber ? ` RO #${opportunity.roNumber}` : `   ${opportunity.opportunityId}`}
-
+              {opportunity.roNumber
+                ? ` RO #${opportunity.roNumber}`
+                : `   ${opportunity.opportunityId}`}
             </h2>
             <div className="flex flex-wrap gap-2 items-center mb-2 ml-6">
               {opportunity.priority === 'High' && (
-                <span className="px-2 py-1 text-xs text-white bg-red-500 rounded">HIGH PRIORITY</span>
+                <span className="px-2 py-1 text-xs text-white bg-red-500 rounded">
+                  HIGH PRIORITY
+                </span>
               )}
-              <span className="px-2 py-1 text-xs text-white bg-green-500 rounded">OPEN OPPORTUNITY</span>
+              <span className="px-2 py-1 text-xs text-white bg-green-500 rounded">
+                OPEN OPPORTUNITY
+              </span>
               {opportunity.isInRental && (
-                <span className="px-2 py-1 text-xs text-white bg-blue-500 rounded">IN RENTAL</span>
+                <span className="px-2 py-1 text-xs text-white bg-blue-500 rounded">
+                  IN RENTAL
+                </span>
               )}
               {opportunity.insurance.company && (
-                <span className="px-2 py-1 text-xs text-white bg-purple-500 rounded">{opportunity.insurance.company.toUpperCase()}</span>
+                <span className="px-2 py-1 text-xs text-white bg-purple-500 rounded">
+                  {opportunity.insurance.company.toUpperCase()}
+                </span>
               )}
               {opportunity.insurance.approved && (
-                <span className="px-2 py-1 text-xs text-white bg-gray-500 rounded">APPROVED BY INSURANCE</span>
+                <span className="px-2 py-1 text-xs text-white bg-gray-500 rounded">
+                  APPROVED BY INSURANCE
+                </span>
               )}
             </div>
-
           </div>
 
           {/* Photo Section */}
-
-       
         </div>
         <div className="flex gap-2">
+          {CallSatus === 'calling' && <CallDurationBadge />}
           <Button variant="outline" size="sm">
             <Mail className="mr-1 w-4 h-4" />
           </Button>
@@ -121,7 +135,8 @@ const OpportunityModal = ({ opportunity }: OpportunityModalProps) => {
             <div className="space-y-2">
               {/* Vehicle Info */}
               <div className="flex gap-4 mt-2 rounded-lg">
-                {opportunity.vehicle.photos && opportunity.vehicle.photos.length > 0 ? (
+                {opportunity.vehicle.photos &&
+                opportunity.vehicle.photos.length > 0 ? (
                   <img
                     src={opportunity.vehicle.photos[0].url}
                     alt={`${opportunity.vehicle.year} ${opportunity.vehicle.make} ${opportunity.vehicle.model}`}
@@ -135,15 +150,23 @@ const OpportunityModal = ({ opportunity }: OpportunityModalProps) => {
                 <div className="flex-1">
                   <div className="mb-2">
                     <span className="font-semibold">Estimate: </span>
-                    <span>{opportunity.estimateAmount ? `$ ${formatCurrency(opportunity.estimateAmount)}` : 'No Estimate Amount'}</span>
+                    <span>
+                      {opportunity.estimateAmount
+                        ? `$ ${formatCurrency(opportunity.estimateAmount)}`
+                        : 'No Estimate Amount'}
+                    </span>
                   </div>
                   <div className="mb-2">
                     <span className="font-semibold">Tech: </span>
-                    <span>{opportunity.assignedTech?.name || 'Unassigned'}</span>
+                    <span>
+                      {opportunity.assignedTech?.name || 'Unassigned'}
+                    </span>
                   </div>
                   <div className="mb-2">
                     <span className="font-semibold">Est: </span>
-                    <span>{opportunity.estimator?.estimatorName || 'Unassigned'}</span>
+                    <span>
+                      {opportunity.estimator?.estimatorName || 'Unassigned'}
+                    </span>
                   </div>
                   <p className="mt-2 text-sm text-gray-700">
                     {opportunity.vehicle.damageDescription}
@@ -178,13 +201,30 @@ const OpportunityModal = ({ opportunity }: OpportunityModalProps) => {
                       {safeLogs.map((log, index) => (
                         <tr key={index} className="border-b border-gray-200">
                           <td className="py-2">{log.type}</td>
-                          <td className="py-2">{new Date(log.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</td>
-                          <td className="py-2">{typeof log.user === 'object' && log.user !== null ? log.user.name : log.user || 'Unknown'}</td>
+                          <td className="py-2">
+                            {new Date(log.date).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                              hour: 'numeric',
+                              minute: '2-digit',
+                            })}
+                          </td>
+                          <td className="py-2">
+                            {typeof log.user === 'object' && log.user !== null
+                              ? log.user.name
+                              : log.user || 'Unknown'}
+                          </td>
                         </tr>
                       ))}
                       {safeLogs.length === 0 && (
                         <tr>
-                          <td colSpan={3} className="py-2 text-center text-gray-500">No logs available</td>
+                          <td
+                            colSpan={3}
+                            className="py-2 text-center text-gray-500"
+                          >
+                            No logs available
+                          </td>
                         </tr>
                       )}
                     </tbody>
@@ -203,7 +243,8 @@ const OpportunityModal = ({ opportunity }: OpportunityModalProps) => {
                 <div className="flex flex-col gap-2">
                   <div className="flex gap-4 items-center">
                     <h3 className="font-semibold">
-                      {getOwnerProp(opportunity.owner, 'name', 'Unknown')}, Vehicle Owner
+                      {getOwnerProp(opportunity.owner, 'name', 'Unknown')},
+                      Vehicle Owner
                     </h3>
                     <ContactInfo
                       preferredContactMethod={ContactMethod.phone}
@@ -212,31 +253,44 @@ const OpportunityModal = ({ opportunity }: OpportunityModalProps) => {
                           name: getOwnerProp(opportunity.owner, 'name', ''),
                           role: 'Vehicle Owner',
                           address: '',
-                          company: getOwnerProp(opportunity.owner, 'company', ''),
-                          preferredContactType: 'phone'
+                          company: getOwnerProp(
+                            opportunity.owner,
+                            'company',
+                            ''
+                          ),
+                          preferredContactType: 'phone',
                         },
                         insurance: {
                           company: opportunity.insurance.company || '',
                           representative: '',
                           pendingEstimates: 0,
                           pendingReimbursements: 0,
-                          updates: ''
+                          updates: '',
                         },
                         communicationLogs: [],
-                        emailContacts: [{
-                          email: getOwnerProp(opportunity.owner, 'email', ''),
-                          isPrimary: true
-                        }],
-                        attachmentOptions: []
+                        emailContacts: [
+                          {
+                            email: getOwnerProp(opportunity.owner, 'email', ''),
+                            isPrimary: true,
+                          },
+                        ],
+                        attachmentOptions: [],
                       }}
                     />
                   </div>
                   <p className="text-sm text-gray-600">
                     {getOwnerProp(opportunity.owner, 'phone', '')}
-                    {getOwnerProp(opportunity.owner, 'secondaryPhone', '') && ` / ${getOwnerProp(opportunity.owner, 'secondaryPhone', '')}`}
+                    {getOwnerProp(opportunity.owner, 'secondaryPhone', '') &&
+                      ` / ${getOwnerProp(opportunity.owner, 'secondaryPhone', '')}`}
                     <br />
                     {getOwnerProp(opportunity.owner, 'email', '')}
-                    {getOwnerProp(opportunity.owner, 'company', '') && <><br />Company: {getOwnerProp(opportunity.owner, 'company', '')}</>}
+                    {getOwnerProp(opportunity.owner, 'company', '') && (
+                      <>
+                        <br />
+                        Company:{' '}
+                        {getOwnerProp(opportunity.owner, 'company', '')}
+                      </>
+                    )}
                   </p>
                 </div>
               </div>
@@ -245,8 +299,18 @@ const OpportunityModal = ({ opportunity }: OpportunityModalProps) => {
                 <h3 className="font-semibold">Adjuster</h3>
                 <p className="text-sm text-gray-600">
                   {opportunity.insurance.adjuster}
-                  {opportunity.insurance.adjusterPhone && <><br />Phone: {opportunity.insurance.adjusterPhone}</>}
-                  {opportunity.insurance.adjusterEmail && <><br />Email: {opportunity.insurance.adjusterEmail}</>}
+                  {opportunity.insurance.adjusterPhone && (
+                    <>
+                      <br />
+                      Phone: {opportunity.insurance.adjusterPhone}
+                    </>
+                  )}
+                  {opportunity.insurance.adjusterEmail && (
+                    <>
+                      <br />
+                      Email: {opportunity.insurance.adjusterEmail}
+                    </>
+                  )}
                 </p>
               </div>
 
@@ -254,7 +318,9 @@ const OpportunityModal = ({ opportunity }: OpportunityModalProps) => {
                 <h3 className="font-semibold">Attachments</h3>
                 <div className="flex gap-2">
                   {opportunity.attachments?.map((attachment) => (
-                    <Button key={attachment.id} variant="outline" size="sm">{attachment.type}</Button>
+                    <Button key={attachment.id} variant="outline" size="sm">
+                      {attachment.type}
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -263,7 +329,10 @@ const OpportunityModal = ({ opportunity }: OpportunityModalProps) => {
                 <div className="flex justify-between items-center mt-8 mb-2">
                   <h3 className="font-semibold">Last Communication Summary</h3>
                   <span className="text-sm text-gray-500">
-                    Last updated {opportunity.lastUpdatedDate ? 'on ' + formatDate(opportunity.lastUpdatedDate) : '---'}
+                    Last updated{' '}
+                    {opportunity.lastUpdatedDate
+                      ? 'on ' + formatDate(opportunity.lastUpdatedDate)
+                      : '---'}
                   </span>
                 </div>
                 <div className="space-y-2 text-sm">
@@ -286,8 +355,12 @@ const OpportunityModal = ({ opportunity }: OpportunityModalProps) => {
               <div className="space-y-2">
                 {qcItems.map((item, index) => (
                   <div key={index} className="flex gap-2 items-center">
-                    <div className={`w-4 h-4 border rounded-sm flex items-center justify-center ${item.checked ? 'bg-green-500 border-green-500' : 'border-gray-300'}`}>
-                      {item.checked && <span className="text-xs text-white">✓</span>}
+                    <div
+                      className={`w-4 h-4 border rounded-sm flex items-center justify-center ${item.checked ? 'bg-green-500 border-green-500' : 'border-gray-300'}`}
+                    >
+                      {item.checked && (
+                        <span className="text-xs text-white">✓</span>
+                      )}
                     </div>
                     <span className="text-sm">{item.label}</span>
                   </div>
@@ -309,15 +382,21 @@ const OpportunityModal = ({ opportunity }: OpportunityModalProps) => {
                 <div className="flex justify-between text-sm">
                   <span>CORES</span>
                   <div className="flex gap-2">
-                    <span className="text-red-500">{opportunity.parts?.cores || 0}</span>
-                    <span className="text-red-500">${formatCurrency(opportunity.parts?.coresAmount || 0)}</span>
+                    <span className="text-red-500">
+                      {opportunity.parts?.cores || 0}
+                    </span>
+                    <span className="text-red-500">
+                      ${formatCurrency(opportunity.parts?.coresAmount || 0)}
+                    </span>
                   </div>
                 </div>
                 <div className="flex justify-between text-sm font-semibold">
                   <span>TOTAL RETURNS</span>
                   <div className="flex gap-2">
                     <span>{opportunity.parts?.returns || 0}</span>
-                    <span>${formatCurrency(opportunity.parts?.returnsAmount || 0)}</span>
+                    <span>
+                      ${formatCurrency(opportunity.parts?.returnsAmount || 0)}
+                    </span>
                   </div>
                 </div>
               </div>
