@@ -43,6 +43,10 @@ interface DataTableProps<TData, TValue> {
    * Controls visibility of PaginationControls. Default: true
    */
   showPaginationControls?: boolean
+  /**
+   * Optional record of row IDs that should be hidden
+   */
+  hiddenRows?: Record<string, boolean>
 }
 
 export function DataTable<TData, TValue>({
@@ -56,6 +60,7 @@ export function DataTable<TData, TValue>({
   getSubRows,
   rowHeightClass = '',
   showPaginationControls = true,
+  hiddenRows = {},
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [pageIndex, setPageIndex] = React.useState(0)
@@ -117,40 +122,71 @@ export function DataTable<TData, TValue>({
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <React.Fragment key={row.id}>
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && 'selected'}
-                    className={cn(
-                      rowHeightClass,
-                      onRowClick && 'cursor-pointer hover:bg-muted/50'
-                    )}
-                    onClick={(e) => {
-                      // Check if the click was on a button or link
-                      const target = e.target as HTMLElement
-                      const isButton = target.tagName === 'BUTTON' || 
-                        target.closest('button') || 
-                        target.closest('a')
-                      
-                      if (!isButton) {
-                        onRowClick?.(row.original)
-                      }
-                    }}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className={rowHeightClass}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                  {getSubRows && getSubRows(row.original).map((subRow) => (
-                    <TableRow key={subRow.id} className={cn('bg-gray-50', rowHeightClass)}>
-                      <TableCell colSpan={columns.length} className={rowHeightClass}>
-                        {subRow.details}
-                      </TableCell>
+                  {/* Only show the row if it's not expanded */}
+                  {!(getSubRows && getSubRows(row.original).length > 0) && (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && 'selected'}
+                      className={cn(
+                        rowHeightClass,
+                        onRowClick && 'cursor-pointer hover:bg-muted/50',
+                        // Add red background for urgent priority tasks
+                        (() => {
+                          // Type guard to check if row has priority property
+                          const hasUrgentPriority = (obj: any): boolean => {
+                            if (!obj || !obj.priority) return false;
+                            
+                            if (typeof obj.priority === 'object' && obj.priority.text === 'Urgent') {
+                              return true;
+                            }
+                            
+                            if (typeof obj.priority === 'string' && obj.priority === 'Urgent') {
+                              return true;
+                            }
+                            
+                            return false;
+                          };
+                          
+                          return hasUrgentPriority(row.original) ? 'bg-[#F3D7D7]' : '';
+                        })()
+                      )}
+                      onClick={(e) => {
+                        // Check if the click was on a button or link
+                        const target = e.target as HTMLElement
+                        const isButton = target.tagName === 'BUTTON' || 
+                          target.closest('button') || 
+                          target.closest('a')
+                        
+                        if (!isButton) {
+                          onRowClick?.(row.original)
+                        }
+                      }}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id} className={rowHeightClass}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
                     </TableRow>
+                  )}
+                  
+                  {/* Show expanded details if available */}
+                  {getSubRows && getSubRows(row.original).map((subRow) => (
+                    <tr 
+                      key={subRow.id} 
+                      className={cn('border-b bg-[#E3E3E3] cursor-pointer', rowHeightClass)}
+                      onClick={(e) => {
+                        // When clicking on the expanded details, toggle the row
+                        onRowClick?.(row.original);
+                      }}
+                    >
+                      <td colSpan={columns.length} className={cn('p-2 align-middle', rowHeightClass)}>
+                        {subRow.details}
+                      </td>
+                    </tr>
                   ))}
                 </React.Fragment>
               ))

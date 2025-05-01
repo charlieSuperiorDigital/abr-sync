@@ -25,7 +25,7 @@ import {
   WarningCell,
 } from '@/components/custom-components/custom-table/table-cells'
 import { ColumnDef } from '@tanstack/react-table'
-import { MessageSquareMore, PanelTop, ChevronDown } from 'lucide-react'
+import { MessageSquareMore, PanelTop, ChevronDown, Trash2, Pencil } from 'lucide-react'
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 
 import { Task, TaskRelation } from '@/app/types/task'
@@ -99,6 +99,7 @@ export default function CreatedByMe() {
   // Get tasks data from context
   const { createdTasks, isLoadingCreated, errorCreated } = useTasksContext()
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({})
+  const [hiddenRows, setHiddenRows] = useState<Record<string, boolean>>({})
 
   // Transform API tasks to app task format and filter for non-completed tasks only
   const tasks = createdTasks
@@ -110,10 +111,22 @@ export default function CreatedByMe() {
     : []
 
   const toggleRow = (taskId: string) => {
-    setExpandedRows(prev => ({
-      ...prev,
-      [taskId]: !prev[taskId]
-    }))
+    // Toggle expanded state
+    setExpandedRows(prev => {
+      const newState = {
+        ...prev,
+        [taskId]: !prev[taskId]
+      };
+      
+      // If we're expanding the row, hide the original row
+      // If we're collapsing, show the original row again
+      setHiddenRows(prevHidden => ({
+        ...prevHidden,
+        [taskId]: !prev[taskId] // Hide if expanding, show if collapsing
+      }));
+      
+      return newState;
+    });
   }
 
   const columns: ColumnDef<TaskRow>[] = [
@@ -271,6 +284,7 @@ export default function CreatedByMe() {
       }
     }
   ]
+  console.log('tasks', tasks)
 
   return (
     <div className="w-full">
@@ -290,12 +304,13 @@ export default function CreatedByMe() {
           pageSizeOptions={[5, 10, 20, 30, 40, 50]}
           showPageSize={true}
           onRowClick={(row) => toggleRow(row.id)}
+          hiddenRows={hiddenRows}
           getSubRows={(row) => expandedRows[row.id] ? [
             {
               id: `${row.id}-details`,
               details: (
                 <div
-                  className="px-4 bg-gray-50 cursor-pointer hover:bg-gray-100"
+                  className="px-4 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation()
                     toggleRow(row.id)
@@ -303,84 +318,99 @@ export default function CreatedByMe() {
                 >
 
                   <div className='py-6'>
-
                     {/* Title and ID */}
                     <div className="flex flex-row justify-between flex-2">
                       <div className="flex gap-8 items-center">
                         <h2 className="text-xl font-bold">{row.title}</h2>
-                        <span className="font-medium">{row.id}</span>
-                        <span className="font-medium">RELATED TO WILL GO HERE</span>
-                      </div>
-                      {/* Actions */}
-                      <div className="flex items-center mr-8">
-                        <span>
-                          ACTIONS
+                        <span className="font-medium">ID #{row.id}</span>
+                        <span 
+                          className={`font-medium px-2 py-1 rounded-full text-white ${
+                            typeof row.priority === 'string' 
+                              ? 'bg-slate-500' 
+                              : row.priority.variant === 'danger' 
+                                ? 'bg-red-600' 
+                                : row.priority.variant === 'success' 
+                                  ? 'bg-[#0F6C40]' 
+                                  : row.priority.variant === 'slate' 
+                                    ? 'bg-[#6E6E6E]' 
+                                    : 'bg-amber-500'
+                          }`}
+                        >
+                          {typeof row.priority === 'string' ? row.priority : row.priority.text}
                         </span>
                       </div>
+                      {/* Actions */}
+                      <div className="flex items-center gap-4">
+                        <button className="bg-black text-white px-4 py-2 rounded-full">
+                          {row.status === 'open' ? 'Mark as done' : 'Done'}
+                        </button>
+                        <button className="p-2 rounded-full hover:bg-gray-200">
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                        <button className="p-2 rounded-full hover:bg-gray-200">
+                          <Pencil className="w-5 h-5" />
+                        </button>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Bottom two containers */}
-                  <div className='flex flex-row justify-between items-start py-6 border-t border-slate-200'>
 
-                    {/* Description, name and contact */}
-                    {/* Name and Representative */}
-                    <div className="flex flex-col gap-6 pr-10 w-full border-r border-slate-200">
+
+                  {/* Main information */}
+                  <div className='py-4 border-t border-slate-200 flex flex-row gap-10'>
+                    {/* Name and contact info row */}
+                    <div className='flex flex-col gap-3 mb-4'>
                       <div>
-                        <div className='flex gap-8'>
-                          <div className="flex flex-col">
-                            <span className="font-medium">Name:</span>
-                            <span className="font-bold underline whitespace-nowrap">{row.title}</span>
+                        <div className="flex items-center gap-6">
+                          <div>
+                            <div className="text-sm text-black">NAME:</div>
+                            <div className="font-semibold text-black underline">{row.title}</div>
                           </div>
-                          <div className="flex flex-col">
-                            <span className="font-medium">Representative:</span>
-                            REPRESENTATIVE NAME
-                          </div>
-                          <div className="">
-                           
-                           <ContactInfo/>
-
-                          </div>
+                        
+                        <div>
+                          <div className="text-sm text-black">REPRESENTATIVE:</div>
+                          <div>REPRESENTATIVE NAME</div>
                         </div>
+                        <div className="flex items-center gap-3">
+                        <ContactInfo/>
                       </div>
-
-                      {/* Description itself */}
-                      <div>
-                        <div className="flex flex-col">
-                          <span className="mt-4 mb-2 font-medium">DESCRIPTION</span>
-                          {/* <span>{row.description}</span> */}
-                          <span>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Suscipit debitis dignissimos quaerat deserunt aliquam ipsum veniam quod est sapiente consequuntur molestiae, iure, eius quos necessitatibus at, in corporis maxime commodi? Unde repudiandae, quibusdam minus explicabo ducimus, nobis libero doloremque quod, autem voluptate porro deserunt asperiores animi illo error? Quod, eveniet laborum voluptatibus voluptate qui assumenda pariatur sed nihil saepe quia. Asperiores doloribus accusamus fugiat dolorem atque quisquam dolore modi rerum, quaerat voluptatibus! Quibusdam reiciendis expedita iusto adipisci quos alias eum praesentium voluptatum dolor dolorum laudantium harum beatae nam, aliquam magnam, commodi, amet incidunt cumque corrupti culpa accusantium magni atque inventore mollitia. Recusandae distinctio vitae maxime sit illo pariatur quasi accusantium animi tempora, odit eos nemo odio error accusamus voluptates iusto ea molestias voluptatibus similique ad quia tempore dignissimos! Aspernatur odit ducimus voluptates voluptatum temporibus voluptatibus quae corrupti eos, rem error exercitationem excepturi deserunt, possimus obcaecati! Provident quaerat, earum alias cumque voluptate dolor exercitationem. Laboriosam minus repudiandae molestias ipsa! Incidunt, dolor nemo, voluptate adipisci voluptates consequatur corrupti sit molestias excepturi, repellat deserunt recusandae? Temporibus provident libero eligendi vitae sapiente ab corrupti quod consequatur atque totam nam quos cumque repellat, saepe illum laborum autem veritatis sed officiis, consequuntur dolor? Rem, eius consequuntur?</span>
-                        </div>
+                      </div>
+                      </div>
+                      {/* Description */}
+                      <div className="mb-4">
+                        <div className="text-sm text-black mb-1">DESCRIPTION</div>
+                        <div className="text-sm">{row.description || ""}</div>
                       </div>
                     </div>
-                    {/* Assignee, Creator and dates */}
-                    <div className='flex gap-8 p-4 mr-[200px]  '>
+                    
 
-                      <div className="flex flex-col gap-8">
-                        <div className="flex flex-col">
-                          <span className="font-medium whitespace-nowrap">Created By:</span>
-                          <span className="whitespace-nowrap">JOHN KELLY</span>
+                    
+                    {/* Task details in grid layout */}
+                    <div className="grid grid-cols-2 gap-10">
+                      <div className="flex flex-col gap-4">
+                        <div>
+                          <div className="text-sm text-black">CREATED BY:</div>
+                          <div>{row.createdByUser?.firstName + ' ' + row.createdByUser?.lastName}</div>
                         </div>
-                        <div className="flex flex-col">
-                          <span className="font-medium whitespace-nowrap">Created Date:</span>
-                          <span>{new Date(row.createdAt).toLocaleDateString()}</span>
+                        
+                        <div>
+                          <div className="text-sm text-black">CREATED DATE:</div>
+                          <div>{new Date(row.createdAt).toLocaleDateString()}</div>
                         </div>
                       </div>
-
-                      <div className="flex flex-col gap-8">
-                        <div className="flex flex-col">
-                          <span className="font-medium">Assignee:</span>
-                          <span className="whitespace-nowrap">MIKE JHONSON</span>
+                      <div className="flex flex-col gap-4">
+                        <div>
+                          <div className="text-sm text-black">ASSIGNEE:</div>
+                          <div>{row.assignedUser?.firstName + ' ' + row.assignedUser?.lastName}</div>
                         </div>
-                        <div className="flex flex-col">
-                          <span className="font-medium">Due Date:</span>
-                          <span>{new Date(row.dueDate).toLocaleDateString()}</span>
+                        
+                        <div>
+                          <div className="text-sm text-black">DUE DATE:</div>
+                          <div>{new Date(row.dueDate).toLocaleDateString()}</div>
                         </div>
                       </div>
-
                     </div>
                   </div>
-
                 </div>
               )
             }

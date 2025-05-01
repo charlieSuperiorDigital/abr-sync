@@ -124,8 +124,8 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           </div>
         </aside>
         <main className="flex flex-col py-8 w-full min-h-screen pl-16">
-                      <CallReceiver />
-                      {children}
+          <CallReceiver />
+          {children}
         </main>
       </div>
       <EditProfileModal
