@@ -27,6 +27,83 @@ export enum RepairStage {
 
 export type PartsWarningStatus = "ORDERED" | "UPDATED" | undefined;
 
+/**
+ * Represents the API response format for the getOpportunityById endpoint
+ */
+export interface GetOpportunityByIdApiResponse {
+  id: string;
+  tenantId: string;
+  insuranceId: string;
+  insurance: {
+    id: string;
+    name: string;
+    provider: string;
+    claimNumber: string;
+    policyNumber: string;
+    typeOfLoss: string;
+    deductible: string;
+    contactName: string;
+    contactPhone: string;
+    adjuster: string;
+    adjusterPhone: string;
+    adjusterEmail: string;
+    approved: boolean;
+    createdAt: string;
+    updatedAt: string;
+  } | null;
+  vehicleId: string;
+  vehicle: {
+    id: string;
+    ownerId: string;
+    owner: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      phone: string;
+      email: string;
+      address: string;
+      company?: string;
+      createdAt: string;
+      updatedAt: string;
+    };
+    make: string;
+    model: string;
+    year: number;
+    vin: string;
+    licensePlate: string;
+    exteriorColor: string;
+    interiorColor: string;
+    mileageIn: number;
+    damageDescription: string;
+    isCommercial: boolean;
+    createdAt: string;
+    updatedAt: string;
+  } | null;
+  locationId: null;
+  location: null;
+  documentId: null;
+  document: null;
+  status: string;
+  roNumber: string;
+  labourHours: null;
+  createdAt: string;
+  updatedAt: string;
+  _1stCall: string;
+  _2ndCall: string;
+  dropDate: string | null;
+  summary: string;
+  inDate: string;
+  inRental: boolean;
+  estimatedCompletionDate: string;
+  partsOrders: any[];
+  estimatorId: string;
+  estimator: {
+    id: string;
+    name: string;
+    profilePicture?: string;
+  };
+}
+
 export type Opportunity = {
   opportunityId: string; // Unique identifier for the opportunity
   roNumber?: string; // RO number

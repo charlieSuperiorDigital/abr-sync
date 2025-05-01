@@ -5,7 +5,8 @@ import {
   getLastOpportunityLog,
   OpportunityLogCreateVM 
 } from '../functions/communication'
-import { getOpportunitiesList, OpportunityResponse } from '@/app/api/functions/opportunities'
+import { getOpportunitiesList, getOpportunityById, OpportunityResponse } from '@/app/api/functions/opportunities'
+import { GetOpportunityByIdApiResponse } from '@/app/types/opportunity'
 import { isValidDate } from '@/app/utils/is-valid-date'
 
 /**
@@ -140,5 +141,43 @@ export function useCreateOpportunityLog() {
     isError: mutation.isError,
     error: mutation.error,
     reset: mutation.reset
+  }
+}
+
+/**
+ * Hook for fetching a specific opportunity by its ID
+ * @param opportunityId - The ID of the opportunity
+ * @param options - Additional options for the query
+ * @returns Query result with opportunity data, loading state, and error
+ */
+export function useGetOpportunityById(
+  opportunityId: string,
+  options: { enabled?: boolean } = {}
+) {
+  const { data, isLoading, error } = useQuery<GetOpportunityByIdApiResponse>({
+    queryKey: ['opportunity', opportunityId],
+    queryFn: async () => {
+      try {
+        if (!opportunityId) {
+          console.log('No opportunity ID provided to useGetOpportunityById')
+          throw new Error('No opportunity ID provided')
+        }
+        console.log(`Fetching opportunity with ID ${opportunityId}`)
+        return await getOpportunityById({ opportunityId })
+      } catch (error) {
+        console.error('Error in useGetOpportunityById hook:', error)
+        throw error
+      }
+    },
+    enabled: options.enabled !== false && !!opportunityId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1, // Only retry once
+    refetchOnWindowFocus: false, // Don't refetch when window gains focus
+  })
+
+  return {
+    opportunity: data,
+    isLoading,
+    error
   }
 }
