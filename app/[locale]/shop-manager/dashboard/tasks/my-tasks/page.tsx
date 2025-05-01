@@ -25,7 +25,7 @@ import {
   WarningCell,
 } from '@/components/custom-components/custom-table/table-cells'
 import { ColumnDef } from '@tanstack/react-table'
-import { MessageSquareMore, PanelTop } from 'lucide-react'
+import { MessageSquareMore, PanelTop, ChevronDown, Trash2, Pencil } from 'lucide-react'
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 
 import { Task } from '@/app/types/task'
@@ -91,6 +91,27 @@ const getPriorityVariant = (priority: string): 'danger' | 'warning' | 'success' 
 export default function MyTasks() {
   // Get tasks data from context
   const { assignedTasks, isLoadingAssigned, errorAssigned } = useTasksContext()
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({})
+  const [hiddenRows, setHiddenRows] = useState<Record<string, boolean>>({})
+
+  const toggleRow = (taskId: string) => {
+    // Toggle expanded state
+    setExpandedRows(prev => {
+      const newState = {
+        ...prev,
+        [taskId]: !prev[taskId]
+      };
+      
+      // If we're expanding the row, hide the original row
+      // If we're collapsing, show the original row again
+      setHiddenRows(prevHidden => ({
+        ...prevHidden,
+        [taskId]: !prev[taskId] // Hide if expanding, show if collapsing
+      }));
+      
+      return newState;
+    });
+  }
   
   // Transform API tasks to app task format and filter for non-completed tasks only
   const tasks = assignedTasks 
@@ -105,7 +126,20 @@ export default function MyTasks() {
     {
       accessorKey: 'id',
       header: 'Task ID',
-      
+      cell: ({ row }) => {
+        return (
+          <div className="flex items-center space-x-2">
+            <ChevronDown
+              className={`w-4 h-4 ${expandedRows[row.original.id] ? 'rotate-180' : ''} transform transition-transform`}
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleRow(row.original.id)
+              }}
+            />
+            <span>{row.original.id}</span>
+          </div>
+        )
+      },
     },
     {
       accessorKey: 'priority',
@@ -256,6 +290,123 @@ export default function MyTasks() {
           pageSize={10}
           pageSizeOptions={[5, 10, 20, 30, 40, 50]}
           showPageSize={true}
+          onRowClick={(row) => toggleRow(row.id)}
+          hiddenRows={hiddenRows}
+          getSubRows={(row) => expandedRows[row.id] ? [
+            {
+              id: `${row.id}-details`,
+              details: (
+                <div
+                  className="px-4 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    toggleRow(row.id)
+                  }}
+                >
+                  <div className='py-6'>
+                    {/* Title and ID */}
+                    <div className="flex flex-row justify-between flex-2">
+                      <div className="flex gap-8 items-center">
+                        <h2 className="text-xl font-bold">{row.title}</h2>
+                        <span className="font-medium">ID #{row.id}</span>
+                        <span 
+                          className={`font-medium px-2 py-1 rounded-full text-white ${
+                            typeof row.priority === 'string' 
+                              ? 'bg-slate-500' 
+                              : row.priority.variant === 'danger' 
+                                ? 'bg-red-600' 
+                                : row.priority.variant === 'success' 
+                                  ? 'bg-[#0F6C40]' 
+                                  : row.priority.variant === 'slate' 
+                                    ? 'bg-[#6E6E6E]' 
+                                    : 'bg-amber-500'
+                          }`}
+                        >
+                          {typeof row.priority === 'string' ? row.priority : row.priority.text}
+                        </span>
+                      </div>
+                      {/* Actions */}
+                      <div className="flex items-center gap-4">
+                        <button className="bg-black text-white px-4 py-2 rounded-full">
+                          {row.status === 'open' ? 'Mark as done' : 'Done'}
+                        </button>
+                        <button className="p-2 rounded-full hover:bg-gray-200">
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                        <button className="p-2 rounded-full hover:bg-gray-200">
+                          <Pencil className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Main information */}
+                  <div className='py-4 border-t border-slate-200 flex flex-row gap-10'>
+                    {/* Name and contact info row */}
+                    <div className='flex flex-col gap-3 mb-4'>
+                      <div>
+                        <div className="flex items-center gap-6">
+                          <div>
+                            <div className="text-sm text-black">NAME:</div>
+                            <div className="font-semibold text-black underline">{row.title}</div>
+                          </div>
+                        
+                        <div>
+                          <div className="text-sm text-black">REPRESENTATIVE:</div>
+                          <div>REPRESENTATIVE NAME</div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                        <ContactInfo/>
+                      </div>
+                      </div>
+                      </div>
+                      {/* Description */}
+                      <div className="mb-4">
+                        <div className="text-sm text-black mb-1">DESCRIPTION</div>
+                        <div className="text-sm">{row.description || ""}</div>
+                      </div>
+                    </div>
+                    
+                    {/* Task details in grid layout */}
+                    <div className="grid grid-cols-2 gap-10">
+                      <div className="flex flex-col gap-4">
+                        <div>
+                          <div className="text-sm text-black">CREATED BY:</div>
+                          <div>{row.createdByUser?.firstName + ' ' + row.createdByUser?.lastName}</div>
+                        </div>
+                        
+                        <div>
+                          <div className="text-sm text-black">CREATED DATE:</div>
+                          <div>{new Date(row.createdAt).toLocaleDateString()}</div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-4">
+                        <div>
+                          <div className="text-sm text-black">ASSIGNEE:</div>
+                          <div>{row.assignedUser?.firstName + ' ' + row.assignedUser?.lastName}</div>
+                        </div>
+                        
+                        <div>
+                          <div className="text-sm text-black">DUE DATE:</div>
+                          <div>{new Date(row.dueDate).toLocaleDateString()}</div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <div className="text-sm text-gray-500">Due date:</div>
+                        <div>{row.dueDate}</div>
+                      </div>
+                      
+                      <div>
+                        <div className="text-sm text-gray-500">Priority:</div>
+                        <div>{typeof row.priority === 'string' ? row.priority : row.priority.text}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            }
+          ] : []}
         />
       )}
     </div>
