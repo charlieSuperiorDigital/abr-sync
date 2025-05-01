@@ -230,14 +230,18 @@ export default function EstimateOpportunities() {
               name: 'Estimate.pdf', 
               category: 'Estimate',
               size: '1.2 MB',
-              checked: false 
+              checked: false,
+              email: owner.email || 'No email provided',
+              isPrimary: true
             },
             {
               id: '2',
               name: 'Vehicle_Photos.zip', 
               category: 'Photos',
               size: '3.5 MB',
-              checked: false 
+              checked: false,
+              email: owner.email || 'No email provided',
+              isPrimary: true 
             }
           ]
         };
