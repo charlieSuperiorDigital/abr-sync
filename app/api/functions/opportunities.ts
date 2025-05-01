@@ -13,7 +13,7 @@ export interface OpportunityResponse {
   opportunityStatus: string
   opportunityCreatedAt: string
   opportunityUpdatedAt: string
-  
+
   // Insurance information
   insuranceName: string
   insuranceProvider: string
@@ -29,7 +29,7 @@ export interface OpportunityResponse {
   insuranceAdjusterEmail: string
   insuranceAdjusterPhone: string
   insuranceApproved: boolean
-  
+
   // Vehicle information
   vehicleId: string
   vehicleMake: string
@@ -45,7 +45,7 @@ export interface OpportunityResponse {
   vehicleDamageDescription: string
   vehicleMileageIn: number
   vehiclePhotos: VehiclePhoto[]
-  
+
   // Owner information
   ownerFirstName: string
   ownerLastName: string
@@ -55,7 +55,7 @@ export interface OpportunityResponse {
   ownerId: string
   ownerCreatedAt: string
   ownerUpdatedAt: string
-  
+
   // Additional information
   totalParts: number
   totalPartsCost: number
@@ -64,14 +64,20 @@ export interface OpportunityResponse {
   lastCommunicationSummary: string
 }
 
-export const getOpportunitiesList = async ({ tenantId }: { tenantId: string }): Promise<OpportunityResponse[]> => {
+export const getOpportunitiesList = async ({
+  tenantId,
+}: {
+  tenantId: string
+}): Promise<OpportunityResponse[]> => {
   try {
-    const response = await apiService.get<OpportunityResponse[]>(`/Opportunity/List/${tenantId}`)
+    const response = await apiService.get<OpportunityResponse[]>(
+      `/Opportunity/List/${tenantId}`
+    )
     console.log('Opportunities length:', response.data.length)
     return response.data
   } catch (error) {
     console.error('Error fetching opportunities:', error)
-    throw error;
+    throw error
   }
 }
 

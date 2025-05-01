@@ -1,14 +1,21 @@
 'use client'
 import { useGetOpportunities } from '@/app/api/hooks/useOpportunities'
-import { Opportunity } from '@/app/types/opportunity'
 import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
 import { showUnarchiveToast } from '@/app/utils/toast-utils'
-import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import {
   SummaryCell,
-  VehicleCell
+  VehicleCell,
 } from '@/components/custom-components/custom-table/table-cells'
+import ContactInfo from '@/app/[locale]/custom-components/contact-info'
+
+import { ClipboardPlus } from 'lucide-react'
+import {
+  Opportunity,
+  OpportunityStatus,
+  RepairStage,
+} from '@/app/types/opportunity'
+import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import { ColumnDef } from '@tanstack/react-table'
 import { useSession } from 'next-auth/react'
@@ -85,18 +92,19 @@ export default function ArchivedOpportunities() {
       accessorKey: 'roNumber',
       header: 'RO',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.roNumber || '---'}</span>
+        <span className="whitespace-nowrap">
+          {row.original.roNumber || '---'}
+        </span>
       ),
     },
     {
       accessorKey: 'owner.name',
       header: 'Owner',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">
-          {row.original.owner.name}
-        </span>
+        <span className="whitespace-nowrap">{row.original.owner.name}</span>
       ),
-    }, {
+    },
+    {
       accessorKey: 'firstCallDate',
       header: '1ST CALL',
       cell: ({ row }) => (
@@ -136,7 +144,9 @@ export default function ArchivedOpportunities() {
       accessorKey: 'lastUpdatedDate',
       header: 'LAST UPDATED',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{formatDate(row.original.lastUpdatedDate)}</span>
+        <span className="whitespace-nowrap">
+          {formatDate(row.original.lastUpdatedDate)}
+        </span>
       ),
     },
     {
@@ -145,9 +155,11 @@ export default function ArchivedOpportunities() {
     },
     {
       header: 'SUMMARY',
-      cell: ({ row }) => <SummaryCell text='Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' />,
+      cell: ({ row }) => (
+        <SummaryCell text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." />
+      ),
     },
-   {
+    {
       id: 'unarchive',
       header: 'Unarchive',
       cell: ({ row }) => (
@@ -165,7 +177,11 @@ export default function ArchivedOpportunities() {
   ]
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-64">Loading opportunities...</div>
+    return (
+      <div className="flex justify-center items-center h-64">
+        Loading opportunities...
+      </div>
+    )
   }
 
   return (

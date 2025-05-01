@@ -22,8 +22,18 @@ import {
 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { PriorityBadge } from '../priority-badge/priority-badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { act, useState } from 'react'
 import { EditTaskModal } from '../task-modal/edit-task-modal'
 import RoundButtonWithTooltip from '@/app/[locale]/custom-components/round-button-with-tooltip'
@@ -58,15 +68,15 @@ export function CreatedByCell({ createdBy, currentUser }: CreatedByCellProps) {
 interface StatusBadgeProps {
   status: string
   variant?:
-  | 'default'
-  | 'danger'
-  | 'warning'
-  | 'neutral'
-  | 'slate'
-  | 'info'
-  | 'success'
-  | 'forest'
-  | 'dark'
+    | 'default'
+    | 'danger'
+    | 'warning'
+    | 'neutral'
+    | 'slate'
+    | 'info'
+    | 'success'
+    | 'forest'
+    | 'dark'
 }
 
 export function StatusBadgeCell({ status, variant }: StatusBadgeProps) {
@@ -80,15 +90,15 @@ export function StatusBadgeCell({ status, variant }: StatusBadgeProps) {
 interface PriorityBadgeProps {
   priority: string
   variant?:
-  | 'default'
-  | 'danger'
-  | 'warning'
-  | 'neutral'
-  | 'slate'
-  | 'info'
-  | 'success'
-  | 'forest'
-  | 'dark'
+    | 'default'
+    | 'danger'
+    | 'warning'
+    | 'neutral'
+    | 'slate'
+    | 'info'
+    | 'success'
+    | 'forest'
+    | 'dark'
 }
 
 export function PriorityBadgeCell({ priority, variant }: PriorityBadgeProps) {
@@ -123,20 +133,21 @@ export function FriendlyDateCell({ date, variant }: FriendlyDateCellProps) {
   }
 
   const friendlyDate = getFriendlyDate(date)
-  const isUrgent = variant === 'due' &&
+  const isUrgent =
+    variant === 'due' &&
     (friendlyDate === 'Today' || friendlyDate === 'Tomorrow')
 
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className={`whitespace-nowrap ${isUrgent ? 'font-semibold text-red-500' : ''}`}>
+          <span
+            className={`whitespace-nowrap ${isUrgent ? 'font-semibold text-red-500' : ''}`}
+          >
             {friendlyDate}
           </span>
         </TooltipTrigger>
-        <TooltipContent>
-          {formatDateTime(date)}
-        </TooltipContent>
+        <TooltipContent>{formatDateTime(date)}</TooltipContent>
       </Tooltip>
     </TooltipProvider>
   )
@@ -159,9 +170,9 @@ export function VehicleCell({ make, model, year, imageUrl }: VehicleCellProps) {
           className="object-cover w-10 h-10 rounded-md"
         />
       )}
-        <span className="whitespace-nowrap">
-          {year} {make} {model}
-        </span>
+      <span className="whitespace-nowrap">
+        {year} {make} {model}
+      </span>
     </div>
   )
 }
@@ -243,8 +254,9 @@ export function ContactMethodCell({
             <Button
               variant="ghost"
               size="icon"
-              className={`h-8 w-8 rounded-full transition-colors hover:bg-black ${!messages ? 'text-gray-400' : 'text-black'
-                } hover:text-white`}
+              className={`h-8 w-8 rounded-full transition-colors hover:bg-black ${
+                !messages ? 'text-gray-400' : 'text-black'
+              } hover:text-white`}
               onClick={(e) => {
                 e.stopPropagation()
                 console.log('Messages clicked')
@@ -266,8 +278,9 @@ export function ContactMethodCell({
             <Button
               variant="ghost"
               size="icon"
-              className={`h-8 w-8 rounded-full transition-colors hover:bg-black ${!email ? 'text-gray-400' : 'text-black'
-                } hover:text-white`}
+              className={`h-8 w-8 rounded-full transition-colors hover:bg-black ${
+                !email ? 'text-gray-400' : 'text-black'
+              } hover:text-white`}
               onClick={(e) => {
                 e.stopPropagation()
                 console.log('Email clicked')
@@ -284,8 +297,9 @@ export function ContactMethodCell({
             <Button
               variant="ghost"
               size="icon"
-              className={`h-8 w-8 rounded-full transition-colors hover:bg-black ${!phone ? 'text-gray-400' : 'text-black'
-                } hover:text-white`}
+              className={`h-8 w-8 rounded-full transition-colors hover:bg-black ${
+                !phone ? 'text-gray-400' : 'text-black'
+              } hover:text-white`}
               onClick={(e) => {
                 e.stopPropagation()
                 console.log('Phone clicked')
@@ -380,7 +394,7 @@ interface ActionButtonCellProps {
 export function ActionButtonCell({ label, onClick }: ActionButtonCellProps) {
   return (
     <Dialog>
-      <DialogTrigger asChild>
+      <DialogTrigger asChild aria-describedby="123">
         <span className="flex gap-2 justify-center items-center w-20 h-8 text-white bg-black rounded-2xl hover:opacity-90">
           <Check className="w-4 h-4" />
           {label}
@@ -443,28 +457,24 @@ export function ArchiveButtonCell({
 
 interface RelatedToCellProps {
   relatedObjects: Array<{
-    type: string;
-    id: string;
-  }>;
+    type: string
+    id: string
+  }>
 }
 
 export function RelatedToCell({ relatedObjects }: RelatedToCellProps) {
-
-  if (!relatedObjects || relatedObjects.length === 0) return null;
+  if (!relatedObjects || relatedObjects.length === 0) return null
 
   return (
     <div className="flex flex-wrap gap-2">
       {relatedObjects.map((obj, index) => (
         <Popover key={`${obj.type}-${obj.id}-${index}`}>
           <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              className="p-0"
-            >
-              <span className="text-sm font-semibold underline" >
-                #{obj.id}{index !== relatedObjects.length - 1 && ', '}
+            <Button variant="ghost" className="p-0">
+              <span className="text-sm font-semibold underline">
+                #{obj.id}
+                {index !== relatedObjects.length - 1 && ', '}
               </span>
-              
             </Button>
           </PopoverTrigger>
           <PopoverContent
@@ -483,5 +493,5 @@ export function RelatedToCell({ relatedObjects }: RelatedToCellProps) {
         </Popover>
       ))}
     </div>
-  );
+  )
 }

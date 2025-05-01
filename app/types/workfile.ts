@@ -149,6 +149,7 @@ export type WorkfileApiResponse = {
           firstName: string;
           lastName: string;
           phone: string;
+          company?: string;
           email: string;
           address: string;
           createdAt: string;

@@ -62,6 +62,7 @@ export interface GetOpportunityByIdApiResponse {
       phone: string;
       email: string;
       address: string;
+      company?: string;
       createdAt: string;
       updatedAt: string;
     };
