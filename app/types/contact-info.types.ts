@@ -1,11 +1,11 @@
 import { Opportunity } from './opportunity'
 
 export interface ContactPerson {
-  name: string
-  role: string
-  address: string
-  company: string
-  preferredContactType: string
+  name: string;
+  role: string;
+  address: string;
+  company?: string;
+  preferredContactType: string;
 }
 
 export interface Insurance {
@@ -25,6 +25,17 @@ export interface CommunicationLog {
 }
 
 export interface EmailContact {
+
+  email: string;
+  isPrimary: boolean;
+}
+
+export interface AttachmentOption {
+  id: string;
+  name: string;
+  size: string;
+  category: string;
+  checked?: boolean;
   email: string
   isPrimary: boolean
 }

@@ -6,45 +6,41 @@ import {
 } from '@/components/custom-components/custom-table/table-cells'
 import { ColumnDef } from '@tanstack/react-table'
 import { MessageSquareMore, Archive as ArchiveIcon } from 'lucide-react'
-import { Workfile, WorkfileStatus } from '@/app/types/workfile'
-import { useState, useCallback, useEffect } from 'react'
-import { useWorkfileStore } from '@/app/stores/workfile-store'
-import { useOpportunityStore } from '@/app/stores/opportunity-store'
+import { WorkfilesByTenantIdResponse } from '@/app/types/workfile'
+import { useState, useCallback } from 'react'
 import RoundButtonWithTooltip from '@/app/[locale]/custom-components/round-button-with-tooltip'
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
+import { useGetWorkfilesByTenantId } from '@/app/api/hooks/useWorkfiles'
+import { useSession } from 'next-auth/react'
 
 export default function Archive() {
-  const { getWorkfilesByStatus, setSelectedWorkfile, selectedWorkfile, updateWorkfile } = useWorkfileStore()
-  const { getOpportunityById, setSelectedOpportunity, selectedOpportunity } = useOpportunityStore()
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const { data: session } = useSession()
+  const { archived, isLoading } = useGetWorkfilesByTenantId({ tenantId: session?.user?.tenantId! })
+  const [selectedWorkfile, setSelectedWorkfile] = useState<WorkfilesByTenantIdResponse | null>(null)
+  const [modalState, setModalState] = useState<{ isOpen: boolean; opportunityId: string | null }>({
+    isOpen: false,
+    opportunityId: null
+  })
 
-  const archivedWorkfiles = getWorkfilesByStatus(WorkfileStatus.Archived)
-
-  // When a workfile is selected, find the related opportunity
-  useEffect(() => {
-    if (selectedWorkfile) {
-      const relatedOpportunity = getOpportunityById(selectedWorkfile.opportunityId)
-      if (relatedOpportunity) {
-        setSelectedOpportunity(relatedOpportunity)
-      }
-    }
-  }, [selectedWorkfile, getOpportunityById, setSelectedOpportunity])
-
-  const handleRowClick = useCallback((workfile: Workfile) => {
+  const handleRowClick = useCallback((workfile: WorkfilesByTenantIdResponse) => {
     setSelectedWorkfile(workfile)
-    setIsModalOpen(true)
-  }, [setSelectedWorkfile])
-
-  const handleUnarchive = useCallback((e: React.MouseEvent, workfile: Workfile) => {
-    e.stopPropagation()
-    // Update workfile status to Ready for Pickup
-    updateWorkfile(workfile.workfileId, {
-      status: WorkfileStatus.ReadyForPickup
+    setModalState({
+      isOpen: true,
+      opportunityId: workfile.opportunityId
     })
-    console.log('Unarchived workfile:', workfile.workfileId)
-  }, [updateWorkfile])
+  }, [])
+
+  const handleModalOpenChange = useCallback((open: boolean) => {
+    setModalState(prev => ({ ...prev, isOpen: open }))
+  }, [])
+
+  const handleUnarchive = useCallback((e: React.MouseEvent, workfile: WorkfilesByTenantIdResponse) => {
+    e.stopPropagation()
+    // Update workfile status to Ready for Pickup - would need API implementation
+    console.log('Unarchived workfile:', workfile.id)
+  }, [])
 
   const formatDate = (date: string | undefined) => {
     if (!date) return '---'
@@ -60,16 +56,16 @@ export default function Archive() {
   }
 
   // Helper to check if a workfile has a rental vehicle
-  const hasRentalVehicle = (workfile: Workfile) => {
-    return workfile.isInRental === true;
+  const hasRentalVehicle = (workfile: WorkfilesByTenantIdResponse) => {
+    return workfile.opportunity.inRental === true;
   }
 
-  const columns: ColumnDef<Workfile, any>[] = [
+  const columns: ColumnDef<WorkfilesByTenantIdResponse, any>[] = [
     {
       accessorKey: 'roNumber',
       header: 'RO',
       cell: ({ row }) => (
-        <span className="font-medium">{row.original.roNumber || '---'}</span>
+        <span className="font-medium">{row.original.opportunity.roNumber || '---'}</span>
       ),
     },
     {
@@ -77,10 +73,10 @@ export default function Archive() {
       header: 'Vehicle',
       cell: ({ row }) => (
         <VehicleCell
-          make={row.original.vehicle.make}
-          model={row.original.vehicle.model}
-          year={row.original.vehicle.year.toString()}
-          imageUrl={row.original.vehicle.vehiclePicturesUrls[0] || `https://picsum.photos/seed/${row.original.workfileId}/200/100`}
+          make={row.original.opportunity.vehicle.make}
+          model={row.original.opportunity.vehicle.model}
+          year={row.original.opportunity.vehicle.year.toString()}
+          imageUrl={row.original.opportunity.vehicle.vehiclePicturesUrls[0] || `https://picsum.photos/seed/${row.original.id}/200/100`}
         />
       ),
     },
@@ -89,7 +85,9 @@ export default function Archive() {
       header: 'Owner',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
-          {row.original.owner.name}
+          {row.original.opportunity.vehicle.owner ? 
+            `${row.original.opportunity.vehicle.owner.firstName} ${row.original.opportunity.vehicle.owner.lastName}` : 
+            'Owner Name'}
         </span>
       ),
     },
@@ -98,7 +96,8 @@ export default function Archive() {
       header: 'Estimate',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
-          {formatCurrency(row.original.estimateAmount)}
+          {/* {formatCurrency(row.original.estimateAmount)} */}
+          PLACEHOLDER
         </span>
       ),
     },
@@ -116,24 +115,29 @@ export default function Archive() {
       header: 'In Date',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
-          {formatDate(row.original.inDate)}
+          {formatDate(row.original.opportunity.inDate)}
         </span>
       ),
     },
     {
       accessorKey: 'insurance.company',
       header: 'Insurance',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">
-          {row.original.insurance?.company || '---'}
-        </span>
-      ),
+      cell: ({ row }) => {
+        // Safely handle the insurance property which might be null
+        const insurance = row.original.opportunity.insurance;
+        return (
+          <span className="whitespace-nowrap">
+            {insurance ? insurance : '---'}
+          </span>
+        );
+      },
     },
     {
       id: 'lastCommDate',
       header: 'Last Comm Date',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{formatDate(row.original.lastUpdatedDate)}</span>
+        // <span className="whitespace-nowrap">{formatDate(row.original.updatedAt)}</span>
+        <span className="whitespace-nowrap">PLACEHOLDER</span>
       ),
     },
     {
@@ -141,7 +145,7 @@ export default function Archive() {
       cell: ({ row }) => (
         <RoundButtonWithTooltip 
           buttonIcon={<MessageSquareMore className="w-5 h-5" />}
-          tooltipText={row.original.lastCommunicationSummary || 'No summary available'}
+          tooltipText={row.original.opportunity.summary || 'No summary available'}
         />
       ),
     },
@@ -159,22 +163,26 @@ export default function Archive() {
     },
   ]
 
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-64">Loading workfiles...</div>
+  }
+
   return (
     <div className="w-full">
       <DataTable
         columns={columns}
-        data={archivedWorkfiles}
+        data={archived || []}
         onRowClick={handleRowClick}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
       />
 
       <BottomSheetModal
-        isOpen={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        title={selectedWorkfile ? `${selectedWorkfile.vehicle.year} ${selectedWorkfile.vehicle.make} ${selectedWorkfile.vehicle.model}` : ''}
+        isOpen={modalState.isOpen}
+        onOpenChange={handleModalOpenChange}
+        title={selectedWorkfile ? `${selectedWorkfile.opportunity.vehicle.year} ${selectedWorkfile.opportunity.vehicle.make} ${selectedWorkfile.opportunity.vehicle.model}` : ''}
       >
-        {selectedOpportunity && <OpportunityModal opportunity={selectedOpportunity} />}
+        {modalState.opportunityId && <OpportunityModal opportunityId={modalState.opportunityId} workfileId={selectedWorkfile?.id} />}
       </BottomSheetModal>
     </div>
   )

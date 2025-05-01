@@ -2,16 +2,18 @@
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
 import RoundButtonWithTooltip from '@/app/[locale]/custom-components/round-button-with-tooltip'
-import { useGetWorkfiles } from '@/app/api/hooks/useGetWorkfiles'
+import { useGetWorkfilesByTenantId } from '@/app/api/hooks/useWorkfiles'
 import { useGetOpportunities } from '@/app/api/hooks/useOpportunities'
 import { Opportunity } from '@/app/types/opportunity'
-import { QualityControlStatus, WorkfileApiResponse } from '@/app/types/workfile'
-import { formatDate } from '@/app/utils/date-utils'
+import { WorkfilesByTenantIdResponse } from '@/app/types/workfile'
+import { formatDate, calculateDaysUntil } from '@/app/utils/date-utils'
+import { formatCurrency } from '@/app/utils/currency-utils'
 import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import {
   VehicleCell,
+  StatusBadgeCell,
 } from '@/components/custom-components/custom-table/table-cells'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import QCChecklistBottomSheet from '@/components/custom-components/qc-checklist-modal'
@@ -25,51 +27,53 @@ export default function QualityControl() {
   const { data: session } = useSession();
   const tenantId = session?.user?.tenantId;
 
-
   const { opportunities: allOpportunities, isLoading: isOpportunitiesLoading } = useGetOpportunities({ tenantId: tenantId || '' });
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalState, setModalState] = useState<{ isOpen: boolean; opportunityId: string | null }>({
+    isOpen: false,
+    opportunityId: null
+  })
   const [isQCChecklistOpen, setIsQCChecklistOpen] = useState(false);
-  const [selectedQCWorkfile, setSelectedQCWorkfile] = useState<WorkfileApiResponse | null>(null);
-  const [selectedWorkfile, setSelectedWorkfile] = useState<WorkfileApiResponse | null>(null);
+  const [selectedQCWorkfile, setSelectedQCWorkfile] = useState<WorkfilesByTenantIdResponse | null>(null);
+  const [selectedWorkfile, setSelectedWorkfile] = useState<WorkfilesByTenantIdResponse | null>(null);
 
-  const { qualityControl: qcWorkfiles, isLoading, error } = useGetWorkfiles({ tenantId: tenantId || '' });
+  const { qualityControl, isLoading } = useGetWorkfilesByTenantId({ tenantId: tenantId || '' });
 
-  const handleRowClick = useCallback((workfile: WorkfileApiResponse) => {
+  const handleRowClick = useCallback((workfile: WorkfilesByTenantIdResponse) => {
     setSelectedWorkfile(workfile);
-    // Find the matching opportunity by opportunityId
-    if (allOpportunities && workfile.workfile.opportunityId) {
-      const foundRaw = allOpportunities.find((opp) => opp.opportunityId === workfile.workfile.opportunityId);
-      setSelectedOpportunity(foundRaw ? mapApiResponseToOpportunity(foundRaw) : null);
-    } else {
-      setSelectedOpportunity(null);
-    }
-    setIsModalOpen(true);
-  }, [allOpportunities]);
+    setModalState({
+      isOpen: true,
+      opportunityId: workfile.opportunityId
+    })
+  }, [])
 
-  const handleContactClick = useCallback((workfile: WorkfileApiResponse) => {
+  const handleModalOpenChange = useCallback((open: boolean) => {
+    setModalState(prev => ({ ...prev, isOpen: open }))
+  }, [])
+
+  const handleContactClick = useCallback((workfile: WorkfilesByTenantIdResponse) => {
     // Handle contact info click
-    console.log('Contact clicked for workfile:', workfile.workfile.id)
+    console.log('Contact clicked for workfile:', workfile.id)
   }, [])
 
-  const handleTaskClick = useCallback((workfile: WorkfileApiResponse) => {
+  const handleTaskClick = useCallback((workfile: WorkfilesByTenantIdResponse) => {
     // Handle task button click
-    console.log('Task clicked for workfile:', workfile.workfile.id)
+    console.log('Task clicked for workfile:', workfile.id)
   }, [])
 
-  const handleQCChecklistClick = useCallback((workfile: WorkfileApiResponse, e: React.MouseEvent) => {
+  const handleQCChecklistClick = useCallback((workfile: WorkfilesByTenantIdResponse, e: React.MouseEvent) => {
     e.stopPropagation()
     // Open QC checklist modal
     setSelectedQCWorkfile(workfile)
     setIsQCChecklistOpen(true)
   }, [])
 
-  const columns: ColumnDef<WorkfileApiResponse, any>[] = [
+  const columns: ColumnDef<WorkfilesByTenantIdResponse, any>[] = [
     {
       accessorKey: 'roNumber',
       header: 'RO',
       cell: ({ row }) => (
-        <span className="font-medium">{row.original.workfile.id || '---'}</span>
+        <span className="font-medium">{row.original.opportunity.roNumber || '---'}</span>
       ),
     },
     {
@@ -77,10 +81,10 @@ export default function QualityControl() {
       header: 'Vehicle',
       cell: ({ row }) => (
         <VehicleCell
-          make={row.original.workfile.opportunity.vehicle.make || 'No Make'}
-          model={row.original.workfile.opportunity.vehicle.model || 'No Model'}
-          year={String(row.original.workfile.opportunity.vehicle.year) || 'No Year'}
-          imageUrl={`https://picsum.photos/seed/${row.original.workfile.opportunityId}/200/100`}
+          make={row.original.opportunity.vehicle.make}
+          model={row.original.opportunity.vehicle.model}
+          year={row.original.opportunity.vehicle.year.toString()}
+          imageUrl={row.original.opportunity.vehicle.vehiclePicturesUrls[0] || `https://picsum.photos/seed/${row.original.id}/200/100`}
         />
       ),
     },
@@ -89,7 +93,9 @@ export default function QualityControl() {
       header: 'Owner',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
-          {row.original.workfile.opportunity.vehicle.owner.firstName + ' ' + row.original.workfile.opportunity.vehicle.owner.lastName || '---'}
+          {row.original.opportunity.vehicle.owner ? 
+            `${row.original.opportunity.vehicle.owner.firstName} ${row.original.opportunity.vehicle.owner.lastName}` : 
+            'Owner Name'}
         </span>
       ),
     },
@@ -198,15 +204,15 @@ export default function QualityControl() {
     return <div className="flex justify-center items-center h-64">Loading workfiles...</div>;
   }
 
-  if (error) {
-    return <div className="flex justify-center items-center h-64">Error loading workfiles: {error.message}</div>;
+  if (!qualityControl || qualityControl.length === 0) {
+    return <div className="flex justify-center items-center h-64">No workfiles found.</div>;
   }
 
   return (
     <div className="w-full">
       <DataTable
         columns={columns}
-        data={qcWorkfiles}
+        data={qualityControl}
         onRowClick={handleRowClick}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
@@ -214,11 +220,11 @@ export default function QualityControl() {
 
       {/* Opportunity Details Modal */}
       <BottomSheetModal
-        isOpen={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        title={selectedOpportunity ? `${selectedOpportunity.vehicle?.year || ''} ${selectedOpportunity.vehicle?.make || ''} ${selectedOpportunity.vehicle?.model || ''}` : ''}
+        isOpen={modalState.isOpen}
+        onOpenChange={handleModalOpenChange}
+        title={selectedWorkfile ? `${selectedWorkfile.opportunity.vehicle.year} ${selectedWorkfile.opportunity.vehicle.make} ${selectedWorkfile.opportunity.vehicle.model}` : ''}
       >
-        {selectedOpportunity && <OpportunityModal opportunity={selectedOpportunity} />}
+        {modalState.opportunityId && <OpportunityModal opportunityId={modalState.opportunityId} workfileId={selectedWorkfile?.id} />}
       </BottomSheetModal>
 
       {/* QC Checklist Modal */}
