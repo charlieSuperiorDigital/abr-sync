@@ -1,5 +1,6 @@
-'use client'
+"use client";
 import {
+  Archive,
   ClipboardList,
   FolderOpen,
   Mail,
@@ -9,37 +10,33 @@ import {
   TrendingUp,
   TruckIcon,
   User,
-} from 'lucide-react'
-import Image from 'next/image'
-import SideBarIconGroup from '../../custom-components/sidebar-icon-group'
-import type React from 'react'
-import { useState, useEffect, useRef } from 'react'
-import EditProfileModal from '@/app/components/custom-components/edit-profile-modal/edit-profile-modal'
-import RoleGuard from '@/app/components/RoleGuard'
-import { CallReceiver } from '../../custom-components/calls/call-receiver'
-import { Button } from '@/components/ui/button'
-import { useCall } from '@/app/context/call-context'
+} from "lucide-react";
+import Image from "next/image";
+import SideBarIconGroup from "../../custom-components/sidebar-icon-group";
+import React, { useState, useEffect, useRef } from "react";
+import EditProfileModal from "@/app/components/custom-components/edit-profile-modal/edit-profile-modal";
+import RoleGuard from "@/app/components/RoleGuard";
 import { CallProvider } from '@/app/context/call-context'
+import { CallReceiver } from '../../custom-components/calls/call-receiver'
 
-// Create a separate component for the dashboard content
+
 function DashboardContent({ children }: { children: React.ReactNode }) {
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
-  const [isNavExpanded, setIsNavExpanded] = useState(false)
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isNavExpanded, setIsNavExpanded] = useState(false);
 
   return (
-    <RoleGuard
-      allowedRoles={[
-        'shopmanager',
-        'admin',
-        'salesrep',
-        'estimator',
-        'shopowner',
-        'manager',
-        'technician',
-      ]}
-    >
-      <div className="flex max-h-screen">
-        <aside className="flex flex-col items-center px-2 py-5 w-16 text-white bg-black">
+    <RoleGuard allowedRoles={['shopmanager', 'admin', 'salesrep', 'estimator', 'shopowner', 'manager', 'technician']}>
+      <div className="flex max-h-screen relative">
+        <aside 
+          className="fixed h-full z-10 overflow-hidden bg-black"
+          onMouseEnter={() => setIsNavExpanded(true)}
+          onMouseLeave={() => setIsNavExpanded(false)}
+          style={{ 
+            width: isNavExpanded ? '300px' : '75px',
+            transition: 'width 150ms ease-in-out'
+          }}
+        >
+          <div className="flex flex-col items-center px-2 py-5 text-white h-full">
           <Image
             src="/auto-360-logo.png"
             alt="Logo"
@@ -71,22 +68,14 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
               <SideBarIconGroup
                 link={'/shop-manager/dashboard/parts-management'}
                 icons={[
-                  {
-                    newNotificationsQuantity: 2,
-                    Icon: Settings,
-                    label: 'Settings',
-                  },
+                  { newNotificationsQuantity: 2, Icon: Settings, label: 'Settings' },
                   {
                     newNotificationsQuantity: 2,
                     Icon: TruckIcon,
                     hasWarning: true,
-                    label: 'Delivery Issues',
+                    label: 'Delivery Issues'
                   },
-                  {
-                    newNotificationsQuantity: 2,
-                    Icon: TruckIcon,
-                    label: 'Shipments',
-                  },
+                  { newNotificationsQuantity: 2, Icon: TruckIcon, label: 'Shipments' },
                 ]}
                 label="Parts Management"
                 expanded={isNavExpanded}
@@ -130,11 +119,13 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                 />
               </div>
             </div>
+
           </nav>
+          </div>
         </aside>
-        <main className="flex flex-col py-8 w-full min-h-screen items-center">
-          <CallReceiver />
-          {children}
+        <main className="flex flex-col py-8 w-full min-h-screen pl-16">
+                      <CallReceiver />
+                      {children}
         </main>
       </div>
       <EditProfileModal
@@ -142,7 +133,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         onOpenChange={setIsProfileModalOpen}
       />
     </RoleGuard>
-  )
+  );
 }
 
 export default function DashboardLayoutClient({
