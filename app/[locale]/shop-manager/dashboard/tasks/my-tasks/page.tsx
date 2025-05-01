@@ -25,7 +25,7 @@ import {
   WarningCell,
 } from '@/components/custom-components/custom-table/table-cells'
 import { ColumnDef } from '@tanstack/react-table'
-import { MessageSquareMore, PanelTop } from 'lucide-react'
+import { MessageSquareMore, PanelTop, ChevronDown } from 'lucide-react'
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 
 import { Task } from '@/app/types/task'
@@ -92,6 +92,17 @@ export default function MyTasks() {
   // Get tasks data from context
   const { assignedTasks, isLoadingAssigned, errorAssigned } = useTasksContext()
   
+  // State to track expanded rows
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({})
+  
+  // Function to toggle row expansion
+  const toggleRow = (taskId: string) => {
+    setExpandedRows(prev => ({
+      ...prev,
+      [taskId]: !prev[taskId]
+    }))
+  }
+  
   // Transform API tasks to app task format and filter for non-completed tasks only
   const tasks = assignedTasks 
     ? assignedTasks
@@ -105,7 +116,20 @@ export default function MyTasks() {
     {
       accessorKey: 'id',
       header: 'Task ID',
-      
+      cell: ({ row }) => {
+        return (
+          <div className="flex items-center space-x-2">
+            <ChevronDown
+              className={`w-4 h-4 ${expandedRows[row.original.id] ? 'rotate-180' : ''} transform transition-transform`}
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleRow(row.original.id)
+              }}
+            />
+            <span>{row.original.id}</span>
+          </div>
+        )
+      },
     },
     {
       accessorKey: 'priority',
@@ -256,6 +280,102 @@ export default function MyTasks() {
           pageSize={10}
           pageSizeOptions={[5, 10, 20, 30, 40, 50]}
           showPageSize={true}
+          onRowClick={(row) => toggleRow(row.id)}
+          getSubRows={(row) => expandedRows[row.id] ? [
+            {
+              id: `${row.id}-details`,
+              details: (
+                <div
+                  className="px-4 bg-gray-50 cursor-pointer hover:bg-gray-100"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    toggleRow(row.id)
+                  }}
+                >
+
+                  <div className='py-6'>
+
+                    {/* Title and ID */}
+                    <div className="flex flex-row justify-between flex-2">
+                      <div className="flex gap-8 items-center">
+                        <h2 className="text-xl font-bold">{row.title}</h2>
+                        <span className="font-medium">{row.id}</span>
+                        <span className="font-medium">RELATED TO WILL GO HERE</span>
+                      </div>
+                      {/* Actions */}
+                      <div className="flex items-center mr-8">
+                        <span>
+                          ACTIONS
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom two containers */}
+                  <div className='flex flex-row justify-between items-start py-6 border-t border-slate-200'>
+
+                    {/* Description, name and contact */}
+                    {/* Name and Representative */}
+                    <div className="flex flex-col gap-6 pr-10 w-full border-r border-slate-200">
+                      <div>
+                        <div className='flex gap-8'>
+                          <div className="flex flex-col">
+                            <span className="font-medium">Name:</span>
+                            <span className="font-bold underline whitespace-nowrap">{row.title}</span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-medium">Representative:</span>
+                            REPRESENTATIVE NAME
+                          </div>
+                          <div className="">
+                           
+                           <ContactInfo/>
+
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Description itself */}
+                      <div>
+                        <div className="flex flex-col">
+                          <span className="mt-4 mb-2 font-medium">DESCRIPTION</span>
+                          <span>{row.description}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Task details */}
+                    <div className="flex flex-col gap-6 pl-10 w-full">
+                      <div className="flex flex-col gap-2">
+                        <div className="flex gap-8">
+                          <div className="flex flex-col">
+                            <span className="font-medium">Created by:</span>
+                            <span>{row.createdBy}</span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-medium">Created date:</span>
+                            <span>{row.createdAt}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <div className="flex gap-8">
+                          <div className="flex flex-col">
+                            <span className="font-medium">Due date:</span>
+                            <span>{row.dueDate}</span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-medium">Priority:</span>
+                            <span>{typeof row.priority === 'string' ? row.priority : row.priority.text}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            }
+          ] : []}
         />
       )}
     </div>
