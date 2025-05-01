@@ -108,13 +108,13 @@ export default function ContactInfo({
         }
       >
         {selectedOpportunity && (
-          <OpportunityModal opportunity={selectedOpportunity} />
+          <OpportunityModal opportunityId={selectedOpportunity.opportunityId} />
         )}
       </BottomSheetModal>
 
       {/* {shouldShowModal && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          className="flex fixed inset-0 z-50 justify-center items-center p-4 bg-black bg-opacity-50"
           onClick={handleOverlayClick}
         >
           <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col">
@@ -127,7 +127,7 @@ export default function ContactInfo({
 
             <div className="overflow-y-auto flex-1 p-6">
               <div className="mb-6">
-                <h3 className="text-lg mb-2 font-bold">
+                <h3 className="mb-2 text-lg font-bold">
                   {contactData.person.name}, {contactData.person.role}
                 </h3>
                 <div className="grid grid-cols-3 gap-4">
@@ -147,7 +147,7 @@ export default function ContactInfo({
               </div>
 
               <div className="mb-6">
-                <h3 className="text-lg mb-2 font-bold">
+                <h3 className="mb-2 text-lg font-bold">
                   Insurance - {contactData.insurance.company}
                 </h3>
                 <div className="grid grid-cols-4 gap-4">
@@ -177,7 +177,7 @@ export default function ContactInfo({
                 </div>
                 <table className="w-full">
                   <thead>
-                    <tr className="text-left text-sm">
+                    <tr className="text-sm text-left">
                       <th className="pb-2">TYPE</th>
                       <th className="pb-2">DATE</th>
                       <th className="pb-2">USER</th>
@@ -188,9 +188,9 @@ export default function ContactInfo({
                       <tr key={index} className="border-t">
                         <td className="py-2">{log.type}</td>
                         <td className="py-2">{log.date}</td>
-                        <td className="py-2 flex items-center">
+                        <td className="flex items-center py-2">
                           {!log.isAutomatic && (
-                            <div className="w-6 h-6 rounded-full bg-gray-200 mr-2" />
+                            <div className="mr-2 w-6 h-6 bg-gray-200 rounded-full" />
                           )}
                           {log.user}
                         </td>
@@ -250,7 +250,7 @@ export default function ContactInfo({
                     <div className="mb-4">
                       <p className="mb-2">Message</p>
                       <textarea
-                        className="w-full h-32 p-3 border rounded-lg bg-gray-50"
+                        className="p-3 w-full h-32 bg-gray-50 rounded-lg border"
                         placeholder="Type your message here..."
                       />
                     </div>
@@ -258,7 +258,7 @@ export default function ContactInfo({
                 ) : (
                   <>
                     <div className="mb-6">
-                      <h4 className="font-medium mb-4">Attach files</h4>
+                      <h4 className="mb-4 font-medium">Attach files</h4>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-3">
                           {contactData.attachmentOptions
@@ -266,7 +266,7 @@ export default function ContactInfo({
                             .map((option, index) => (
                               <div
                                 key={index}
-                                className="flex items-center justify-between"
+                                className="flex justify-between items-center"
                               >
                                 <label className="flex items-center">
                                   <input
@@ -293,7 +293,7 @@ export default function ContactInfo({
                             .map((option, index) => (
                               <div
                                 key={index}
-                                className="flex items-center justify-between"
+                                className="flex justify-between items-center"
                               >
                                 <label className="flex items-center">
                                   <input
@@ -317,10 +317,10 @@ export default function ContactInfo({
                       </div>
                     </div>
 
-                    <div className="space-y-2 mb-4">
+                    <div className="mb-4 space-y-2">
                       {contactData.emailContacts.map((contact, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                          <div className="flex-1 flex items-center bg-gray-100 rounded-lg px-4 py-2">
+                        <div key={index} className="flex gap-2 items-center">
+                          <div className="flex flex-1 items-center px-4 py-2 bg-gray-100 rounded-lg">
                             <span className="text-sm text-black">Email</span>
                             <input
                               type="email"
@@ -328,13 +328,13 @@ export default function ContactInfo({
                               onChange={(e) =>
                                 handleEmailChange(index, e.target.value)
                               }
-                              className="flex-1 bg-transparent outline-none ml-2"
+                              className="flex-1 ml-2 bg-transparent outline-none"
                               placeholder="Enter email address"
                             />
                           </div>
                           {index > 0 && (
                             <button
-                              className="p-2 hover:bg-gray-100 rounded-lg"
+                              className="p-2 rounded-lg hover:bg-gray-100"
                               onClick={() => handleRemoveEmail(index)}
                             >
                               <Trash className="w-4 h-4" />
@@ -342,7 +342,7 @@ export default function ContactInfo({
                           )}
                           {index === contactData.emailContacts.length - 1 && (
                             <button
-                              className="p-2 hover:bg-gray-100 rounded-lg"
+                              className="p-2 rounded-lg hover:bg-gray-100"
                               onClick={handleAddEmail}
                             >
                               <Plus className="w-4 h-4" />
@@ -355,7 +355,7 @@ export default function ContactInfo({
                     <div className="mb-4">
                       <p className="mb-2">Message</p>
                       <textarea
-                        className="w-full h-32 p-3 border rounded-lg bg-gray-50"
+                        className="p-3 w-full h-32 bg-gray-50 rounded-lg border"
                         placeholder="Type your message here..."
                       />
                     </div>
@@ -365,7 +365,7 @@ export default function ContactInfo({
                 <div className="flex justify-end p-6 border-t">
                   <button
                     onClick={handleSend}
-                    className="px-6 py-2 bg-black text-white rounded-full hover:bg-gray-800 transition-colors"
+                    className="px-6 py-2 text-white bg-black rounded-full transition-colors hover:bg-gray-800"
                   >
                     Send
                   </button>
