@@ -9,40 +9,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { DialogTitle } from '@radix-ui/react-dialog'
 import apiService from '@/app/utils/apiService'
+import { ContactData, AttachmentOption, CommunicationLog } from '@/app/types/contact-info.types'
 
-// Define the interfaces based on what you provided
-interface CommunicationLog {
-  type: string
-  date: string
-  user: string
-  description?: string
-  isAutomatic: boolean
-}
-
-interface AttachmentOption {
-  name: string
-  category: string
-  checked?: boolean
-}
-
-interface ContactData {
-  communicationLogs: CommunicationLog[]
-  attachmentOptions: AttachmentOption[]
-  person: {
-    name: string
-    address: string
-    company: string
-    preferredContactType: string
-  }
-  insurance: {
-    company: string
-    representative: string
-    pendingEstimates: number
-    pendingReimbursements: number
-    updates: number
-  }
-}
-
+// Define any additional interfaces needed
 interface EmailItem {
   id: number
   address: string
@@ -156,7 +125,7 @@ export default function EmailModal({ contactData }: Props) {
       <DialogTrigger asChild>
         <Button
           variant="ghost"
-          className="p-0 h-auto w-auto bg-transparent hover:bg-transparent"
+          className="p-0 w-auto h-auto bg-transparent hover:bg-transparent"
         >
           <svg
             width="36"
@@ -259,27 +228,27 @@ export default function EmailModal({ contactData }: Props) {
             </div>
 
             <div className="mt-2">
-              <div className="grid grid-cols-3 text-sm text-gray-500 border-b pb-1">
+              <div className="grid grid-cols-3 pb-1 text-sm text-gray-500 border-b">
                 <div>TYPE</div>
                 <div>DATE</div>
                 <div>USER</div>
               </div>
 
               {contactData.communicationLogs.length === 0 ? (
-                <div className="text-center py-4 text-gray-500">
+                <div className="py-4 text-center text-gray-500">
                   There are no communication logs to show
                 </div>
               ) : (
                 contactData.communicationLogs.map((log, index) => (
                   <div
                     key={index}
-                    className="grid grid-cols-3 text-sm py-3 border-b"
+                    className="grid grid-cols-3 py-3 text-sm border-b"
                   >
                     <div>{log.type}</div>
                     <div>{log.date}</div>
                     <div className={log.isAutomatic ? '' : 'flex items-center'}>
                       {!log.isAutomatic && (
-                        <div className="w-5 h-5 rounded-full bg-gray-300 mr-2"></div>
+                        <div className="mr-2 w-5 h-5 bg-gray-300 rounded-full"></div>
                       )}
                       {log.isAutomatic ? 'Automatic' : log.user}
                     </div>
@@ -298,9 +267,9 @@ export default function EmailModal({ contactData }: Props) {
                     : 'rounded-r-full'
                 }`}
               ></div>
-              <div className="absolute top-0 left-0 right-0 bottom-0 flex">
+              <div className="flex absolute top-0 right-0 bottom-0 left-0">
                 <div
-                  className="flex-1 flex items-center justify-center cursor-pointer z-10"
+                  className="flex z-10 flex-1 justify-center items-center cursor-pointer"
                   onClick={() => setActiveTab('message')}
                 >
                   <span
@@ -314,7 +283,7 @@ export default function EmailModal({ contactData }: Props) {
                   </span>
                 </div>
                 <div
-                  className="flex-1 flex items-center justify-center cursor-pointer z-10"
+                  className="flex z-10 flex-1 justify-center items-center cursor-pointer"
                   onClick={() => setActiveTab('email')}
                 >
                   <span
@@ -337,14 +306,14 @@ export default function EmailModal({ contactData }: Props) {
 
           <div className="grid grid-cols-2 gap-y-4">
             {contactData.attachmentOptions.length === 0 ? (
-              <div className="text-center py-4 text-gray-500 col-span-2">
+              <div className="col-span-2 py-4 text-center text-gray-500">
                 There are no attachment options to show
               </div>
             ) : (
               contactData.attachmentOptions.map((attachment, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between pr-4"
+                  className="flex justify-between items-center pr-4"
                 >
                   <div className="flex items-center">
                     <Checkbox
@@ -402,13 +371,13 @@ export default function EmailModal({ contactData }: Props) {
                       onClick={addEmail}
                       className="flex items-center text-gray-600 hover:text-gray-900"
                     >
-                      <Plus className="h-4 w-4 mr-2" />
+                      <Plus className="mr-2 w-4 h-4" />
                       Add Email
                     </Button>
                   </div>
                 ) : (
                   emails.map((email) => (
-                    <div key={email.id} className="flex items-center gap-2">
+                    <div key={email.id} className="flex gap-2 items-center">
                       <div className="relative w-full max-w-[700px]">
                         <div className="flex items-center h-10 px-3 rounded-full bg-[#E3E3E3]">
                           <span className="text-[#1D1D1D] font-medium text-[15px]">
@@ -420,7 +389,7 @@ export default function EmailModal({ contactData }: Props) {
                             onChange={(e) =>
                               updateEmail(email.id, e.target.value)
                             }
-                            className="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 text-right pl-2"
+                            className="flex-1 pl-2 text-right bg-transparent border-none focus:outline-none focus:ring-0"
                             placeholder=""
                           />
                         </div>
@@ -429,18 +398,18 @@ export default function EmailModal({ contactData }: Props) {
                         variant="ghost"
                         size="icon"
                         onClick={() => removeEmail(email.id)}
-                        className="h-8 w-8"
+                        className="w-8 h-8"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                       {email.id === emails[emails.length - 1].id && (
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={addEmail}
-                          className="h-8 w-8"
+                          className="w-8 h-8"
                         >
-                          <Plus className="h-4 w-4" />
+                          <Plus className="w-4 h-4" />
                         </Button>
                       )}
                     </div>
@@ -462,9 +431,9 @@ export default function EmailModal({ contactData }: Props) {
                 placeholder=""
               />
             </div>
-            {error && <p className="mt-2 text-red-500 text-sm">{error}</p>}
+            {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
           </div>
-          <div className="mt-6 flex justify-between">
+          <div className="flex justify-between mt-6">
             <Button
               variant="outline"
               onClick={() => setOpen(false)}

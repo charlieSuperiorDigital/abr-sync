@@ -23,17 +23,30 @@ export default function SecondCallOpportunities() {
   const { data: session } = useSession()
   const tenantId = session?.user?.tenantId
   const { secondCallOpportunities, isLoading } = useGetOpportunities({ tenantId: tenantId! })
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [archiveConfirmation, setArchiveConfirmation] = useState<{ isOpen: boolean; opportunity: Opportunity | null }>({
+  const [archiveConfirmation, setArchiveConfirmation] = useState<{
+    isOpen: boolean
+    opportunity: Opportunity | null
+  }>({
     isOpen: false,
     opportunity: null
   })
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null)
+  const [modalState, setModalState] = useState<{ isOpen: boolean; opportunityId: string | null }>({
+    isOpen: false,
+    opportunityId: null
+  })
 
   const handleRowClick = useCallback((opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity)
-    setIsModalOpen(true)
-  }, [setSelectedOpportunity])
+    setModalState({
+      isOpen: true,
+      opportunityId: opportunity.opportunityId
+    })
+  }, [])
+
+  const handleModalOpenChange = useCallback((open: boolean) => {
+    setModalState(prev => ({ ...prev, isOpen: open }))
+  }, [])
 
   const handleContactClick = useCallback((opportunity: Opportunity) => {
     // Handle contact info click based on opportunity state
@@ -246,11 +259,11 @@ export default function SecondCallOpportunities() {
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
       />
       <BottomSheetModal
-        isOpen={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        title={selectedOpportunity ? `${selectedOpportunity.vehicle.year} ${selectedOpportunity.vehicle.make} ${selectedOpportunity.vehicle.model}` : ''}
+        isOpen={modalState.isOpen}
+        onOpenChange={handleModalOpenChange}
+        title={selectedOpportunity ? `${selectedOpportunity.vehicle?.year || ''} ${selectedOpportunity.vehicle?.make || ''} ${selectedOpportunity.vehicle?.model || ''}` : ''}
       >
-        {selectedOpportunity && <OpportunityModal opportunity={selectedOpportunity} />}
+        {modalState.opportunityId && <OpportunityModal opportunityId={modalState.opportunityId} workfileId={undefined} />}
       </BottomSheetModal>
       <ConfirmationModal
         isOpen={archiveConfirmation.isOpen}

@@ -1,4 +1,5 @@
 import apiService from '@/app/utils/apiService'
+import { GetOpportunityByIdApiResponse } from '@/app/types/opportunity'
 
 export interface VehiclePhoto {
   id: string
@@ -77,5 +78,16 @@ export const getOpportunitiesList = async ({
   } catch (error) {
     console.error('Error fetching opportunities:', error)
     throw error
+  }
+}
+
+export const getOpportunityById = async ({ opportunityId }: { opportunityId: string }): Promise<GetOpportunityByIdApiResponse> => {
+  try {
+    const response = await apiService.get<GetOpportunityByIdApiResponse>(`/Opportunity/${opportunityId}`)
+    console.log('Fetched opportunity:', opportunityId)
+    return response.data
+  } catch (error) {
+    console.error('Error fetching opportunity by id:', error)
+    throw error;
   }
 }

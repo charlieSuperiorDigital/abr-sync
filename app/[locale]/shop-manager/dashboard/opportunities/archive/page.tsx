@@ -24,20 +24,20 @@ import { useCallback, useState } from 'react'
 export default function ArchivedOpportunities() {
   const { data: session } = useSession()
   const tenantId = session?.user?.tenantId
-  const { archivedOpportunities, isLoading } = useGetOpportunities({
-    tenantId: tenantId!,
+  const { archivedOpportunities, isLoading } = useGetOpportunities({ tenantId: tenantId! })
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null)
+  const [modalState, setModalState] = useState<{ isOpen: boolean; opportunityId: string | null }>({
+    isOpen: false,
+    opportunityId: null
   })
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [selectedOpportunity, setSelectedOpportunity] =
-    useState<Opportunity | null>(null)
 
-  const handleRowClick = useCallback(
-    (opportunity: Opportunity) => {
-      setSelectedOpportunity(opportunity)
-      setIsModalOpen(true)
-    },
-    [setSelectedOpportunity]
-  )
+  const handleRowClick = useCallback((opportunity: Opportunity) => {
+    setSelectedOpportunity(opportunity)
+    setModalState({
+      isOpen: true,
+      opportunityId: opportunity.opportunityId
+    })
+  }, [])
 
   const handleContactClick = useCallback((opportunity: Opportunity) => {
     // Handle contact info click based on opportunity state
@@ -53,6 +53,10 @@ export default function ArchivedOpportunities() {
     // TODO: Implement unarchive API call
     showUnarchiveToast(opportunity)
     console.log('Unarchiving opportunity:', opportunity.opportunityId)
+  }, [])
+
+  const handleModalOpenChange = useCallback((open: boolean) => {
+    setModalState(prev => ({ ...prev, isOpen: open }))
   }, [])
 
   const formatDate = (date: string | undefined) => {
@@ -191,17 +195,11 @@ export default function ArchivedOpportunities() {
       />
 
       <BottomSheetModal
-        isOpen={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        title={
-          selectedOpportunity
-            ? `${selectedOpportunity.vehicle.year} ${selectedOpportunity.vehicle.make} ${selectedOpportunity.vehicle.model}`
-            : ''
-        }
+        isOpen={modalState.isOpen}
+        onOpenChange={handleModalOpenChange}
+        title={selectedOpportunity ? `${selectedOpportunity.vehicle?.year || ''} ${selectedOpportunity.vehicle?.make || ''} ${selectedOpportunity.vehicle?.model || ''}` : ''}
       >
-        {selectedOpportunity && (
-          <OpportunityModal opportunity={selectedOpportunity} />
-        )}
+        {modalState.opportunityId && <OpportunityModal opportunityId={modalState.opportunityId} workfileId={undefined} />}
       </BottomSheetModal>
     </div>
   )
