@@ -57,7 +57,80 @@ export type Sublet = {
   dueDate?: string; // Date when the sublet work is due to be completed (ISO format)
 };
 
-// Represents the API response format for workfiles
+export type VehicleOwner = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  address: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Vehicle = {
+  id: string;
+  ownerId: string;
+  owner: VehicleOwner;
+  make: string;
+  model: string;
+  year: number;
+  vin: string;
+  licensePlate: string;
+  exteriorColor: string;
+  interiorColor: string;
+  mileageIn: number;
+  damageDescription: string;
+  isCommercial: boolean;
+  createdAt: string;
+  updatedAt: string;
+  vehiclePicturesUrls: string[]; // Kept from frontend model as it's used in the UI
+};
+
+/**
+ * Represents the API response format for workfiles get by tenant Id throught the hook useGetWorkfilesByTenantId
+ */
+export interface WorkfilesByTenantIdResponse {
+  id: string;
+  opportunityId: string;
+  opportunity: {
+    id: string;
+    tenantId: string;
+    insuranceId: string;
+    insurance: null;
+    vehicleId: string;
+    vehicle: Vehicle;
+    locationId: null;
+    location: null;
+    documentId: null;
+    document: null;
+    status: string;
+    roNumber: string;
+    labourHours: null;
+    createdAt: string;
+    updatedAt: string;
+    _1stCall: string;
+    _2ndCall: string;
+    dropDate: null | string;
+    summary: string;
+    inDate: string;
+    inRental: boolean;
+    estimatedCompletionDate: string;
+    partsOrders: any[];
+    estimatorId: string;
+    estimator: null;
+  };
+  status: string;
+  dropDate: string;
+  estimatedCompletionDate: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+
+/**
+ * Represents the API response format for workfiles get by user Id throught the hook useGetWorkfilesByUserId and useGetWorkfileById
+ */
 export type WorkfileApiResponse = {
   workfile: {
     id: string;
@@ -134,6 +207,87 @@ export type WorkfileApiResponse = {
     createdBy: any | null;
     vendor: any | null;
   }>;
+};
+
+/**
+ * Represents the API response format for the getWorkfileById endpoint
+ */
+export type GetWorkfileByIdApiResponse = {
+  id: string;
+  opportunityId: string;
+  opportunity: {
+    id: string;
+    tenantId: string;
+    insuranceId: string;
+    insurance: {
+      id: string;
+      name: string;
+      provider: string;
+      claimNumber: string;
+      policyNumber: string;
+      typeOfLoss: string;
+      deductible: string;
+      contactName: string;
+      contactPhone: string;
+      adjuster: string;
+      adjusterPhone: string;
+      adjusterEmail: string;
+      approved: boolean;
+      createdAt: string;
+      updatedAt: string;
+    } | null;
+    vehicleId: string;
+    vehicle: {
+      id: string;
+      ownerId: string;
+      owner: {
+        id: string;
+        firstName: string;
+        lastName: string;
+        phone: string;
+        email: string;
+        address: string;
+        createdAt: string;
+        updatedAt: string;
+      };
+      make: string;
+      model: string;
+      year: number;
+      vin: string;
+      licensePlate: string;
+      exteriorColor: string;
+      interiorColor: string;
+      mileageIn: number;
+      damageDescription: string;
+      isCommercial: boolean;
+      createdAt: string;
+      updatedAt: string;
+    } | null;
+    locationId: null;
+    location: null;
+    documentId: null;
+    document: null;
+    status: string;
+    roNumber: string;
+    labourHours: null;
+    createdAt: string;
+    updatedAt: string;
+    _1stCall: string;
+    _2ndCall: string;
+    dropDate: null | string;
+    summary: string;
+    inDate: string;
+    inRental: boolean;
+    estimatedCompletionDate: string;
+    partsOrders: any[];
+    estimatorId: string;
+    estimator: null;
+  };
+  status: string;
+  dropDate: string;
+  estimatedCompletionDate: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 // Maps API response to our Workfile type

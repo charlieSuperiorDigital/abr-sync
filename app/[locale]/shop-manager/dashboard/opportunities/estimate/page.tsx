@@ -28,13 +28,23 @@ export default function EstimateOpportunities() {
   const { data: session } = useSession()
   const tenantId = session?.user?.tenantId
   const { estimateOpportunities, isLoading } = useGetOpportunities({ tenantId: tenantId! })
-  const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null)
+  const [modalState, setModalState] = useState<{ isOpen: boolean; opportunityId: string | null }>({
+    isOpen: false,
+    opportunityId: null
+  })
 
   const handleRowClick = useCallback((opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity)
-    setIsModalOpen(true)
-  }, [setSelectedOpportunity])
+    setModalState({
+      isOpen: true,
+      opportunityId: opportunity.opportunityId
+    })
+  }, [])
+
+  const handleModalOpenChange = useCallback((open: boolean) => {
+    setModalState(prev => ({ ...prev, isOpen: open }))
+  }, [])
 
   const handleContactClick = useCallback((opportunity: Opportunity) => {
     // Handle contact info click based on opportunity state
@@ -216,14 +226,18 @@ export default function EstimateOpportunities() {
           ].filter(contact => contact.email !== 'No email provided' && contact.email !== 'No adjuster email'),
           attachmentOptions: [
             {
-              name: 'Estimate',
-              category: 'Documents',
-              checked: false
+              id: '1',
+              name: 'Estimate.pdf', 
+              category: 'Estimate',
+              size: '1.2 MB',
+              checked: false 
             },
             {
-              name: 'Vehicle Photos',
-              category: 'Images',
-              checked: false
+              id: '2',
+              name: 'Vehicle_Photos.zip', 
+              category: 'Photos',
+              size: '3.5 MB',
+              checked: false 
             }
           ]
         };
@@ -286,11 +300,11 @@ export default function EstimateOpportunities() {
       />
 
       <BottomSheetModal
-        isOpen={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        title={selectedOpportunity ? `${selectedOpportunity.vehicle.year} ${selectedOpportunity.vehicle.make} ${selectedOpportunity.vehicle.model}` : ''}
+        isOpen={modalState.isOpen}
+        onOpenChange={handleModalOpenChange}
+        title={selectedOpportunity ? `${selectedOpportunity.vehicle?.year || ''} ${selectedOpportunity.vehicle?.make || ''} ${selectedOpportunity.vehicle?.model || ''}` : ''}
       >
-        {selectedOpportunity && <OpportunityModal opportunity={selectedOpportunity} />}
+        {modalState.opportunityId && <OpportunityModal opportunityId={modalState.opportunityId} workfileId={undefined} />}
       </BottomSheetModal>
     </div>
   )

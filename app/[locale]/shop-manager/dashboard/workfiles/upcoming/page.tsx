@@ -1,57 +1,56 @@
 'use client'
 
+import ContactInfo from '@/app/[locale]/custom-components/contact-info'
+import DarkButton from '@/app/[locale]/custom-components/dark-button'
+import DateTimePicker from '@/app/[locale]/custom-components/date-time-picker'
+import RoundButtonWithTooltip from '@/app/[locale]/custom-components/round-button-with-tooltip'
+import { useGetWorkfilesByTenantId } from '@/app/api/hooks/useWorkfiles'
+import { Workfile } from '@/app/types/workfile'
+import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import {
   VehicleCell,
 } from '@/components/custom-components/custom-table/table-cells'
-import ContactInfo from '@/app/[locale]/custom-components/contact-info'
-import DateTimePicker from '@/app/[locale]/custom-components/date-time-picker'
-import { ColumnDef } from '@tanstack/react-table'
-import { ClipboardPlus, Calendar, Check, MessageSquareMore } from 'lucide-react'
-import { Workfile, WorkfileStatus } from '@/app/types/workfile'
-import { useState, useCallback, useEffect } from 'react'
-import { useWorkfileStore } from '@/app/stores/workfile-store'
-import { useOpportunityStore } from '@/app/stores/opportunity-store'
-import DarkButton from '@/app/[locale]/custom-components/dark-button'
-import RoundButtonWithTooltip from '@/app/[locale]/custom-components/round-button-with-tooltip'
-import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
+import { ColumnDef } from '@tanstack/react-table'
+import { Check, ClipboardPlus, MessageSquareMore } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import { useCallback, useState } from 'react'
 
 export default function Upcoming() {
-  const { getWorkfilesByStatus, setSelectedWorkfile, selectedWorkfile, checkInVehicle, updateWorkfile } = useWorkfileStore()
-  const { getOpportunityById, setSelectedOpportunity, selectedOpportunity } = useOpportunityStore()
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const { data: session } = useSession()
+  const { workfiles } = useGetWorkfilesByTenantId({ tenantId: session?.user?.tenantId! })
+  const [modalState, setModalState] = useState<{ isOpen: boolean; opportunityId: string | null }>({
+    isOpen: false,
+    opportunityId: null
+  })
 
-  const upcomingWorkfiles = getWorkfilesByStatus(WorkfileStatus.Upcoming)
+  const upcomingWorkfiles = workfiles?.filter(w => w.status.toLowerCase() === 'upcoming') || []
 
-  // When a workfile is selected, find the related opportunity
-  useEffect(() => {
-    if (selectedWorkfile) {
-      const relatedOpportunity = getOpportunityById(selectedWorkfile.opportunityId)
-      if (relatedOpportunity) {
-        setSelectedOpportunity(relatedOpportunity)
-      }
-    }
-  }, [selectedWorkfile, getOpportunityById, setSelectedOpportunity])
+  const handleRowClick = useCallback((workfile: any) => {
+    setModalState({
+      isOpen: true,
+      opportunityId: workfile.opportunity.id
+    })
+  }, [])
 
-  const handleRowClick = useCallback((workfile: Workfile) => {
-    setSelectedWorkfile(workfile)
-    setIsModalOpen(true)
-  }, [setSelectedWorkfile])
-
-  const handleContactClick = useCallback((workfile: Workfile) => {
+  const handleContactClick = useCallback((workfile: any) => {
     // Handle contact info click
-    console.log('Contact clicked for workfile:', workfile.workfileId)
+    console.log('Contact clicked for workfile:', workfile.id)
   }, [])
 
-  const handleTaskClick = useCallback((workfile: Workfile) => {
+  const handleTaskClick = useCallback((workfile: any) => {
     // Handle task button click
-    console.log('Task clicked for workfile:', workfile.workfileId)
+    console.log('Task clicked for workfile:', workfile.id)
   }, [])
 
-  const handleCheckInClick = useCallback((workfileId: string) => {
-    checkInVehicle(workfileId)
-  }, [checkInVehicle])
+  const handleModalOpenChange = useCallback((open: boolean) => {
+    setModalState(prev => ({ ...prev, isOpen: open }))
+  }, [])
+
+  const handleCloseModal = useCallback(() => {
+    setModalState(prev => ({ ...prev, isOpen: false }))
+  }, [])
 
   const formatDate = (date: string | undefined) => {
     if (!date) return '---'
@@ -145,9 +144,9 @@ export default function Upcoming() {
       cell: ({ row }) => (
         <div className="flex gap-2 items-center">
           {row.original.technician?.avatar && (
-            <img 
-              src={row.original.technician.avatar} 
-              alt="" 
+            <img
+              src={row.original.technician.avatar}
+              alt=""
               className="w-6 h-6 rounded-full"
             />
           )}
@@ -161,7 +160,7 @@ export default function Upcoming() {
       id: 'checkIn',
       header: 'Check-In',
       cell: ({ row }) => (
-        <div 
+        <div
           onClick={(e) => {
             e.stopPropagation()
           }}
@@ -191,7 +190,7 @@ export default function Upcoming() {
     {
       header: 'Summary',
       cell: ({ row }) => (
-        <RoundButtonWithTooltip 
+        <RoundButtonWithTooltip
           buttonIcon={<MessageSquareMore className="w-5 h-5" />}
           tooltipText={row.original.lastCommunicationSummary || 'No summary available'}
         />
@@ -201,8 +200,8 @@ export default function Upcoming() {
       id: 'contact',
       header: 'Contact',
       cell: ({ row }) => (
-        <div 
-          data-testid="contact-info" 
+        <div
+          data-testid="contact-info"
           className="cursor-pointer"
           onClick={(e) => {
             e.stopPropagation()
@@ -217,8 +216,8 @@ export default function Upcoming() {
       id: 'task',
       header: 'Add Task',
       cell: ({ row }) => (
-        <div 
-          data-testid="task-button" 
+        <div
+          data-testid="task-button"
           className="transition-colors cursor-pointer hover:text-blue-600"
           onClick={(e) => {
             e.stopPropagation()
@@ -229,7 +228,6 @@ export default function Upcoming() {
         </div>
       ),
     },
-   
   ]
 
   return (
@@ -238,17 +236,22 @@ export default function Upcoming() {
         columns={columns}
         data={upcomingWorkfiles}
         onRowClick={handleRowClick}
-        pageSize={10}
-        pageSizeOptions={[5, 10, 20, 30, 40, 50]}
       />
 
-      <BottomSheetModal
-        isOpen={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        title={selectedWorkfile ? `${selectedWorkfile.vehicle.year} ${selectedWorkfile.vehicle.make} ${selectedWorkfile.vehicle.model}` : ''}
-      >
-        {selectedOpportunity && <OpportunityModal opportunity={selectedOpportunity} />}
-      </BottomSheetModal>
+      {/* Bottom Sheet Modal for Opportunity Details */}
+      {modalState.isOpen && modalState.opportunityId && (
+        <BottomSheetModal
+          isOpen={modalState.isOpen}
+          onOpenChange={handleModalOpenChange}
+          title="Opportunity Details"
+        >
+          <OpportunityModal opportunityId={modalState.opportunityId} />
+        </BottomSheetModal>
+      )}
     </div>
   )
 }
+function handleCheckInClick(workfileId: string): any {
+  throw new Error('Function not implemented.')
+}
+

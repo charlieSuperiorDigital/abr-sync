@@ -9,15 +9,15 @@ import * as React from 'react'
 import QCChecklistSettingsModal from './qc-checklist-settings-modal'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { toast } from 'react-toastify';
-import { WorkfileApiResponse } from '@/app/types/workfile'
+import { WorkfilesByTenantIdResponse } from '@/app/types/workfile'
 
 interface QCChecklistModalProps {
-  workfile: WorkfileApiResponse 
+  workfile: WorkfilesByTenantIdResponse 
   onClose?: () => void
 }
 
 export default function QCChecklistModal({ workfile, onClose }: QCChecklistModalProps) {
-  const { qualityCheck, checks, isLoading, error } = useGetQualityCheck({ workfileId: workfile?.workfile.id })
+  const { qualityCheck, checks, isLoading, error } = useGetQualityCheck({ workfileId: workfile?.id })
   const [settingsOpen, setSettingsOpen] = React.useState(false)
   const [updatingItemId, setUpdatingItemId] = React.useState<string | null>(null)
   const { updateItem, isLoading: isUpdating } = useUpdateQualityCheckItem()
@@ -26,11 +26,11 @@ export default function QCChecklistModal({ workfile, onClose }: QCChecklistModal
   const [uploadingId, setUploadingId] = React.useState<string | null>(null);
 
   // Defensive: fallback for missing vehicle
-  const safeVehicle = workfile?.workfile.opportunity.vehicle || { make: '---', model: '---', year: '---', vehiclePicturesUrls: [], vin: '---' };
+  const safeVehicle = workfile?.opportunity.vehicle || { make: '---', model: '---', year: '---', vehiclePicturesUrls: [], vin: '---' };
 
   React.useEffect(() => {
-    console.log('Current workfile ID:', workfile.workfile.id)
-  }, [workfile.workfile.id])
+    console.log('Current workfile ID:', workfile?.id)
+  }, [workfile?.id])
 
   // Only show enabled items
   const enabledChecks = checks.filter(item => item.enabled);
@@ -340,7 +340,7 @@ export default function QCChecklistModal({ workfile, onClose }: QCChecklistModal
         <QCChecklistSettingsModal
           open={settingsOpen}
           onClose={() => setSettingsOpen(false)}
-          workfileId={workfile.workfile.id}
+          workfileId={workfile.id}
           qualityCheckId={qualityCheck?.id || ''}
           checklist={checks}
           // status={qualityCheck?.status as QualityControlStatus}

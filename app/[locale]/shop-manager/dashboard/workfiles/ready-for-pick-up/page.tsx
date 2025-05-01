@@ -7,61 +7,60 @@ import {
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { ColumnDef } from '@tanstack/react-table'
 import { ClipboardPlus, Calendar, Check, MessageSquareMore, CheckCircle } from 'lucide-react'
-import { Workfile, WorkfileStatus } from '@/app/types/workfile'
-import { useState, useCallback, useEffect } from 'react'
-import { useWorkfileStore } from '@/app/stores/workfile-store'
-import { useOpportunityStore } from '@/app/stores/opportunity-store'
+import { WorkfilesByTenantIdResponse } from '@/app/types/workfile'
+import { useState, useCallback } from 'react'
 import RoundButtonWithTooltip from '@/app/[locale]/custom-components/round-button-with-tooltip'
 import { formatDate } from '@/app/utils/date-utils'
 import { formatCurrency } from '@/app/utils/currency-utils'
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
+import { useGetWorkfilesByTenantId } from '@/app/api/hooks/useWorkfiles'
+import { useSession } from 'next-auth/react'
 
 export default function ReadyForPickup() {
-  const { getWorkfilesByStatus, setSelectedWorkfile, selectedWorkfile } = useWorkfileStore()
-  const { getOpportunityById, setSelectedOpportunity, selectedOpportunity } = useOpportunityStore()
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const { data: session } = useSession()
+  const { readyForPickup, isLoading } = useGetWorkfilesByTenantId({ tenantId: session?.user?.tenantId! })
+  const [selectedWorkfile, setSelectedWorkfile] = useState<WorkfilesByTenantIdResponse | null>(null)
+  const [modalState, setModalState] = useState<{ isOpen: boolean; opportunityId: string | null }>({
+    isOpen: false,
+    opportunityId: null
+  })
 
-  const readyWorkfiles = getWorkfilesByStatus(WorkfileStatus.ReadyForPickup)
-
-  // When a workfile is selected, find the related opportunity
-  useEffect(() => {
-    if (selectedWorkfile) {
-      const relatedOpportunity = getOpportunityById(selectedWorkfile.opportunityId)
-      if (relatedOpportunity) {
-        setSelectedOpportunity(relatedOpportunity)
-      }
-    }
-  }, [selectedWorkfile, getOpportunityById, setSelectedOpportunity])
-
-  const handleRowClick = useCallback((workfile: Workfile) => {
+  const handleRowClick = useCallback((workfile: WorkfilesByTenantIdResponse) => {
     setSelectedWorkfile(workfile)
-    setIsModalOpen(true)
-  }, [setSelectedWorkfile])
+    setModalState({
+      isOpen: true,
+      opportunityId: workfile.opportunityId
+    })
+  }, [])
 
-  const handleContactClick = useCallback((workfile: Workfile) => {
+  const handleContactClick = useCallback((workfile: WorkfilesByTenantIdResponse) => {
     // Handle contact info click
-    console.log('Contact clicked for workfile:', workfile.workfileId)
+    console.log('Contact clicked for workfile:', workfile.id)
   }, [])
 
-  const handleTaskClick = useCallback((workfile: Workfile) => {
+  const handleTaskClick = useCallback((workfile: WorkfilesByTenantIdResponse) => {
     // Handle task button click
-    console.log('Task clicked for workfile:', workfile.workfileId)
+    console.log('Task clicked for workfile:', workfile.id)
   }, [])
 
-  const handleCompleteClick = useCallback((workfile: Workfile, e: React.MouseEvent) => {
+  const handleModalOpenChange = useCallback((open: boolean) => {
+    setModalState(prev => ({ ...prev, isOpen: open }))
+  }, [])
+
+  const handleCompleteClick = useCallback((workfile: WorkfilesByTenantIdResponse, e: React.MouseEvent) => {
     e.stopPropagation()
     // Handle complete button click - would transition to Archived status
-    console.log('Complete clicked for workfile:', workfile.workfileId)
+    console.log('Complete clicked for workfile:', workfile.id)
   }, [])
 
-  const columns: ColumnDef<Workfile, any>[] = [
+  const columns: ColumnDef<WorkfilesByTenantIdResponse, any>[] = [
     {
       accessorKey: 'roNumber',
       header: 'RO',
       cell: ({ row }) => (
-        <span className="font-medium">{row.original.roNumber || '---'}</span>
+        <span className="font-medium">{row.original.opportunity.roNumber || '---'}</span>
       ),
     },
     {
@@ -69,10 +68,10 @@ export default function ReadyForPickup() {
       header: 'Vehicle',
       cell: ({ row }) => (
         <VehicleCell
-          make={row.original.vehicle.make}
-          model={row.original.vehicle.model}
-          year={row.original.vehicle.year.toString()}
-          imageUrl={row.original.vehicle.vehiclePicturesUrls[0] || `https://picsum.photos/seed/${row.original.workfileId}/200/100`}
+          make={row.original.opportunity.vehicle.make}
+          model={row.original.opportunity.vehicle.model}
+          year={row.original.opportunity.vehicle.year.toString()}
+          imageUrl={row.original.opportunity.vehicle.vehiclePicturesUrls[0] || `https://picsum.photos/seed/${row.original.id}/200/100`}
         />
       ),
     },
@@ -81,7 +80,8 @@ export default function ReadyForPickup() {
       header: 'Estimate',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
-          {formatCurrency(row.original.estimateAmount)}
+          {/* {formatCurrency(row.original.estimateAmount)} */}
+          PLACEHOLDER
         </span>
       ),
     },
@@ -90,7 +90,9 @@ export default function ReadyForPickup() {
       header: 'Owner',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
-          {row.original.owner.name}
+          {row.original.opportunity.vehicle.owner ? 
+            `${row.original.opportunity.vehicle.owner.firstName} ${row.original.opportunity.vehicle.owner.lastName}` : 
+            'Owner Name'}
         </span>
       ),
     },
@@ -99,7 +101,8 @@ export default function ReadyForPickup() {
       header: 'QC Date',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
-          {formatDate(row.original.qualityControl?.completionDate) || '---'}
+          {/* {formatDate(row.original.qualityControl?.completionDate) || '---'} */}
+          PLACEHOLDER
         </span>
       ),
     },
@@ -108,7 +111,8 @@ export default function ReadyForPickup() {
       header: 'Pick-up',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
-          {formatDate(row.original.pickupDate) || '---'}
+          {/* {formatDate(row.original.pickupDate) || '---'} */}
+          PLACEHOLDER
         </span>
       ),
     },
@@ -116,7 +120,8 @@ export default function ReadyForPickup() {
       id: 'lastCommDate',
       header: 'Last Comm Date',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{formatDate(row.original.lastUpdatedDate)}</span>
+        // <span className="whitespace-nowrap">{formatDate(row.original.lastUpdatedDate)}</span>
+        <span className="whitespace-nowrap">PLACEHOLDER</span>
       ),
     },
     {
@@ -124,7 +129,7 @@ export default function ReadyForPickup() {
       cell: ({ row }) => (
         <RoundButtonWithTooltip 
           buttonIcon={<MessageSquareMore className="w-5 h-5" />}
-          tooltipText={row.original.lastCommunicationSummary || 'No summary available'}
+          tooltipText={row.original.opportunity.summary || 'No summary available'}
         />
       ),
     },
@@ -175,22 +180,26 @@ export default function ReadyForPickup() {
     },
   ]
 
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-64">Loading workfiles...</div>
+  }
+
   return (
     <div className="w-full">
       <DataTable
         columns={columns}
-        data={readyWorkfiles}
+        data={readyForPickup || []}
         onRowClick={handleRowClick}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
       />
 
       <BottomSheetModal
-        isOpen={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        title={selectedWorkfile ? `${selectedWorkfile.vehicle.year} ${selectedWorkfile.vehicle.make} ${selectedWorkfile.vehicle.model}` : ''}
+        isOpen={modalState.isOpen}
+        onOpenChange={handleModalOpenChange}
+        title={selectedWorkfile ? `${selectedWorkfile.opportunity.vehicle.year} ${selectedWorkfile.opportunity.vehicle.make} ${selectedWorkfile.opportunity.vehicle.model}` : ''}
       >
-        {selectedOpportunity && <OpportunityModal opportunity={selectedOpportunity} />}
+        {modalState.opportunityId && <OpportunityModal opportunityId={modalState.opportunityId} workfileId={selectedWorkfile?.id} />}
       </BottomSheetModal>
     </div>
   )
