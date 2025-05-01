@@ -47,8 +47,9 @@ export default function SideBarIconGroup({ icons, link, label, expanded = false 
                 <div className="bg-[#1D1D1D] rounded-[20px] p-3 w-full group-hover:bg-white">
                     <div className="flex flex-col space-y-2">
                         {icons.map((icon, index) => (
-                            <div 
+                            <Link 
                                 key={index}
+                                href={link}
                                 className="flex items-center py-1 cursor-pointer"
                             >
                                 <SideBarIcon {...icon} />
@@ -58,7 +59,7 @@ export default function SideBarIconGroup({ icons, link, label, expanded = false 
                                         <span className="ml-2 font-bold text-red-500">{icon.newNotificationsQuantity}</span>
                                     )}
                                 </div>
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 </div>
@@ -90,7 +91,10 @@ export default function SideBarIconGroup({ icons, link, label, expanded = false 
                 </Link>
             ) : (
                 // Expanded state
-                <div className="bg-[#1D1D1D] rounded-full p-2 w-full group-hover:bg-white cursor-pointer">
+                <Link 
+                    href={link} 
+                    className="bg-[#1D1D1D] rounded-full p-2 w-full group-hover:bg-white cursor-pointer"
+                >
                     <div className="flex items-center">
                         <SideBarIcon {...icons[0]} />
                         <div className="ml-4 font-medium text-base text-white group-hover:text-black whitespace-nowrap overflow-hidden">
@@ -100,7 +104,7 @@ export default function SideBarIconGroup({ icons, link, label, expanded = false 
                             )}
                         </div>
                     </div>
-                </div>
+                </Link>
             )}
         </div>
     )

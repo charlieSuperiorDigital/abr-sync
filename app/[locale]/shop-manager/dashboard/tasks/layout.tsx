@@ -126,7 +126,7 @@ export default function TasksLayout({
             }}
           />
         </div>
-        <main className="w-full">{children}</main>
+        <main className="w-full ml-[20px]">{children}</main>
       </div>
     </TasksContext.Provider>
   )
