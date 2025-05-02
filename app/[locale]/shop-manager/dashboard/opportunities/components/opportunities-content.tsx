@@ -4,9 +4,9 @@ import { OpportunityResponse } from '@/app/api/functions/opportunities'
 import { useSearchParams } from 'next/navigation'
 import NewOpportunities from '../new-opportunities/new-opportunities'
 import EstimateOpportunities from '../estimate/estimates'
-import SecondCallOpportunities from '../second-call/page'
-import TotalLossOpportunities from '../total-loss/page'
-import ArchivedOpportunities from '../archive/page'
+import SecondCallOpportunities from '../second-call/second-call'
+import TotalLossOpportunities from '../total-loss/total-loss'
+import ArchivedOpportunities from '../archive/archive'
 
 type CategorizedOpportunities = {
   new: OpportunityResponse[]

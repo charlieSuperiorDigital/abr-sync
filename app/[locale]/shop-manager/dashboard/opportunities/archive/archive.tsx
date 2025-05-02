@@ -18,7 +18,6 @@ import {
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import { ColumnDef } from '@tanstack/react-table'
-import { useSession } from 'next-auth/react'
 import { useCallback, useState } from 'react'
 import { OpportunityResponse } from '@/app/api/functions/opportunities'
 
