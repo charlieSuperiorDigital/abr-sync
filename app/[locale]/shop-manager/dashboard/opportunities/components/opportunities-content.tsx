@@ -15,7 +15,7 @@ type Props = {
 
 export default function OpportunitiesContent({ tenantId }: Props) {
   const searchParams = useSearchParams()
-  const activeTab = searchParams?.get('tab') || 'new-opportunities'
+  const activeTab = searchParams?.get('type') || 'new-opportunities'
   const {
     newOpportunities,
     estimateOpportunities,
