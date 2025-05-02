@@ -1,5 +1,6 @@
 'use client'
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
+import { OpportunityResponse } from '@/app/api/functions/opportunities'
 import { useGetOpportunities } from '@/app/api/hooks/useOpportunities'
 import { Opportunity } from '@/app/types/opportunity'
 import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
@@ -9,7 +10,7 @@ import ConfirmationModal from '@/components/custom-components/confirmation-modal
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import {
   SummaryCell,
-  VehicleCell
+  VehicleCell,
 } from '@/components/custom-components/custom-table/table-cells'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import { StatusBadge } from '@/components/custom-components/status-badge/status-badge'
@@ -19,33 +20,38 @@ import { Archive, Plus } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useCallback, useState } from 'react'
 
-export default function SecondCallOpportunities() {
-  const { data: session } = useSession()
-  const tenantId = session?.user?.tenantId
-  const { secondCallOpportunities, isLoading } = useGetOpportunities({ tenantId: tenantId! })
+type Props = {
+  secondCalls: OpportunityResponse[]
+}
+
+export default function SecondCallOpportunities({ secondCalls }: Props) {
   const [archiveConfirmation, setArchiveConfirmation] = useState<{
     isOpen: boolean
     opportunity: Opportunity | null
   }>({
     isOpen: false,
-    opportunity: null
+    opportunity: null,
   })
-  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null)
-  const [modalState, setModalState] = useState<{ isOpen: boolean; opportunityId: string | null }>({
+  const [selectedOpportunity, setSelectedOpportunity] =
+    useState<Opportunity | null>(null)
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean
+    opportunityId: string | null
+  }>({
     isOpen: false,
-    opportunityId: null
+    opportunityId: null,
   })
 
   const handleRowClick = useCallback((opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity)
     setModalState({
       isOpen: true,
-      opportunityId: opportunity.opportunityId
+      opportunityId: opportunity.opportunityId,
     })
   }, [])
 
   const handleModalOpenChange = useCallback((open: boolean) => {
-    setModalState(prev => ({ ...prev, isOpen: open }))
+    setModalState((prev) => ({ ...prev, isOpen: open }))
   }, [])
 
   const handleContactClick = useCallback((opportunity: Opportunity) => {
@@ -62,14 +68,17 @@ export default function SecondCallOpportunities() {
     if (archiveConfirmation.opportunity) {
       // TODO: Implement archive API call
       showArchiveToast(archiveConfirmation.opportunity)
-      console.log('Archiving opportunity:', archiveConfirmation.opportunity.opportunityId)
+      console.log(
+        'Archiving opportunity:',
+        archiveConfirmation.opportunity.opportunityId
+      )
     }
   }, [archiveConfirmation.opportunity])
 
   const handleArchiveClick = useCallback((opportunity: Opportunity) => {
     setArchiveConfirmation({
       isOpen: true,
-      opportunity
+      opportunity,
     })
   }, [])
 
@@ -80,7 +89,7 @@ export default function SecondCallOpportunities() {
       day: 'numeric',
       year: 'numeric',
       hour: 'numeric',
-      minute: '2-digit'
+      minute: '2-digit',
     })
   }
 
@@ -105,16 +114,16 @@ export default function SecondCallOpportunities() {
       accessorKey: 'roNumber',
       header: 'RO',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.roNumber || '---'}</span>
+        <span className="whitespace-nowrap">
+          {row.original.roNumber || '---'}
+        </span>
       ),
     },
     {
       accessorKey: 'owner.name',
       header: 'Owner',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">
-          {row.original.owner.name}
-        </span>
+        <span className="whitespace-nowrap">{row.original.owner.name}</span>
       ),
     },
     {
@@ -157,7 +166,9 @@ export default function SecondCallOpportunities() {
       accessorKey: 'lastUpdatedDate',
       header: 'LAST UPDATED',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{formatDate(row.original.lastUpdatedDate)}</span>
+        <span className="whitespace-nowrap">
+          {formatDate(row.original.lastUpdatedDate)}
+        </span>
       ),
     },
     {
@@ -166,28 +177,30 @@ export default function SecondCallOpportunities() {
     },
     {
       header: 'SUMMARY',
-      cell: ({ row }) => <SummaryCell text='Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' />,
+      cell: ({ row }) => (
+        <SummaryCell text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." />
+      ),
     },
     {
       accessorKey: 'warning',
       header: 'Warning',
       cell: ({ row }) => {
-        const warning = row.original.warning;
-        if (!warning || !warning.message) return null;
+        const warning = row.original.warning
+        if (!warning || !warning.message) return null
 
         // Determine variant and text based on warning type
-        let variant: 'warning' | 'danger' | 'pending';
-        let text: string;
+        let variant: 'warning' | 'danger' | 'pending'
+        let text: string
 
         if (warning.type === 'MISSING_VOR') {
-          variant = 'danger';
-          text = 'OVERDUE';
+          variant = 'danger'
+          text = 'OVERDUE'
         } else if (warning.type === 'UPDATED_IN_CCC') {
-          variant = 'warning';
-          text = 'URGENT';
+          variant = 'warning'
+          text = 'URGENT'
         } else {
-          variant = 'pending';
-          text = 'PENDING';
+          variant = 'pending'
+          text = 'PENDING'
         }
 
         return (
@@ -200,7 +213,7 @@ export default function SecondCallOpportunities() {
               {text}
             </StatusBadge>
           </div>
-        );
+        )
       },
     },
     {
@@ -230,30 +243,22 @@ export default function SecondCallOpportunities() {
         >
           <NewTaskModal
             title="New Task"
-            defaultRelation={
-              {
-                id: row.original.opportunityId,
-                type: 'opportunity'
-              }
-            }
-            children={
-              <Plus className="m-auto w-5 h-5" />
-            }
+            defaultRelation={{
+              id: row.original.opportunityId,
+              type: 'opportunity',
+            }}
+            children={<Plus className="m-auto w-5 h-5" />}
           />
         </div>
       ),
     },
   ]
 
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-64">Loading opportunities...</div>
-  }
-
   return (
     <div className="w-full">
       <DataTable<Opportunity, any>
         columns={columns}
-        data={secondCallOpportunities.map(mapApiResponseToOpportunity)}
+        data={secondCalls.map(mapApiResponseToOpportunity)}
         onRowClick={handleRowClick}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
@@ -261,13 +266,24 @@ export default function SecondCallOpportunities() {
       <BottomSheetModal
         isOpen={modalState.isOpen}
         onOpenChange={handleModalOpenChange}
-        title={selectedOpportunity ? `${selectedOpportunity.vehicle?.year || ''} ${selectedOpportunity.vehicle?.make || ''} ${selectedOpportunity.vehicle?.model || ''}` : ''}
+        title={
+          selectedOpportunity
+            ? `${selectedOpportunity.vehicle?.year || ''} ${selectedOpportunity.vehicle?.make || ''} ${selectedOpportunity.vehicle?.model || ''}`
+            : ''
+        }
       >
-        {modalState.opportunityId && <OpportunityModal opportunityId={modalState.opportunityId} workfileId={undefined} />}
+        {modalState.opportunityId && (
+          <OpportunityModal
+            opportunityId={modalState.opportunityId}
+            workfileId={undefined}
+          />
+        )}
       </BottomSheetModal>
       <ConfirmationModal
         isOpen={archiveConfirmation.isOpen}
-        onClose={() => setArchiveConfirmation({ isOpen: false, opportunity: null })}
+        onClose={() =>
+          setArchiveConfirmation({ isOpen: false, opportunity: null })
+        }
         onConfirm={handleArchiveConfirm}
         title="Archive Opportunity"
         description="Are you sure you want to archive this opportunity? This action will remove it from the active opportunities list."

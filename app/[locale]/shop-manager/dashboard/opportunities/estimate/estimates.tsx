@@ -1,6 +1,6 @@
 'use client'
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
-import { useGetOpportunities } from '@/app/api/hooks/useOpportunities'
+import { OpportunityResponse } from '@/app/api/functions/opportunities'
 import { ContactData, ContactMethod } from '@/app/types/contact-info.types'
 import { Opportunity } from '@/app/types/opportunity'
 import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
@@ -9,41 +9,48 @@ import { DataTable } from '@/components/custom-components/custom-table/data-tabl
 import {
   AutoCell,
   SummaryCell,
-  VehicleCell
+  VehicleCell,
 } from '@/components/custom-components/custom-table/table-cells'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import { StatusBadge } from '@/components/custom-components/status-badge/status-badge'
 import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
 import { ColumnDef } from '@tanstack/react-table'
 import { Plus } from 'lucide-react'
-import { useSession } from 'next-auth/react'
-import dynamic from "next/dynamic"
+import dynamic from 'next/dynamic'
 import { useCallback, useState } from 'react'
 
-const PdfPreview = dynamic(() => import("@/app/[locale]/custom-components/pdf-preview"), {
-  ssr: false,
-});
+const PdfPreview = dynamic(
+  () => import('@/app/[locale]/custom-components/pdf-preview'),
+  {
+    ssr: false,
+  }
+)
 
-export default function EstimateOpportunities() {
-  const { data: session } = useSession()
-  const tenantId = session?.user?.tenantId
-  const { estimateOpportunities, isLoading } = useGetOpportunities({ tenantId: tenantId! })
-  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null)
-  const [modalState, setModalState] = useState<{ isOpen: boolean; opportunityId: string | null }>({
+type Props = {
+  estimates: OpportunityResponse[]
+}
+
+export default function EstimateOpportunities({ estimates }: Props) {
+  const [selectedOpportunity, setSelectedOpportunity] =
+    useState<Opportunity | null>(null)
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean
+    opportunityId: string | null
+  }>({
     isOpen: false,
-    opportunityId: null
+    opportunityId: null,
   })
 
   const handleRowClick = useCallback((opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity)
     setModalState({
       isOpen: true,
-      opportunityId: opportunity.opportunityId
+      opportunityId: opportunity.opportunityId,
     })
   }, [])
 
   const handleModalOpenChange = useCallback((open: boolean) => {
-    setModalState(prev => ({ ...prev, isOpen: open }))
+    setModalState((prev) => ({ ...prev, isOpen: open }))
   }, [])
 
   const handleContactClick = useCallback((opportunity: Opportunity) => {
@@ -66,7 +73,9 @@ export default function EstimateOpportunities() {
       accessorKey: 'roNumber',
       header: 'RO Number',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.roNumber || '---'}</span>
+        <span className="whitespace-nowrap">
+          {row.original.roNumber || '---'}
+        </span>
       ),
     },
     {
@@ -84,9 +93,7 @@ export default function EstimateOpportunities() {
     {
       accessorKey: 'file',
       header: 'FILE',
-      cell: ({ row }) => (
-        <PdfPreview />
-      )
+      cell: ({ row }) => <PdfPreview />,
     },
     {
       accessorKey: 'parts',
@@ -108,7 +115,7 @@ export default function EstimateOpportunities() {
             )}
           </div>
         )
-      }
+      },
     },
     {
       accessorKey: 'isInRental',
@@ -117,32 +124,34 @@ export default function EstimateOpportunities() {
     },
     {
       accessorKey: 'priority',
-      header: 'PRIORITY'
+      header: 'PRIORITY',
     },
     {
       header: 'Summary',
-      cell: ({ row }) => <SummaryCell text='Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' />,
+      cell: ({ row }) => (
+        <SummaryCell text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." />
+      ),
     },
     {
       accessorKey: 'warning',
       header: 'Warning',
       cell: ({ row }) => {
-        const warning = row.original.warning;
-        if (!warning || !warning.message) return null;
+        const warning = row.original.warning
+        if (!warning || !warning.message) return null
 
         // Determine variant and text based on warning type
-        let variant: 'warning' | 'danger' | 'pending';
-        let text: string;
+        let variant: 'warning' | 'danger' | 'pending'
+        let text: string
 
         if (warning.type === 'MISSING_VOR') {
-          variant = 'danger';
-          text = 'OVERDUE';
+          variant = 'danger'
+          text = 'OVERDUE'
         } else if (warning.type === 'UPDATED_IN_CCC') {
-          variant = 'warning';
-          text = 'URGENT';
+          variant = 'warning'
+          text = 'URGENT'
         } else {
-          variant = 'pending';
-          text = 'PENDING';
+          variant = 'pending'
+          text = 'PENDING'
         }
 
         return (
@@ -155,20 +164,20 @@ export default function EstimateOpportunities() {
               {text}
             </StatusBadge>
           </div>
-        );
+        )
       },
     },
     {
       accessorKey: 'insuranceApproval',
       header: 'INSURANCE APPROVAL',
       cell: ({ row }) => {
-        const insurance = row.original.insurance;
+        const insurance = row.original.insurance
         if (insurance.approved === undefined) {
           return (
             <StatusBadge variant="pending" size="sm">
               PENDING APPROVAL
             </StatusBadge>
-          );
+          )
         }
         return (
           <StatusBadge
@@ -177,74 +186,84 @@ export default function EstimateOpportunities() {
           >
             {insurance.approved ? 'APPROVED' : 'REJECTED'}
           </StatusBadge>
-        );
-      }
+        )
+      },
     },
     {
       id: 'contact',
       header: 'Contact',
       cell: ({ row }) => {
-        const opportunity = row.original;
-        const owner = opportunity.owner;
-        const insurance = opportunity.insurance;
+        const opportunity = row.original
+        const owner = opportunity.owner
+        const insurance = opportunity.insurance
 
         // Determine preferred contact method based on opportunity data
-        let preferredContactMethod;
-        if (owner.email) preferredContactMethod = ContactMethod.email;
-        else if (owner.phone) preferredContactMethod = ContactMethod.phone;
-        else preferredContactMethod = ContactMethod.message;
+        let preferredContactMethod
+        if (owner.email) preferredContactMethod = ContactMethod.email
+        else if (owner.phone) preferredContactMethod = ContactMethod.phone
+        else preferredContactMethod = ContactMethod.message
 
         const contactData: ContactData = {
           person: {
             name: owner.name,
-            role: owner.company ? `${owner.company} Representative` : 'Vehicle Owner',
+            role: owner.company
+              ? `${owner.company} Representative`
+              : 'Vehicle Owner',
             address: `${owner.address}, ${owner.city}, ${owner.state} ${owner.zip}`,
             company: owner.company || 'N/A',
-            preferredContactType: preferredContactMethod
+            preferredContactType: preferredContactMethod,
           },
           insurance: {
             company: insurance.company,
             representative: insurance.representative || 'Not Assigned',
             pendingEstimates: 1, // Default to 1 since this is an active opportunity
             pendingReimbursements: 0, // Could be updated based on actual data
-            updates: insurance.approved === undefined ? 'Pending Approval' :
-              insurance.approved ? 'Estimate Approved' : 'Estimate Rejected'
+            updates:
+              insurance.approved === undefined
+                ? 'Pending Approval'
+                : insurance.approved
+                  ? 'Estimate Approved'
+                  : 'Estimate Rejected',
           },
-          communicationLogs: (opportunity.logs || []).map(log => ({
+          communicationLogs: (opportunity.logs || []).map((log) => ({
             ...log,
-            isAutomatic: log.type === 'email' // Assume emails are automatic, other types are manual
+            isAutomatic: log.type === 'email', // Assume emails are automatic, other types are manual
           })),
           emailContacts: [
             {
               email: owner.email || 'No email provided',
-              isPrimary: true
+              isPrimary: true,
             },
             {
               email: insurance.adjusterEmail || 'No adjuster email',
-              isPrimary: false
-            }
-          ].filter(contact => contact.email !== 'No email provided' && contact.email !== 'No adjuster email'),
+              isPrimary: false,
+            },
+          ].filter(
+            (contact) =>
+              contact.email !== 'No email provided' &&
+              contact.email !== 'No adjuster email'
+          ),
           attachmentOptions: [
             {
               id: '1',
-              name: 'Estimate.pdf', 
+              name: 'Estimate.pdf',
               category: 'Estimate',
               size: '1.2 MB',
               checked: false,
               email: owner.email || 'No email provided',
-              isPrimary: true
+              isPrimary: true,
             },
             {
               id: '2',
-              name: 'Vehicle_Photos.zip', 
+              name: 'Vehicle_Photos.zip',
               category: 'Photos',
               size: '3.5 MB',
               checked: false,
               email: owner.email || 'No email provided',
-              isPrimary: true 
-            }
-          ]
-        };
+              isPrimary: true,
+            },
+          ],
+        }
 
         return (
           <div
@@ -260,7 +279,7 @@ export default function EstimateOpportunities() {
               contactData={contactData}
             />
           </div>
-        );
+        )
       },
     },
     {
@@ -274,30 +293,22 @@ export default function EstimateOpportunities() {
         >
           <NewTaskModal
             title="New Task"
-            defaultRelation={
-              {
-                id: row.original.opportunityId,
-                type: 'opportunity'
-              }
-            }
-            children={
-              <Plus className="m-auto w-5 h-5" />
-            }
+            defaultRelation={{
+              id: row.original.opportunityId,
+              type: 'opportunity',
+            }}
+            children={<Plus className="m-auto w-5 h-5" />}
           />
         </div>
       ),
     },
   ]
 
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-64">Loading opportunities...</div>
-  }
-
   return (
     <div className="w-full">
       <DataTable<Opportunity, any>
         columns={columns}
-        data={estimateOpportunities.map(mapApiResponseToOpportunity)}
+        data={estimates.map(mapApiResponseToOpportunity)}
         onRowClick={handleRowClick}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
@@ -306,9 +317,18 @@ export default function EstimateOpportunities() {
       <BottomSheetModal
         isOpen={modalState.isOpen}
         onOpenChange={handleModalOpenChange}
-        title={selectedOpportunity ? `${selectedOpportunity.vehicle?.year || ''} ${selectedOpportunity.vehicle?.make || ''} ${selectedOpportunity.vehicle?.model || ''}` : ''}
+        title={
+          selectedOpportunity
+            ? `${selectedOpportunity.vehicle?.year || ''} ${selectedOpportunity.vehicle?.make || ''} ${selectedOpportunity.vehicle?.model || ''}`
+            : ''
+        }
       >
-        {modalState.opportunityId && <OpportunityModal opportunityId={modalState.opportunityId} workfileId={undefined} />}
+        {modalState.opportunityId && (
+          <OpportunityModal
+            opportunityId={modalState.opportunityId}
+            workfileId={undefined}
+          />
+        )}
       </BottomSheetModal>
     </div>
   )

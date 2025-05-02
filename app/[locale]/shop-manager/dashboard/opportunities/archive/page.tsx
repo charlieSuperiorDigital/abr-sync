@@ -20,22 +20,28 @@ import OpportunityModal from '@/components/custom-components/opportunity-modal/o
 import { ColumnDef } from '@tanstack/react-table'
 import { useSession } from 'next-auth/react'
 import { useCallback, useState } from 'react'
+import { OpportunityResponse } from '@/app/api/functions/opportunities'
 
-export default function ArchivedOpportunities() {
-  const { data: session } = useSession()
-  const tenantId = session?.user?.tenantId
-  const { archivedOpportunities, isLoading } = useGetOpportunities({ tenantId: tenantId! })
-  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null)
-  const [modalState, setModalState] = useState<{ isOpen: boolean; opportunityId: string | null }>({
+type Props = {
+  archived: OpportunityResponse[]
+}
+
+export default function ArchivedOpportunities({ archived }: Props) {
+  const [selectedOpportunity, setSelectedOpportunity] =
+    useState<Opportunity | null>(null)
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean
+    opportunityId: string | null
+  }>({
     isOpen: false,
-    opportunityId: null
+    opportunityId: null,
   })
 
   const handleRowClick = useCallback((opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity)
     setModalState({
       isOpen: true,
-      opportunityId: opportunity.opportunityId
+      opportunityId: opportunity.opportunityId,
     })
   }, [])
 
@@ -56,7 +62,7 @@ export default function ArchivedOpportunities() {
   }, [])
 
   const handleModalOpenChange = useCallback((open: boolean) => {
-    setModalState(prev => ({ ...prev, isOpen: open }))
+    setModalState((prev) => ({ ...prev, isOpen: open }))
   }, [])
 
   const formatDate = (date: string | undefined) => {
@@ -176,19 +182,11 @@ export default function ArchivedOpportunities() {
     },
   ]
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        Loading opportunities...
-      </div>
-    )
-  }
-
   return (
     <div className="w-full">
       <DataTable<Opportunity, any>
         columns={columns}
-        data={archivedOpportunities.map(mapApiResponseToOpportunity)}
+        data={archived.map(mapApiResponseToOpportunity)}
         onRowClick={handleRowClick}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
@@ -197,9 +195,18 @@ export default function ArchivedOpportunities() {
       <BottomSheetModal
         isOpen={modalState.isOpen}
         onOpenChange={handleModalOpenChange}
-        title={selectedOpportunity ? `${selectedOpportunity.vehicle?.year || ''} ${selectedOpportunity.vehicle?.make || ''} ${selectedOpportunity.vehicle?.model || ''}` : ''}
+        title={
+          selectedOpportunity
+            ? `${selectedOpportunity.vehicle?.year || ''} ${selectedOpportunity.vehicle?.make || ''} ${selectedOpportunity.vehicle?.model || ''}`
+            : ''
+        }
       >
-        {modalState.opportunityId && <OpportunityModal opportunityId={modalState.opportunityId} workfileId={undefined} />}
+        {modalState.opportunityId && (
+          <OpportunityModal
+            opportunityId={modalState.opportunityId}
+            workfileId={undefined}
+          />
+        )}
       </BottomSheetModal>
     </div>
   )

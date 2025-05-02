@@ -1,10 +1,7 @@
 'use client'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import {
-  AutoCell,
-  StatusBadgeCell,
   SummaryCell,
-  UploadTimeCell,
   VehicleCell,
 } from '@/components/custom-components/custom-table/table-cells'
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
@@ -14,55 +11,62 @@ import { Opportunity, OpportunityStatus } from '@/app/types/opportunity'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import { useState, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
 import ConfirmationModal from '@/components/custom-components/confirmation-modal/confirmation-modal'
 import { showPickupToast } from '@/app/utils/toast-utils'
 import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
 import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
-import { useGetOpportunities } from '@/app/api/hooks/useOpportunities'
+import { OpportunityResponse } from '@/app/api/functions/opportunities'
 
-export default function TotalLossOpportunities() {
-  const { data: session } = useSession()
-  const tenantId = session?.user?.tenantId
-  const { totalLossOpportunities, isLoading } = useGetOpportunities({ tenantId: tenantId! })
+type Props = {
+  totalLoss: OpportunityResponse[]
+}
+
+export default function TotalLossOpportunities({ totalLoss }: Props) {
   const [pickupConfirmation, setPickupConfirmation] = useState<{
     isOpen: boolean
     opportunity: Opportunity | null
   }>({
     isOpen: false,
-    opportunity: null
+    opportunity: null,
   })
-  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null)
-  const [modalState, setModalState] = useState<{ isOpen: boolean; opportunityId: string | null }>({
+  const [selectedOpportunity, setSelectedOpportunity] =
+    useState<Opportunity | null>(null)
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean
+    opportunityId: string | null
+  }>({
     isOpen: false,
-    opportunityId: null
+    opportunityId: null,
   })
 
   const handleRowClick = useCallback((opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity)
     setModalState({
       isOpen: true,
-      opportunityId: opportunity.opportunityId
+      opportunityId: opportunity.opportunityId,
     })
   }, [])
 
   const handleModalOpenChange = useCallback((open: boolean) => {
-    setModalState(prev => ({ ...prev, isOpen: open }));
-  }, []);
+    setModalState((prev) => ({ ...prev, isOpen: open }))
+  }, [])
 
   const handlePickupConfirm = useCallback(() => {
     if (pickupConfirmation.opportunity) {
       // TODO: Implement pickup API call
       showPickupToast(pickupConfirmation.opportunity)
-      console.log('Marking opportunity as picked up:', pickupConfirmation.opportunity.opportunityId)
+      console.log(
+        'Marking opportunity as picked up:',
+        pickupConfirmation.opportunity.opportunityId
+      )
     }
   }, [pickupConfirmation.opportunity])
 
   const handlePickupClick = useCallback((opportunity: Opportunity) => {
     setPickupConfirmation({
       isOpen: true,
-      opportunity
+      opportunity,
     })
   }, [])
 
@@ -92,16 +96,16 @@ export default function TotalLossOpportunities() {
       accessorKey: 'owner.name',
       header: 'Owner',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">
-          {row.original.owner.name}
-        </span>
+        <span className="whitespace-nowrap">{row.original.owner.name}</span>
       ),
     },
     {
       accessorKey: 'insurance.company',
       header: 'Insurance',
       cell: ({ row }) => (
-        <span className={`whitespace-nowrap font-bold ${row.original.insurance.company === 'PROGRESSIVE' ? 'text-blue-700' : ''}`}>
+        <span
+          className={`whitespace-nowrap font-bold ${row.original.insurance.company === 'PROGRESSIVE' ? 'text-blue-700' : ''}`}
+        >
           {row.original.insurance.company.toUpperCase()}
         </span>
       ),
@@ -110,18 +114,18 @@ export default function TotalLossOpportunities() {
       accessorKey: 'numberOfCommunications',
       header: '# OF COMMUNICATIONS',
       cell: ({ row }) => {
-        const communicationLogs = row.original.logs?.filter(log => 
-          log.type.toLowerCase().includes('call') || 
-          log.type.toLowerCase().includes('email') || 
-          log.type.toLowerCase().includes('message')
-        ) || []
-        
+        const communicationLogs =
+          row.original.logs?.filter(
+            (log) =>
+              log.type.toLowerCase().includes('call') ||
+              log.type.toLowerCase().includes('email') ||
+              log.type.toLowerCase().includes('message')
+          ) || []
+
         return (
-          <span className="whitespace-nowrap">
-            {communicationLogs.length}
-          </span>
+          <span className="whitespace-nowrap">{communicationLogs.length}</span>
         )
-      }
+      },
     },
     {
       accessorKey: 'timeTracking',
@@ -134,14 +138,21 @@ export default function TotalLossOpportunities() {
         const amount = row.original.finalBill?.amount
         return (
           <span className="whitespace-nowrap">
-            {amount ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount) : '---'}
+            {amount
+              ? new Intl.NumberFormat('en-US', {
+                  style: 'currency',
+                  currency: 'USD',
+                }).format(amount)
+              : '---'}
           </span>
         )
-      }
+      },
     },
     {
       header: 'Summary',
-      cell: ({ row }) => <SummaryCell text='Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' />,
+      cell: ({ row }) => (
+        <SummaryCell text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." />
+      ),
     },
     {
       id: 'pickup',
@@ -163,12 +174,15 @@ export default function TotalLossOpportunities() {
       id: 'contact',
       header: 'Contact',
       cell: ({ row }) => (
-        <div 
-          data-testid="contact-info" 
+        <div
+          data-testid="contact-info"
           className="cursor-pointer"
           onClick={(e) => {
             e.stopPropagation()
-            console.log('Contact clicked for opportunity:', row.original.opportunityId)
+            console.log(
+              'Contact clicked for opportunity:',
+              row.original.opportunityId
+            )
           }}
         >
           <ContactInfo />
@@ -186,30 +200,22 @@ export default function TotalLossOpportunities() {
         >
           <NewTaskModal
             title="New Task"
-            defaultRelation={
-              {
-                id: row.original.opportunityId,
-                type: 'opportunity'
-              }
-            }
-            children={
-              <Plus className="m-auto w-5 h-5" />
-            }
+            defaultRelation={{
+              id: row.original.opportunityId,
+              type: 'opportunity',
+            }}
+            children={<Plus className="m-auto w-5 h-5" />}
           />
         </div>
       ),
     },
   ]
 
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-64">Loading opportunities...</div>
-  }
-
   return (
     <div className="w-full">
       <DataTable<Opportunity, any>
         columns={columns}
-        data={totalLossOpportunities.map(mapApiResponseToOpportunity)}
+        data={totalLoss.map(mapApiResponseToOpportunity)}
         onRowClick={handleRowClick}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
@@ -217,13 +223,24 @@ export default function TotalLossOpportunities() {
       <BottomSheetModal
         isOpen={modalState.isOpen}
         onOpenChange={handleModalOpenChange}
-        title={selectedOpportunity ? `${selectedOpportunity.vehicle?.year || ''} ${selectedOpportunity.vehicle?.make || ''} ${selectedOpportunity.vehicle?.model || ''}` : ''}
+        title={
+          selectedOpportunity
+            ? `${selectedOpportunity.vehicle?.year || ''} ${selectedOpportunity.vehicle?.make || ''} ${selectedOpportunity.vehicle?.model || ''}`
+            : ''
+        }
       >
-        {modalState.opportunityId && <OpportunityModal opportunityId={modalState.opportunityId} workfileId={undefined} />}
+        {modalState.opportunityId && (
+          <OpportunityModal
+            opportunityId={modalState.opportunityId}
+            workfileId={undefined}
+          />
+        )}
       </BottomSheetModal>
       <ConfirmationModal
         isOpen={pickupConfirmation.isOpen}
-        onClose={() => setPickupConfirmation({ isOpen: false, opportunity: null })}
+        onClose={() =>
+          setPickupConfirmation({ isOpen: false, opportunity: null })
+        }
         onConfirm={handlePickupConfirm}
         title="Mark Vehicle as Picked Up"
         description="Are you sure you want to mark this vehicle as picked up? This will archive the opportunity and record the pickup date."
