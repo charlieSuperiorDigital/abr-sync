@@ -37,6 +37,7 @@ export default function ClientOpportunitiesLayout({
       ) : (
         <>
           <DraggableNav
+            useQueryParams={true}
             navItems={[
               {
                 id: 'new-opportunities',

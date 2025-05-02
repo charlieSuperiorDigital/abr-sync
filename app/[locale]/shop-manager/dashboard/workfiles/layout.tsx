@@ -1,8 +1,8 @@
-"use client"
-import DraggableNav from '@/components/custom-components/draggable-nav/draggable-nav';
-import { useSession } from 'next-auth/react';
-import { useGetWorkfiles } from '@/app/api/hooks/useGetWorkfiles';
-import React from 'react';
+'use client'
+import DraggableNav from '@/components/custom-components/draggable-nav/draggable-nav'
+import { useSession } from 'next-auth/react'
+import { useGetWorkfiles } from '@/app/api/hooks/useGetWorkfiles'
+import React from 'react'
 
 export default function WorkfilesLayout({
   children,
@@ -28,13 +28,31 @@ export default function WorkfilesLayout({
 
   return (
     <div className="w-full">
-      <h1 className="px-5 my-7 text-3xl font-semibold tracking-tight">Work Files</h1>
+      <h1 className="px-5 my-7 text-3xl font-semibold tracking-tight">
+        Work Files
+      </h1>
       <DraggableNav
         navItems={[
-          { id: 'upcoming', label: 'Upcoming', count: workfilesQuantity.upcoming },
-          { id: 'in-progress', label: 'In Progress', count: workfilesQuantity.inProgress },
-          { id: 'quality-control', label: 'Quality Control', count: workfilesQuantity.qualityControl },
-          { id: 'ready-for-pick-up', label: 'Ready For Pick-Up', count: workfilesQuantity.readyForPickup },
+          {
+            id: 'upcoming',
+            label: 'Upcoming',
+            count: workfilesQuantity.upcoming,
+          },
+          {
+            id: 'in-progress',
+            label: 'In Progress',
+            count: workfilesQuantity.inProgress,
+          },
+          {
+            id: 'quality-control',
+            label: 'Quality Control',
+            count: workfilesQuantity.qualityControl,
+          },
+          {
+            id: 'ready-for-pick-up',
+            label: 'Ready For Pick-Up',
+            count: workfilesQuantity.readyForPickup,
+          },
           { id: 'sublets', label: 'Sublets', count: workfilesQuantity.sublets },
           { id: 'labor', label: 'Labor', count: workfilesQuantity.labor },
           { id: 'reports', label: 'Reports', count: workfilesQuantity.reports },
