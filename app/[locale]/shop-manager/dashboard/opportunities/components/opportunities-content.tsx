@@ -7,43 +7,39 @@ import EstimateOpportunities from '../estimate/estimates'
 import SecondCallOpportunities from '../second-call/second-call'
 import TotalLossOpportunities from '../total-loss/total-loss'
 import ArchivedOpportunities from '../archive/archive'
+import { useGetOpportunities } from '@/app/api/hooks/useOpportunities'
 
-type CategorizedOpportunities = {
-  new: OpportunityResponse[]
-  estimate: OpportunityResponse[]
-  secondCall: OpportunityResponse[]
-  totalLoss: OpportunityResponse[]
-  archived: OpportunityResponse[]
+type Props = {
+  tenantId: string
 }
 
-export default function OpportunitiesContent({
-  categorizedOpportunities,
-}: {
-  categorizedOpportunities: CategorizedOpportunities
-}) {
+export default function OpportunitiesContent({ tenantId }: Props) {
   const searchParams = useSearchParams()
-  const activeTab = searchParams?.get('tab') || 'new-opportunities'
+  const activeTab = searchParams?.get('type') || 'new-opportunities'
+  const {
+    newOpportunities,
+    estimateOpportunities,
+    secondCallOpportunities,
+    totalLossOpportunities,
+    archivedOpportunities,
+  } = useGetOpportunities({ tenantId })
 
   return (
     <div className="w-full">
       {activeTab === 'new-opportunities' && (
-        <NewOpportunities newOpportunities={categorizedOpportunities.new} />
+        <NewOpportunities newOpportunities={newOpportunities} />
       )}
       {activeTab === 'estimate' && (
-        <EstimateOpportunities estimates={categorizedOpportunities.estimate} />
+        <EstimateOpportunities estimates={estimateOpportunities} />
       )}
       {activeTab === 'second-call' && (
-        <SecondCallOpportunities
-          secondCalls={categorizedOpportunities.secondCall}
-        />
+        <SecondCallOpportunities secondCalls={secondCallOpportunities} />
       )}
       {activeTab === 'total-loss' && (
-        <TotalLossOpportunities
-          totalLoss={categorizedOpportunities.totalLoss}
-        />
+        <TotalLossOpportunities totalLoss={totalLossOpportunities} />
       )}
       {activeTab === 'archive' && (
-        <ArchivedOpportunities archived={categorizedOpportunities.archived} />
+        <ArchivedOpportunities archived={archivedOpportunities} />
       )}
     </div>
   )

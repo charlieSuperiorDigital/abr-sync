@@ -2,10 +2,19 @@
 
 import { Search as SearchIcon } from 'lucide-react'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
-import { AutoCell, StatusBadgeCell, SummaryCell, UploadTimeCell, VehicleCell } from '@/components/custom-components/custom-table/table-cells'
+import {
+  AutoCell,
+  StatusBadgeCell,
+  SummaryCell,
+  UploadTimeCell,
+  VehicleCell,
+} from '@/components/custom-components/custom-table/table-cells'
 import { ColumnDef } from '@tanstack/react-table'
 import { OpportunityResponse } from '@/app/api/functions/opportunities'
-import { WorkfileApiResponse } from '@/app/types/workfile'
+import {
+  WorkfileApiResponse,
+  WorkfilesByTenantIdResponse,
+} from '@/app/types/workfile'
 import { useSession } from 'next-auth/react'
 import { useGetWorkfiles } from '@/app/api/hooks/useGetWorkfiles'
 import { useState } from 'react'
@@ -23,7 +32,7 @@ export default function SearchPage() {
     secondCallOpportunities,
     totalLossOpportunities,
     archivedOpportunities,
-    error: opportunitiesError
+    error: opportunitiesError,
   } = useGetOpportunities({ tenantId: tenantId! })
   const {
     upcoming,
@@ -34,26 +43,47 @@ export default function SearchPage() {
     labor,
     reports,
     archive,
-    error: workfilesError
+    error: workfilesError,
   } = useGetWorkfiles({ tenantId: tenantId! })
 
   // Combine all opportunities and workfiles
-  const allOpportunities = [...(newOpportunities || []), ...(estimateOpportunities || []), ...(secondCallOpportunities || []), ...(totalLossOpportunities || []), ...(archivedOpportunities || [])]
-  const allWorkfiles = [...(upcoming || []), ...(inProgress || []), ...(qualityControl || []), ...(readyForPickup || []), ...(sublets || []), ...(labor || []), ...(reports || []), ...(archive || [])]
+  const allOpportunities = [
+    ...(newOpportunities || []),
+    ...(estimateOpportunities || []),
+    ...(secondCallOpportunities || []),
+    ...(totalLossOpportunities || []),
+    ...(archivedOpportunities || []),
+  ]
+  const allWorkfiles = [
+    ...(upcoming || []),
+    ...(inProgress || []),
+    ...(qualityControl || []),
+    ...(readyForPickup || []),
+    ...(sublets || []),
+    ...(labor || []),
+    ...(reports || []),
+    ...(archive || []),
+  ]
 
   const [searchTerm, setSearchTerm] = useState('')
 
   // Type guard to check if a row is an OpportunityResponse
-  const isOpportunity = (row: OpportunityResponse | WorkfileApiResponse): row is OpportunityResponse => {
-    return (row as OpportunityResponse).opportunityId !== undefined;
-  };
+  const isOpportunity = (
+    row: OpportunityResponse | WorkfilesByTenantIdResponse
+  ): row is OpportunityResponse => {
+    return (row as OpportunityResponse).opportunityId !== undefined
+  }
 
   // Type guard to check if a row is a WorkfileApiResponse
-  const isWorkfile = (row: OpportunityResponse | WorkfileApiResponse): row is WorkfileApiResponse => {
-    return (row as WorkfileApiResponse).workfile.id !== undefined;
-  };
+  const isWorkfile = (
+    row: OpportunityResponse | WorkfilesByTenantIdResponse
+  ): row is WorkfilesByTenantIdResponse => {
+    return (row as WorkfilesByTenantIdResponse).id !== undefined
+  }
 
-  const searchFields = (row: OpportunityResponse | WorkfileApiResponse) => {
+  const searchFields = (
+    row: OpportunityResponse | WorkfilesByTenantIdResponse
+  ) => {
     if (isOpportunity(row)) {
       return [
         row.opportunityId,
@@ -68,14 +98,14 @@ export default function SearchPage() {
         `${row.ownerFirstName} ${row.ownerLastName}`,
         row.ownerPhone,
         row.ownerEmail,
-        row.ownerAddress
-      ];
+        row.ownerAddress,
+      ]
     } else if (isWorkfile(row)) {
       return [
-        row.workfile.id,
-        row.workfile.status,
-        row.workfile.opportunity.vehicle,
-        row.workfile.opportunity.vehicleId,
+        row.id,
+        row.status,
+        row.opportunity.vehicle,
+        row.opportunity.vehicleId,
         '',
         '',
         '',
@@ -84,23 +114,29 @@ export default function SearchPage() {
         '',
         '',
         '',
-        ''
-      ];
+        '',
+      ]
     }
-    return [];
-  };
+    return []
+  }
 
-  const matchesSearch = (row: OpportunityResponse | WorkfileApiResponse) => {
+  const matchesSearch = (
+    row: OpportunityResponse | WorkfilesByTenantIdResponse
+  ) => {
     if (!searchTerm) return false
     const searchLower = searchTerm.toLowerCase()
-    return searchFields(row).some(field =>
-      field && field.toString().toLowerCase().includes(searchLower)
+    return searchFields(row).some(
+      (field) => field && field.toString().toLowerCase().includes(searchLower)
     )
   }
 
   // Filter opportunities and workfiles separately
-  const filteredOpportunities = allOpportunities.filter(matchesSearch as (row: OpportunityResponse) => boolean)
-  const filteredWorkfiles = allWorkfiles.filter(matchesSearch as (row: WorkfileApiResponse) => boolean)
+  const filteredOpportunities = allOpportunities.filter(
+    matchesSearch as (row: OpportunityResponse) => boolean
+  )
+  const filteredWorkfiles = allWorkfiles.filter(
+    matchesSearch as (row: WorkfilesByTenantIdResponse) => boolean
+  )
 
   // Only show results when searching
   const showResults = searchTerm !== ''
@@ -113,12 +149,14 @@ export default function SearchPage() {
     {
       accessorKey: 'opportunityId',
       header: 'Opportunity ID',
-      cell: ({ row }) => <AutoCell  />
+      cell: ({ row }) => <AutoCell />,
     },
     {
       accessorKey: 'opportunityStatus',
       header: 'Status',
-      cell: ({ row }) => <StatusBadgeCell status={row.original.opportunityStatus} />
+      cell: ({ row }) => (
+        <StatusBadgeCell status={row.original.opportunityStatus} />
+      ),
     },
     {
       accessorKey: 'vehicle',
@@ -130,7 +168,7 @@ export default function SearchPage() {
           model={row.original.vehicleModel}
           imageUrl={row.original.vehiclePhotos?.[0]?.url}
         />
-      )
+      ),
     },
     {
       accessorKey: 'insurance',
@@ -142,7 +180,7 @@ export default function SearchPage() {
             {row.original.insuranceClaimNumber}
           </span>
         </div>
-      )
+      ),
     },
     {
       accessorKey: 'owner',
@@ -154,47 +192,54 @@ export default function SearchPage() {
             {row.original.ownerPhone}
           </span>
         </div>
-      )
+      ),
     },
     {
       header: 'Summary',
-      cell: ({ row }) => <SummaryCell text={row.original.lastCommunicationSummary || 'No communication summary available.'} />
+      cell: ({ row }) => (
+        <SummaryCell
+          text={
+            row.original.lastCommunicationSummary ||
+            'No communication summary available.'
+          }
+        />
+      ),
     },
   ]
 
-  const workfileColumns: ColumnDef<WorkfileApiResponse>[] = [
+  const workfileColumns: ColumnDef<WorkfilesByTenantIdResponse>[] = [
     {
       accessorKey: 'id',
       header: 'Workfile ID',
-      cell: ({ row }) => <AutoCell  />
+      cell: ({ row }) => <AutoCell />,
     },
     {
       accessorKey: 'status',
       header: 'Status',
-      cell: ({ row }) => <StatusBadgeCell status={row.original.workfile.status} />
+      cell: ({ row }) => <StatusBadgeCell status={row.original.status} />,
     },
     {
       accessorKey: 'opportunity',
       header: 'Opportunity',
       cell: ({ row }) => (
         <div className="flex flex-col gap-1">
-          <span>{row.original.workfile.opportunityId}</span>
+          <span>{row.original.opportunityId}</span>
           <span className="text-sm text-muted-foreground">
-            {row.original.workfile.opportunity.status}
+            {row.original.opportunity.status}
           </span>
         </div>
-      )
+      ),
     },
     {
       header: 'Vehicle',
       cell: ({ row }) => (
         <div className="flex flex-col gap-1">
-          <span>{row.original.workfile.opportunity.vehicleId}</span>
+          <span>{row.original.opportunity.vehicleId}</span>
           <span className="text-sm text-muted-foreground">
-            {row.original.workfile.opportunity.vehicleId}
+            {row.original.opportunity.vehicleId}
           </span>
         </div>
-      )
+      ),
     },
     {
       header: 'Insurance',
@@ -203,7 +248,7 @@ export default function SearchPage() {
           <span>---</span>
           <span className="text-sm text-muted-foreground">---</span>
         </div>
-      )
+      ),
     },
     {
       header: 'Owner',
@@ -212,11 +257,13 @@ export default function SearchPage() {
           <span>---</span>
           <span className="text-sm text-muted-foreground">---</span>
         </div>
-      )
+      ),
     },
     {
       header: 'Summary',
-      cell: ({ row }) => <SummaryCell text="No communication summary available." />
+      cell: ({ row }) => (
+        <SummaryCell text="No communication summary available." />
+      ),
     },
   ]
 
@@ -245,28 +292,23 @@ export default function SearchPage() {
           {filteredOpportunities.length > 0 && (
             <div className="mb-8">
               <h2 className="mb-4 text-xl font-semibold">Opportunities</h2>
-              <DataTable
-                data={filteredOpportunities}
-                columns={columns}
-              />
+              <DataTable data={filteredOpportunities} columns={columns} />
             </div>
           )}
 
           {filteredWorkfiles.length > 0 && (
             <div>
               <h2 className="mb-4 text-xl font-semibold">Workfiles</h2>
-              <DataTable
-                data={filteredWorkfiles}
-                columns={workfileColumns}
-              />
+              <DataTable data={filteredWorkfiles} columns={workfileColumns} />
             </div>
           )}
 
-          {filteredOpportunities.length === 0 && filteredWorkfiles.length === 0 && (
-            <div className="py-8 text-center">
-              <p>No results found for "{searchTerm}"</p>
-            </div>
-          )}
+          {filteredOpportunities.length === 0 &&
+            filteredWorkfiles.length === 0 && (
+              <div className="py-8 text-center">
+                <p>No results found for "{searchTerm}"</p>
+              </div>
+            )}
         </>
       )}
     </div>
@@ -281,6 +323,6 @@ function formatDate(date: string | undefined): string {
     day: 'numeric',
     year: 'numeric',
     hour: 'numeric',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }

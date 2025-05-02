@@ -2,7 +2,7 @@
 
 import type React from 'react'
 import { useState, useEffect } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 
 export interface NavItem {
   id: string
@@ -14,41 +14,70 @@ interface DraggableNavProps {
   navItems?: NavItem[]
   defaultTab?: string
   onReorder?: (items: NavItem[]) => void
+  useQueryParams?: boolean
 }
 
-export default function DraggableNav({ navItems, defaultTab, onReorder }: DraggableNavProps) {
+export default function DraggableNav({
+  navItems,
+  defaultTab,
+  onReorder,
+  useQueryParams = false,
+}: DraggableNavProps) {
   const [items, setItems] = useState<NavItem[]>([])
   const [draggedItem, setDraggedItem] = useState<number | null>(null)
   const [activeTab, setActiveTab] = useState<string | null>(null)
   const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
 
   useEffect(() => {
     if (navItems) {
       // Preserve the current order when updating counts
       if (items.length > 0) {
-        const updatedItems = items.map(item => {
-          const updatedItem = navItems.find(navItem => navItem.id === item.id);
-          return updatedItem ? { ...item, count: updatedItem.count } : item;
-        });
-        setItems(updatedItems);
+        const updatedItems = items.map((item) => {
+          const updatedItem = navItems.find((navItem) => navItem.id === item.id)
+          return updatedItem ? { ...item, count: updatedItem.count } : item
+        })
+        setItems(updatedItems)
       } else {
-        setItems(navItems);
+        setItems(navItems)
         // Use defaultTab if provided, otherwise use first item
-        setActiveTab(defaultTab || navItems[0].id);
+        setActiveTab(defaultTab || navItems[0].id)
       }
     }
   }, [navItems, defaultTab])
 
   useEffect(() => {
-    const currentTab = pathname?.split('/').pop()
-    if (currentTab && items.some((item) => item.id === currentTab)) {
-      setActiveTab(currentTab)
-    } else if (defaultTab && items.some((item) => item.id === defaultTab)) {
-      setActiveTab(defaultTab)
-      router.push(`${pathname}/${defaultTab}`)
+    if (useQueryParams) {
+      // Check for type in query params
+      const typeParam = searchParams?.get('type')
+      if (
+        typeParam &&
+        items.some(
+          (item) =>
+            item.id === typeParam ||
+            (item.id === 'second-call' && typeParam === '2nd-call')
+        )
+      ) {
+        setActiveTab(typeParam)
+      } else if (defaultTab && items.some((item) => item.id === defaultTab)) {
+        setActiveTab(defaultTab)
+        // Create a new URL with the query parameter
+        const params = new URLSearchParams(searchParams?.toString())
+        params.set('type', defaultTab)
+        router.push(`${pathname}?${params.toString()}`)
+      }
+    } else {
+      // Original path-based logic
+      const currentTab = pathname?.split('/').pop()
+      if (currentTab && items.some((item) => item.id === currentTab)) {
+        setActiveTab(currentTab)
+      } else if (defaultTab && items.some((item) => item.id === defaultTab)) {
+        setActiveTab(defaultTab)
+        router.push(`${pathname}/${defaultTab}`)
+      }
     }
-  }, [pathname, items, defaultTab])
+  }, [pathname, searchParams, items, defaultTab, useQueryParams, router])
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedItem(index)
@@ -77,12 +106,19 @@ export default function DraggableNav({ navItems, defaultTab, onReorder }: Dragga
   }
 
   const handleClick = (id: string) => {
+    let tabId = id
+    if (id === '2nd-call') tabId = 'second-call'
 
-    const pageName = pathname?.split('/')[4]
-    
-    if (id === '2nd-call') id = 'second-call'
-    setActiveTab(id)
-    router.push(`/en/shop-manager/dashboard/${pageName}/${id}`)
+    setActiveTab(tabId)
+
+    if (useQueryParams) {
+      const params = new URLSearchParams(searchParams?.toString())
+      params.set('type', tabId)
+      router.push(`${pathname}?${params.toString()}`)
+    } else {
+      const pageName = pathname?.split('/')[4]
+      router.push(`/en/shop-manager/dashboard/${pageName}/${tabId}`)
+    }
   }
 
   return (

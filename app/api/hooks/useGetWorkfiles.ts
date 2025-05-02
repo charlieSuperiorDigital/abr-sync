@@ -1,7 +1,10 @@
 'use client'
 import { useQuery } from '@tanstack/react-query'
 import { getWorkfiles } from '../functions/workfiles'
-import { WorkfileApiResponse } from '@/app/types/workfile'
+import {
+  WorkfilesByTenantIdResponse,
+  WorkfileStatus,
+} from '@/app/types/workfile'
 
 interface UseGetWorkfilesOptions {
   tenantId: string
@@ -13,8 +16,11 @@ interface UseGetWorkfilesOptions {
  * @param options - Query options including tenantId and enabled flag
  * @returns Query result with categorized workfiles data
  */
-export function useGetWorkfiles({ tenantId, enabled = true }: UseGetWorkfilesOptions) {
-  const { data, isLoading, error } = useQuery<WorkfileApiResponse[]>({
+export function useGetWorkfiles({
+  tenantId,
+  enabled = true,
+}: UseGetWorkfilesOptions) {
+  const { data, isLoading, error } = useQuery<WorkfilesByTenantIdResponse[]>({
     queryKey: ['workfiles', tenantId],
     queryFn: async () => {
       try {
@@ -32,18 +38,23 @@ export function useGetWorkfiles({ tenantId, enabled = true }: UseGetWorkfilesOpt
     enabled: !!tenantId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 1, // Only retry once
-    refetchOnWindowFocus: false // Don't refetch when window gains focus
+    refetchOnWindowFocus: false, // Don't refetch when window gains focus
   })
 
   // Filter workfiles by status
-  const upcoming = data?.filter(w => w.workfile.status.toLowerCase() === 'upcoming') || []
-  const inProgress = data?.filter(w => w.workfile.status.toLowerCase() === 'in progress') || []
-  const qualityControl = data?.filter(w => w.workfile.status.toLowerCase() === 'qc') || []
-  const readyForPickup = data?.filter(w => w.workfile.status.toLowerCase() === 'ready for pickup') || []
-  const sublets = data?.filter(w => w.workfile.status.toLowerCase() === 'sublets') || []
-  const labor = data?.filter(w => w.workfile.status.toLowerCase() === 'labor') || []
-  const reports = data?.filter(w => w.workfile.status.toLowerCase() === 'reports') || []
-  const archive = data?.filter(w => w.workfile.status.toLowerCase() === 'archive') || []
+  const upcoming =
+    data?.filter((w) => w.status === WorkfileStatus.Upcoming) || []
+  const inProgress =
+    data?.filter((w) => w.status === WorkfileStatus.InProgress) || []
+  const qualityControl =
+    data?.filter((w) => w.status === WorkfileStatus.QC) || []
+  const readyForPickup =
+    data?.filter((w) => w.status === WorkfileStatus.ReadyForPickup) || []
+  const sublets = data?.filter((w) => w.status === WorkfileStatus.Sublets) || []
+  const labor = data?.filter((w) => w.status === WorkfileStatus.Labor) || []
+  const reports = data?.filter((w) => w.status === WorkfileStatus.Reports) || []
+  const archive =
+    data?.filter((w) => w.status === WorkfileStatus.Archived) || []
 
   const workfilesQuantity = {
     upcoming: upcoming.length,
@@ -54,7 +65,7 @@ export function useGetWorkfiles({ tenantId, enabled = true }: UseGetWorkfilesOpt
     labor: labor.length,
     reports: reports.length,
     archive: archive.length,
-    total: (data || []).length
+    total: (data || []).length,
   }
 
   return {
@@ -69,6 +80,6 @@ export function useGetWorkfiles({ tenantId, enabled = true }: UseGetWorkfilesOpt
     workfiles: data,
     isLoading,
     error,
-    workfilesQuantity
+    workfilesQuantity,
   }
 }

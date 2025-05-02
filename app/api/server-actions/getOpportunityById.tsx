@@ -8,7 +8,6 @@ export const getOpportunityByIdAction = async (
   tenantId: string
 ): Promise<OpportunityResponse[]> => {
   try {
-    console.log('tenantId', tenantId)
     const session = await getServerSession(authOptions)
     const token = session?.user?.token
 
@@ -35,6 +34,7 @@ export const getOpportunityByIdAction = async (
     }
 
     const data = await response.json()
+
     return data
   } catch (error) {
     console.error('Error fetching opportunity by id:', error)
