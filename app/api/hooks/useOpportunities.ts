@@ -1,13 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { 
-  createOpportunityLog, 
-  getOpportunityLogs, 
+import {
+  createOpportunityLog,
+  getOpportunityLogs,
   getLastOpportunityLog,
-  OpportunityLogCreateVM 
+  OpportunityLogCreateVM,
 } from '../functions/communication'
-import { getOpportunitiesList, getOpportunityById, OpportunityResponse } from '@/app/api/functions/opportunities'
+import {
+  getOpportunitiesList,
+  getOpportunityById,
+  OpportunityResponse,
+} from '@/app/api/functions/opportunities'
 import { GetOpportunityByIdApiResponse } from '@/app/types/opportunity'
 import { isValidDate } from '@/app/utils/is-valid-date'
+import { categorizeOpportunities } from '@/app/[locale]/shop-manager/dashboard/opportunities/utils/categorizeOpportunities'
 
 /**
  * Hook to fetch opportunities for a specific tenant
@@ -36,36 +41,47 @@ export function useGetOpportunities({ tenantId }: { tenantId: string }) {
     refetchOnWindowFocus: false, // Don't refetch when window gains focus
   })
 
+  const result = categorizeOpportunities(data || [])
+
   // Filter opportunities based on different criteria
-  const newOpportunities = data?.filter(opportunity => 
-    opportunity.opportunityStatus.toLowerCase() === 'new'
-  ) || []
+  // const newOpportunities =
+  //   data?.filter(
+  //     (opportunity) => opportunity.opportunityStatus.toLowerCase() === 'new'
+  //   ) || []
 
-  const estimateOpportunities = data?.filter(opportunity => 
-    opportunity.opportunityStatus.toLowerCase() === 'estimate'
-  ) || []
+  // const estimateOpportunities =
+  //   data?.filter(
+  //     (opportunity) =>
+  //       opportunity.opportunityStatus.toLowerCase() === 'estimate'
+  //   ) || []
 
-  const secondCallOpportunities = data?.filter(opportunity => 
-    isValidDate(opportunity._1stCall) && isValidDate(opportunity._2ndCall)
-  ) || []
+  // const secondCallOpportunities =
+  //   data?.filter(
+  //     (opportunity) =>
+  //       isValidDate(opportunity._1stCall) && isValidDate(opportunity._2ndCall)
+  //   ) || []
 
-  const totalLossOpportunities = data?.filter(opportunity => 
-    opportunity.insuranceTypeOfLoss.toLowerCase() === 'total loss'
-  ) || []
+  // const totalLossOpportunities =
+  //   data?.filter(
+  //     (opportunity) =>
+  //       opportunity.insuranceTypeOfLoss.toLowerCase() === 'total loss'
+  //   ) || []
 
-  const archivedOpportunities = data?.filter(opportunity => 
-    opportunity.opportunityStatus.toLowerCase() === 'archived'
-  ) || []
+  // const archivedOpportunities =
+  //   data?.filter(
+  //     (opportunity) =>
+  //       opportunity.opportunityStatus.toLowerCase() === 'archived'
+  //   ) || []
 
   return {
-    newOpportunities,
-    estimateOpportunities,
-    secondCallOpportunities,
-    totalLossOpportunities,
-    archivedOpportunities,
+    newOpportunities: result.new,
+    estimateOpportunities: result.estimate,
+    secondCallOpportunities: result.secondCall,
+    totalLossOpportunities: result.totalLoss,
+    archivedOpportunities: result.archived,
     opportunities: data,
     isLoading,
-    error
+    error,
   }
 }
 
@@ -89,7 +105,7 @@ export function useGetOpportunityLogs(
   return {
     logs: data?.data || [],
     isLoading,
-    error
+    error,
   }
 }
 
@@ -113,7 +129,7 @@ export function useGetLastOpportunityLog(
   return {
     log: data?.data || null,
     isLoading,
-    error
+    error,
   }
 }
 
@@ -123,16 +139,21 @@ export function useGetLastOpportunityLog(
  */
 export function useCreateOpportunityLog() {
   const queryClient = useQueryClient()
-  
+
   const mutation = useMutation({
-    mutationFn: (logData: OpportunityLogCreateVM) => createOpportunityLog(logData),
+    mutationFn: (logData: OpportunityLogCreateVM) =>
+      createOpportunityLog(logData),
     onSuccess: (data, variables) => {
       // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ['opportunityLogs', variables.opportunityId] })
-      queryClient.invalidateQueries({ queryKey: ['lastOpportunityLog', variables.opportunityId] })
-    }
+      queryClient.invalidateQueries({
+        queryKey: ['opportunityLogs', variables.opportunityId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['lastOpportunityLog', variables.opportunityId],
+      })
+    },
   })
-  
+
   return {
     createLog: mutation.mutate,
     createLogAsync: mutation.mutateAsync,
@@ -140,7 +161,7 @@ export function useCreateOpportunityLog() {
     isSuccess: mutation.isSuccess,
     isError: mutation.isError,
     error: mutation.error,
-    reset: mutation.reset
+    reset: mutation.reset,
   }
 }
 
@@ -178,6 +199,6 @@ export function useGetOpportunityById(
   return {
     opportunity: data,
     isLoading,
-    error
+    error,
   }
 }
