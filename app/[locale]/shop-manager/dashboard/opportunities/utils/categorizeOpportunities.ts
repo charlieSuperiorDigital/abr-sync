@@ -21,9 +21,9 @@ export const categorizeOpportunities = (
 
   opportunities.forEach((opportunity) => {
     const status = opportunity.opportunityStatus.toLowerCase()
-    const typeOfLoss = opportunity.insuranceTypeOfLoss.toLowerCase()
-    const isSecondCall =
-      isValidDate(opportunity._1stCall) && isValidDate(opportunity._2ndCall)
+    // const typeOfLoss = opportunity.insuranceTypeOfLoss.toLowerCase()
+    // const isSecondCall =
+    //   isValidDate(opportunity._1stCall) && isValidDate(opportunity._2ndCall)
 
     if (status === 'new') {
       result.new.push(opportunity)
@@ -31,10 +31,10 @@ export const categorizeOpportunities = (
     if (status === 'estimate') {
       result.estimate.push(opportunity)
     }
-    if (isSecondCall) {
+    if (status === 'second-call') {
       result.secondCall.push(opportunity)
     }
-    if (typeOfLoss === 'total loss') {
+    if (status === 'total-loss') {
       result.totalLoss.push(opportunity)
     }
     if (status === 'archived') {
