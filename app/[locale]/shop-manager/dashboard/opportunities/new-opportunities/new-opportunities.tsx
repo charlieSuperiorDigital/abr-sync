@@ -6,44 +6,50 @@ import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import { useState, useCallback, useMemo } from 'react'
 import { Archive } from 'lucide-react'
-import { useSession } from 'next-auth/react'
 import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
-import { useGetOpportunities } from '@/app/api/hooks/useOpportunities'
 import { getOpportunityColumns } from './new-opportunities-columns'
+import { OpportunityResponse } from '@/app/api/functions/opportunities'
 
-export default function NewOpportunities() {
-  const { data: session } = useSession()
-  const tenantId = session?.user?.tenantId
-  const { newOpportunities, isLoading } = useGetOpportunities({ tenantId: tenantId! })
-  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null)
-  const [modalState, setModalState] = useState<{ isOpen: boolean; opportunityId: string | null }>({
+type Props = {
+  newOpportunities: OpportunityResponse[]
+}
+
+export default function NewOpportunities({ newOpportunities }: Props) {
+  const [selectedOpportunity, setSelectedOpportunity] =
+    useState<Opportunity | null>(null)
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean
+    opportunityId: string | null
+  }>({
     isOpen: false,
-    opportunityId: null
+    opportunityId: null,
   })
 
-  const [archiveConfirmation, setArchiveConfirmation] = useState<{ isOpen: boolean; opportunity: Opportunity | null }>({
+  const [archiveConfirmation, setArchiveConfirmation] = useState<{
+    isOpen: boolean
+    opportunity: Opportunity | null
+  }>({
     isOpen: false,
     opportunity: null,
   })
-
 
   const handleRowClick = useCallback((opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity)
     setModalState({
       isOpen: true,
-      opportunityId: opportunity.opportunityId
+      opportunityId: opportunity.opportunityId,
     })
   }, [])
 
   const handleModalOpenChange = useCallback((open: boolean) => {
-    setModalState(prev => ({ ...prev, isOpen: open }))
+    setModalState((prev) => ({ ...prev, isOpen: open }))
   }, [])
 
   const handleContactClick = useCallback((opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity)
     setModalState({
       isOpen: true,
-      opportunityId: opportunity.opportunityId
+      opportunityId: opportunity.opportunityId,
     })
   }, [])
 
@@ -70,13 +76,13 @@ export default function NewOpportunities() {
     return new Date(date).toLocaleDateString()
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        Loading opportunities...
-      </div>
-    )
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="flex justify-center items-center h-64">
+  //       Loading opportunities...
+  //     </div>
+  //   )
+  // }
 
   const mappedOpportunities = useMemo(
     () => newOpportunities.map(mapApiResponseToOpportunity),
@@ -96,6 +102,7 @@ export default function NewOpportunities() {
       handleArchiveClick,
       formatDate,
       archiveConfirmation.opportunity?.opportunityId,
+      newOpportunities,
     ]
   )
 
@@ -112,9 +119,18 @@ export default function NewOpportunities() {
       <BottomSheetModal
         isOpen={modalState.isOpen}
         onOpenChange={handleModalOpenChange}
-        title={selectedOpportunity ? `${selectedOpportunity.vehicle?.year || ''} ${selectedOpportunity.vehicle?.make || ''} ${selectedOpportunity.vehicle?.model || ''}` : ''}
+        title={
+          selectedOpportunity
+            ? `${selectedOpportunity.vehicle?.year || ''} ${selectedOpportunity.vehicle?.make || ''} ${selectedOpportunity.vehicle?.model || ''}`
+            : ''
+        }
       >
-        {modalState.opportunityId && <OpportunityModal opportunityId={modalState.opportunityId} workfileId={undefined} />}
+        {modalState.opportunityId && (
+          <OpportunityModal
+            opportunityId={modalState.opportunityId}
+            workfileId={undefined}
+          />
+        )}
       </BottomSheetModal>
 
       <ConfirmationModal

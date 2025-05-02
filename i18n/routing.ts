@@ -101,7 +101,7 @@ export const routing = defineRouting({
       en: '/super-admin/dashboard/fees',
       es: '/super-administrador/dashboard/fees',
     },
-  }
+  },
 })
 
 export type Locale = (typeof routing.locales)[number]
