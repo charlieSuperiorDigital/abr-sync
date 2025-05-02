@@ -1,8 +1,8 @@
 'use client'
 
 import type React from 'react'
-import { useState, useEffect, useCallback } from 'react'
-import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 
 export interface NavItem {
   id: string
@@ -14,71 +14,41 @@ interface DraggableNavProps {
   navItems?: NavItem[]
   defaultTab?: string
   onReorder?: (items: NavItem[]) => void
-  onTabChange?: (tabId: string) => void // Add this callback
 }
 
-export default function DraggableNav({
-  navItems,
-  defaultTab,
-  onReorder,
-  onTabChange, // Add this prop
-}: DraggableNavProps) {
+export default function DraggableNav({ navItems, defaultTab, onReorder }: DraggableNavProps) {
   const [items, setItems] = useState<NavItem[]>([])
   const [draggedItem, setDraggedItem] = useState<number | null>(null)
   const [activeTab, setActiveTab] = useState<string | null>(null)
   const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
-
-  // Memoize this function to prevent unnecessary re-renders
-  const updateUrlWithoutReload = useCallback(
-    (tabId: string) => {
-      // Use window.history.pushState to update URL without triggering navigation
-      const params = new URLSearchParams(searchParams?.toString())
-      const tabValue = tabId === '2nd-call' ? 'second-call' : tabId
-      params.set('tab', tabValue)
-
-      // Update URL without causing a navigation/reload
-      window.history.pushState(null, '', `${pathname}?${params.toString()}`)
-    },
-    [pathname, searchParams]
-  )
 
   useEffect(() => {
     if (navItems) {
       // Preserve the current order when updating counts
       if (items.length > 0) {
-        const updatedItems = items.map((item) => {
-          const updatedItem = navItems.find((navItem) => navItem.id === item.id)
-          return updatedItem ? { ...item, count: updatedItem.count } : item
-        })
-        setItems(updatedItems)
+        const updatedItems = items.map(item => {
+          const updatedItem = navItems.find(navItem => navItem.id === item.id);
+          return updatedItem ? { ...item, count: updatedItem.count } : item;
+        });
+        setItems(updatedItems);
       } else {
-        setItems(navItems)
+        setItems(navItems);
+        // Use defaultTab if provided, otherwise use first item
+        setActiveTab(defaultTab || navItems[0].id);
       }
     }
-  }, [navItems])
+  }, [navItems, defaultTab])
 
-  // This effect only runs once on initial load or when items change
   useEffect(() => {
-    // Get active tab from search parameters
-    const tabFromParams = searchParams?.get('tab')
-
-    if (tabFromParams && items.some((item) => item.id === tabFromParams)) {
-      setActiveTab(tabFromParams)
-      // Notify parent component about the active tab
-      onTabChange?.(tabFromParams)
+    const currentTab = pathname?.split('/').pop()
+    if (currentTab && items.some((item) => item.id === currentTab)) {
+      setActiveTab(currentTab)
     } else if (defaultTab && items.some((item) => item.id === defaultTab)) {
       setActiveTab(defaultTab)
-      updateUrlWithoutReload(defaultTab)
-      onTabChange?.(defaultTab)
-    } else if (items.length > 0) {
-      // Fallback to first item if no tab is selected
-      setActiveTab(items[0].id)
-      updateUrlWithoutReload(items[0].id)
-      onTabChange?.(items[0].id)
+      router.push(`${pathname}/${defaultTab}`)
     }
-  }, [items, defaultTab, searchParams, updateUrlWithoutReload, onTabChange])
+  }, [pathname, items, defaultTab])
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedItem(index)
@@ -107,13 +77,12 @@ export default function DraggableNav({
   }
 
   const handleClick = (id: string) => {
-    if (activeTab === id) return // Don't do anything if clicking the same tab
 
+    const pageName = pathname?.split('/')[4]
+    
+    if (id === '2nd-call') id = 'second-call'
     setActiveTab(id)
-    updateUrlWithoutReload(id)
-
-    // Notify parent component about the tab change
-    onTabChange?.(id)
+    router.push(`/en/shop-manager/dashboard/${pageName}/${id}`)
   }
 
   return (
