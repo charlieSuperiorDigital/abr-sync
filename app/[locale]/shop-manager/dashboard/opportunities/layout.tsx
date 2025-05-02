@@ -1,96 +1,65 @@
-'use client'
+import type React from 'react'
+import { getServerSession } from 'next-auth'
+import { getOpportunityByIdAction } from '@/app/api/server-actions/getOpportunityById'
+import { categorizeOpportunities } from './utils/categorizeOpportunities'
+import ClientOpportunitiesLayout from './components/client-layout'
+import { authOptions } from '@/app/api/auth/[...nextauth]/auth-options'
 
-
-import DraggableNav, {
-  NavItem,
-} from '@/components/custom-components/draggable-nav/draggable-nav'
-import { useState, useMemo } from 'react'
-import { useSession } from 'next-auth/react'
-import { useGetOpportunities } from '@/app/api/hooks/useOpportunities'
-
-export default function OpportunitiesLayout({
+export default async function OpportunitiesLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const { data: session } = useSession()
+  const session = await getServerSession(authOptions)
   const tenantId = session?.user?.tenantId
 
-  const {
-    newOpportunities,
-    estimateOpportunities,
-    secondCallOpportunities,
-    totalLossOpportunities,
-    archivedOpportunities,
-    isLoading,
-    error,
-  } = useGetOpportunities({ tenantId: tenantId! })
+  if (!tenantId) {
+    return (
+      <div className="flex flex-col w-full min-h-screen">
+        <h1 className="px-5 my-7 text-3xl font-semibold tracking-tight">
+          Opportunities
+        </h1>
+        <div className="flex justify-center p-8">
+          Please log in to view opportunities
+        </div>
+      </div>
+    )
+  }
 
-  // Calculate quantities using useMemo to avoid recalculation on every render
-  const opportunitiesQuantity = useMemo(
-    () => ({
-      new: newOpportunities?.length || 0,
-      estimate: estimateOpportunities?.length || 0,
-      secondCall: secondCallOpportunities?.length || 0,
-      totalLoss: totalLossOpportunities?.length || 0,
-      archived: archivedOpportunities?.length || 0,
-    }),
-    [
-      newOpportunities,
-      estimateOpportunities,
-      secondCallOpportunities,
-      totalLossOpportunities,
-      archivedOpportunities,
-    ]
-  )
+  let opportunities = []
+  try {
+    opportunities = await getOpportunityByIdAction(tenantId)
+  } catch (error) {
+    console.error('Error fetching opportunities:', error)
+
+    return (
+      <div className="flex flex-col w-full min-h-screen">
+        <h1 className="px-5 my-7 text-3xl font-semibold tracking-tight">
+          Opportunities
+        </h1>
+        <div className="flex justify-center p-8">
+          Error loading opportunities
+        </div>
+      </div>
+    )
+  }
+
+  const categorizedOpportunities = categorizeOpportunities(opportunities)
+
+  const opportunitiesQuantity = {
+    new: categorizedOpportunities.new.length,
+    estimate: categorizedOpportunities.estimate.length,
+    secondCall: categorizedOpportunities.secondCall.length,
+    totalLoss: categorizedOpportunities.totalLoss.length,
+    archived: categorizedOpportunities.archived.length,
+  }
 
   return (
-    <div className="flex flex-col w-full min-h-screen">
-      <button
-        onClick={() => console.log(opportunitiesQuantity)}
-        className="fixed right-4 bottom-4 px-4 py-2 text-white bg-blue-500 rounded"
-      >
-        DEBUG
-      </button>
-      <h1 className="px-5 my-7 text-3xl font-semibold tracking-tight">
-        Opportunities
-      </h1>
-      {isLoading ? (
-        <div className="flex justify-center p-8">Loading opportunities...</div>
-      ) : (
-        <>
-          <DraggableNav
-            navItems={[
-              {
-                id: 'new-opportunities',
-                label: 'New Opportunities',
-                count: opportunitiesQuantity.new,
-              },
-              {
-                id: 'second-call',
-                label: 'Second Call',
-                count: opportunitiesQuantity.secondCall,
-              },
-              {
-                id: 'estimate',
-                label: 'Estimate',
-                count: opportunitiesQuantity.estimate,
-              },
-              {
-                id: 'total-loss',
-                label: 'Total Loss',
-                count: opportunitiesQuantity.totalLoss,
-              },
-              {
-                id: 'archive',
-                label: 'Archive',
-                count: opportunitiesQuantity.archived,
-              },
-            ]}
-          />
-          <main className="w-full">{children}</main>
-        </>
-      )}
-    </div>
+    <ClientOpportunitiesLayout
+      opportunitiesQuantity={opportunitiesQuantity}
+      isLoading={false}
+    >
+      {children}
+    </ClientOpportunitiesLayout>
   )
 }

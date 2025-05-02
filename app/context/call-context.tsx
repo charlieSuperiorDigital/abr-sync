@@ -119,10 +119,6 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
               return [...prevCalls, call]
             }
 
-            console.log(
-              'Call with same CallSid already exists, ignoring duplicate',
-              call.parameters.CallSid
-            )
             return prevCalls
           })
         })
@@ -236,8 +232,8 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
 
   const hangup = () => {
     if (device) {
-      signalRConnection?.invoke('SetAgentState', 'available')
       device.disconnectAll()
+      signalRConnection?.invoke('SetAgentState', 'available')
 
       setStatus('ended')
     }
