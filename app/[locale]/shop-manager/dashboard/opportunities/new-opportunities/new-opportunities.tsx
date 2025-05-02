@@ -102,6 +102,7 @@ export default function NewOpportunities({ newOpportunities }: Props) {
       handleArchiveClick,
       formatDate,
       archiveConfirmation.opportunity?.opportunityId,
+      newOpportunities,
     ]
   )
 

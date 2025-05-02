@@ -1,22 +1,16 @@
 'use client'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
-import {
-  SummaryCell,
-  VehicleCell,
-} from '@/components/custom-components/custom-table/table-cells'
-import ContactInfo from '@/app/[locale]/custom-components/contact-info'
-import { ColumnDef } from '@tanstack/react-table'
-import { ClipboardPlus, Car, Plus } from 'lucide-react'
-import { Opportunity, OpportunityStatus } from '@/app/types/opportunity'
+
+import { Car } from 'lucide-react'
+import { Opportunity } from '@/app/types/opportunity'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
-import { useState, useCallback } from 'react'
-import DarkButton from '@/app/[locale]/custom-components/dark-button'
+import { useState, useCallback, useMemo } from 'react'
 import ConfirmationModal from '@/components/custom-components/confirmation-modal/confirmation-modal'
 import { showPickupToast } from '@/app/utils/toast-utils'
-import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
 import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
 import { OpportunityResponse } from '@/app/api/functions/opportunities'
+import { getTotalLossColumns } from './total-loss-columns'
 
 type Props = {
   totalLoss: OpportunityResponse[]
@@ -75,141 +69,13 @@ export default function TotalLossOpportunities({ totalLoss }: Props) {
     return new Date(date).toLocaleDateString()
   }
 
-  const columns: ColumnDef<Opportunity, any>[] = [
-    {
-      accessorKey: 'insurance.claimNumber',
-      header: 'Claim',
-    },
-    {
-      accessorKey: 'vehicle',
-      header: 'Vehicle',
-      cell: ({ row }) => (
-        <VehicleCell
-          make={row.original.vehicle.make}
-          model={row.original.vehicle.model}
-          year={String(row.original.vehicle.year)}
-          imageUrl={`https://picsum.photos/seed/${row.original.opportunityId}/200/100`}
-        />
-      ),
-    },
-    {
-      accessorKey: 'owner.name',
-      header: 'Owner',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.owner.name}</span>
-      ),
-    },
-    {
-      accessorKey: 'insurance.company',
-      header: 'Insurance',
-      cell: ({ row }) => (
-        <span
-          className={`whitespace-nowrap font-bold ${row.original.insurance.company === 'PROGRESSIVE' ? 'text-blue-700' : ''}`}
-        >
-          {row.original.insurance.company.toUpperCase()}
-        </span>
-      ),
-    },
-    {
-      accessorKey: 'numberOfCommunications',
-      header: '# OF COMMUNICATIONS',
-      cell: ({ row }) => {
-        const communicationLogs =
-          row.original.logs?.filter(
-            (log) =>
-              log.type.toLowerCase().includes('call') ||
-              log.type.toLowerCase().includes('email') ||
-              log.type.toLowerCase().includes('message')
-          ) || []
-
-        return (
-          <span className="whitespace-nowrap">{communicationLogs.length}</span>
-        )
-      },
-    },
-    {
-      accessorKey: 'timeTracking',
-      header: 'Time Tracking',
-    },
-    {
-      accessorKey: 'finalBill',
-      header: 'Final Bill',
-      cell: ({ row }) => {
-        const amount = row.original.finalBill?.amount
-        return (
-          <span className="whitespace-nowrap">
-            {amount
-              ? new Intl.NumberFormat('en-US', {
-                  style: 'currency',
-                  currency: 'USD',
-                }).format(amount)
-              : '---'}
-          </span>
-        )
-      },
-    },
-    {
-      header: 'Summary',
-      cell: ({ row }) => (
-        <SummaryCell text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." />
-      ),
-    },
-    {
-      id: 'pickup',
-      header: '',
-      cell: ({ row }) => (
-        <div className="flex justify-center">
-          <DarkButton
-            buttonText="Mark as Picked Up"
-            buttonIcon={<Car className="mr-2 w-4 h-4" />}
-            onClick={(e) => {
-              e.stopPropagation()
-              handlePickupClick(row.original)
-            }}
-          />
-        </div>
-      ),
-    },
-    {
-      id: 'contact',
-      header: 'Contact',
-      cell: ({ row }) => (
-        <div
-          data-testid="contact-info"
-          className="cursor-pointer"
-          onClick={(e) => {
-            e.stopPropagation()
-            console.log(
-              'Contact clicked for opportunity:',
-              row.original.opportunityId
-            )
-          }}
-        >
-          <ContactInfo />
-        </div>
-      ),
-    },
-    {
-      id: 'task',
-      header: 'Task',
-      cell: ({ row }) => (
-        <div
-          onClick={(e) => {
-            e.stopPropagation()
-          }}
-        >
-          <NewTaskModal
-            title="New Task"
-            defaultRelation={{
-              id: row.original.opportunityId,
-              type: 'opportunity',
-            }}
-            children={<Plus className="m-auto w-5 h-5" />}
-          />
-        </div>
-      ),
-    },
-  ]
+  const columns = useMemo(
+    () =>
+      getTotalLossColumns({
+        handlePickupClick,
+      }),
+    [handlePickupClick, totalLoss]
+  )
 
   return (
     <div className="w-full">
