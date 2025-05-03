@@ -20,7 +20,8 @@ const SideBarIcon = ({
   newNotificationsQuantity,
   Icon,
   hasWarning,
-}: SideBarIconProps) => {
+  showNotificationIndicator = true,
+}: SideBarIconProps & { showNotificationIndicator?: boolean }) => {
   return (
     <div className="flex items-center justify-center">
       <div className="relative p-1">
@@ -30,7 +31,7 @@ const SideBarIcon = ({
             !
           </span>
         )}
-        {newNotificationsQuantity > 0 && (
+        {newNotificationsQuantity > 0 && showNotificationIndicator && (
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
             {newNotificationsQuantity}
           </span>
@@ -70,8 +71,8 @@ export default function SideBarIconGroup({
                 href={finalHref}
                 className="flex items-center py-1 cursor-pointer"
               >
-                <SideBarIcon {...icon} />
-                <div className="ml-4 font-medium text-sm text-white group-hover:text-black whitespace-nowrap overflow-hidden">
+                <SideBarIcon {...icon} showNotificationIndicator={false} />
+                <div className="ml-4 font-medium text-sm text-white group-hover:text-black overflow-hidden break-words">
                   {icon.label || `Item ${index + 1}`}
                   {icon.newNotificationsQuantity > 0 && (
                     <span className="ml-2 font-bold text-red-500">
@@ -99,13 +100,13 @@ export default function SideBarIconGroup({
           <div className="flex items-center justify-center">
             {hasMultipleIcons ? (
               <div className="relative">
-                <SideBarIcon {...icons[0]} />
+                <SideBarIcon {...icons[0]} showNotificationIndicator={true} />
                 <div className="absolute -bottom-1 -right-1 bg-white text-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                   {icons.length}
                 </div>
               </div>
             ) : (
-              <SideBarIcon {...icons[0]} />
+              <SideBarIcon {...icons[0]} showNotificationIndicator={true} />
             )}
           </div>
         </Link>
@@ -116,8 +117,8 @@ export default function SideBarIconGroup({
           className="bg-[#1D1D1D] rounded-full p-2 w-full group-hover:bg-white cursor-pointer"
         >
           <div className="flex items-center">
-            <SideBarIcon {...icons[0]} />
-            <div className="ml-4 font-medium text-base text-white group-hover:text-black whitespace-nowrap overflow-hidden">
+            <SideBarIcon {...icons[0]} showNotificationIndicator={false} />
+            <div className="ml-4 font-medium text-base text-white group-hover:text-black overflow-hidden break-words">
               {label}
               {totalNotifications > 0 && (
                 <span className="ml-2 font-bold text-red-500">

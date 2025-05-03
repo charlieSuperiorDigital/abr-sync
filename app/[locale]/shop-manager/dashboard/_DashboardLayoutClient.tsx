@@ -1,7 +1,7 @@
 'use client'
 import {
+  AlarmClock,
   Archive,
-  ClipboardList,
   FolderOpen,
   Mail,
   Search,
@@ -18,6 +18,8 @@ import EditProfileModal from '@/app/components/custom-components/edit-profile-mo
 import RoleGuard from '@/app/components/RoleGuard'
 import { CallProvider } from '@/app/context/call-context'
 import { CallReceiver } from '../../custom-components/calls/call-receiver'
+import svgIcon from '../../custom-components/SVGIcon'
+import { SVGProps } from 'react'
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
@@ -54,23 +56,29 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
               className="object-contain mt-3 mb-8"
             />
             <nav className="flex flex-col justify-between h-full py-2 w-full">
-              <div className="flex flex-col space-y-2">
+              <div className="flex flex-col">
                 {/* Gotta change those icons, they dont match the design */}
                 <SideBarIconGroup
                   link={'/shop-manager/dashboard/tasks'}
-                  icons={[{ newNotificationsQuantity: 0, Icon: ClipboardList }]}
+                  icons={[{ newNotificationsQuantity: 0, Icon: function NoteIcon(props: SVGProps<SVGSVGElement>) { return svgIcon({ src: '/note.text.svg', className: props.className }) } }]} // Using a named function component that satisfies the expected type
                   label="Tasks"
                   expanded={isNavExpanded}
                 />
                 <SideBarIconGroup
                   link={'/shop-manager/dashboard/opportunities'}
-                  icons={[{ newNotificationsQuantity: 2, Icon: Mail }]}
+                  icons={[
+                    { newNotificationsQuantity: 2, Icon: Mail, label: 'Opportunities' },
+                    { newNotificationsQuantity: 0, Icon: function MailIcon(props: SVGProps<SVGSVGElement>) { return svgIcon({ src: '/envelope.badge.fill.svg', className: props.className }) }, label: 'Email Updates' }
+                  ]}
                   label="Opportunities"
                   expanded={isNavExpanded}
                 />
                 <SideBarIconGroup
                   link={'/shop-manager/dashboard/workfiles'}
-                  icons={[{ newNotificationsQuantity: 2, Icon: FolderOpen }]}
+                  icons={[
+                    { newNotificationsQuantity: 2, Icon: FolderOpen, label: 'Workfiles' },
+                    { newNotificationsQuantity: 0, Icon: AlarmClock , label: 'ECD In 3 Days' }
+                  ]}
                   label="Workfiles"
                   expanded={isNavExpanded}
                 />
@@ -80,18 +88,23 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                     {
                       newNotificationsQuantity: 2,
                       Icon: Settings,
-                      label: 'Settings',
+                      label: 'Parts To Order',
                     },
                     {
                       newNotificationsQuantity: 2,
-                      Icon: TruckIcon,
+                      Icon: Settings,
                       hasWarning: true,
-                      label: 'Delivery Issues',
+                      label: 'Tech Needs Parts',
                     },
                     {
                       newNotificationsQuantity: 2,
-                      Icon: TruckIcon,
-                      label: 'Shipments',
+                      Icon: function TruckIcon(props: SVGProps<SVGSVGElement>) { return svgIcon({ src: '/truck.svg', className: props.className }) },
+                      label: 'Parts Today',
+                    },
+                    {
+                      newNotificationsQuantity: 2,
+                      Icon: function TruckIcon(props: SVGProps<SVGSVGElement>) { return svgIcon({ src: '/truck.svg', className: props.className }) },
+                      label: 'Parts Missed',
                     },
                   ]}
                   label="Parts Management"
@@ -99,22 +112,22 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                 />
                 <SideBarIconGroup
                   link={'/shop-manager/dashboard/insurances-and-vehicle-owners'}
-                  icons={[{ newNotificationsQuantity: 2, Icon: SquareUser }]}
-                  label="Insurances & Owners"
+                  icons={[{ newNotificationsQuantity: 2, Icon: function SquareUserIcon(props: SVGProps<SVGSVGElement>) { return svgIcon({ src: '/rectangle.stack.person.crop.fill.svg', className: props.className }) } }]}
+                  label="Customers, Insurances & Vendors"
                   expanded={isNavExpanded}
                 />
                 <SideBarIconGroup
                   link={'/shop-manager/dashboard/ai'}
-                  icons={[{ newNotificationsQuantity: 2, Icon: TrendingUp }]}
-                  label="AI"
+                  icons={[{ newNotificationsQuantity: 2, Icon: function TrendingUpIcon(props: SVGProps<SVGSVGElement>) { return svgIcon({ src: '/ai.svg', className: props.className }) } }]}
+                  label="Reports Chat"
                   expanded={isNavExpanded}
                 />
-                <SideBarIconGroup
+                {/* <SideBarIconGroup
                   link={'/shop-manager/dashboard/users'}
                   icons={[{ newNotificationsQuantity: 0, Icon: User }]}
                   label="Users"
                   expanded={isNavExpanded}
-                />
+                /> */}
               </div>
 
               <div className="flex flex-col space-y-4">
