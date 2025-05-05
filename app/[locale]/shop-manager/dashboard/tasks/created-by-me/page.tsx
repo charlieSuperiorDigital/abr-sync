@@ -25,7 +25,7 @@ import {
   WarningCell,
 } from '@/components/custom-components/custom-table/table-cells'
 import { ColumnDef } from '@tanstack/react-table'
-import { MessageSquareMore, PanelTop, ChevronDown, Trash2, Pencil, Printer, NotepadText, Mail } from 'lucide-react'
+import { MessageSquareMore, PanelTop, ChevronDown, Trash2, Pencil, Printer, NotepadText, Mail, Phone, MessageSquare, MessagesSquare, Paperclip } from 'lucide-react'
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 
 import { Task, TaskRelation } from '@/app/types/task'
@@ -355,7 +355,7 @@ export default function CreatedByMe() {
                       {/* Main content section with car details and owner info */}
                       <div className="flex col-4">
                         {/* Left side - Car image and details */}
-                        <div className="flex-1.5 pr-4 max-w-[780px]">
+                        <div className="flex-1.5 pr-4 max-w-[740px]">
                           <div className="flex border-b border-slate-200">
                             {/* Car image */}
                             <div className="w-1/3 pr-4">
@@ -464,86 +464,65 @@ export default function CreatedByMe() {
                         {/* Right side */}
                         <div className="flex-1 pr-4">
                           <div className="mt-4">
-                            <div className="flex items-center mb-2">
+                            <div className="flex items-center mb-2 justify-between">
                               <h3 className="text-md font-bold">Jane Doe, Vehicle Owner</h3>
-                              <div className="flex ml-auto space-x-2">
-                                <button className="p-1 bg-white rounded border border-gray-200 hover:bg-gray-100">
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                  </svg>
-                                </button>
-                                <button className="p-1 bg-white rounded border border-gray-200 hover:bg-gray-100">
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                  </svg>
-                                </button>
-                                <button className="p-1 bg-white rounded border border-gray-200 hover:bg-gray-100">
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                                  </svg>
+                              <div className="flex space-x-2 items-center">
+                                <NotepadText className='color-black w-[15px] h-[15px]'/>
+                                <Phone className='color-black w-[15px] h-[15px]'/>
+                                <Mail className='color-black w-[15px] h-[15px]'/>
+                                <button className="bg-black rounded-full p-1 flex items-center justify-center">
+                                  <MessagesSquare className='w-[15px] h-[15px] color-white'/>
+                                  <span className="text-xs text-white">PREF.</span>
                                 </button>
                               </div>
                             </div>
-                            <div className="flex">
-                              <div className="w-1/2">
-                                <div className="text-xs text-gray-500">(555) 123-4567</div>
-                                <div className="text-xs">janedoe@gmail.com</div>
-                                <div className="text-xs mt-2">123 Elm Street, Springfield, IL 62704</div>
+                            <div className="flex flex-col">
+                              <div className="flex">
+                                <span className="text-[12px]">(555) 123-4567 janedoe@gmail.com 123 Elm Street, Springfield, IL 62704</span>
                               </div>
-                              <div className="w-1/2">
-                                <div className="flex items-center">
-                                  <div className="text-xs text-gray-500">Adjuster:</div>
-                                  <div className="text-xs ml-1">William Green, Progressive</div>
-                                  <div className="flex ml-2 space-x-2">
-                                    <button className="p-1 bg-white rounded border border-gray-200 hover:bg-gray-100">
-                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                      </svg>
-                                    </button>
-                                    <button className="p-1 bg-white rounded border border-gray-200 hover:bg-gray-100">
-                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                      </svg>
-                                    </button>
-                                    <button className="p-1 bg-white rounded border border-gray-200 hover:bg-gray-100">
-                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                                      </svg>
-                                    </button>
-                                  </div>
-                                </div>
+                              <div className="flex">
+                                <span className="text-[12px]">Insurance: Progressive janedoe@gmail.com 123 Elm Street, Springfield, IL 62704</span>
                               </div>
+                            </div>
+                          </div>
+                          <div className="flex justify-between py-2">
+                            <div>
+                              <span className="text-[12px] font-semibold">Insurance: William Green, Progressive</span>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <NotepadText className='color-black w-[12px] h-[12px]'/>
+                              <Phone className='color-black w-[12px] h-[12px]'/>
+                              <Mail className='color-black w-[12px] h-[12px]'/>
+                              <MessagesSquare className='color-black w-[12px] h-[12px]'/>
                             </div>
                           </div>
                           
                           {/* Attachments */}
                           <div className="mt-4">
                             <h3 className="text-md font-bold mb-2">Attachments</h3>
-                            <div className="flex space-x-2">
+                            <div className="flex space-x-2 bg-color-[#DDDDDD]">
                               <div className="flex items-center space-x-1 text-xs">
-                                <span className="underline">Estimate</span>
-                                <span className="text-gray-400">|</span>
+                                <span className="">Estimate</span>
+                                <Paperclip className="w-[12px] h-[12px]"/>
                               </div>
                               <div className="flex items-center space-x-1 text-xs">
-                                <span className="underline">Drop-Off</span>
-                                <span className="text-gray-400">|</span>
+                                <span className="">Drop-Off</span>
+                                <Paperclip className="w-[12px] h-[12px]"/>
                               </div>
                               <div className="flex items-center space-x-1 text-xs">
-                                <span className="underline">Damage On Estimate</span>
-                                <span className="text-gray-400">|</span>
+                                <span className="">Damage On Estimate</span>
+                                <Paperclip className="w-[12px] h-[12px]"/>
                               </div>
                               <div className="flex items-center space-x-1 text-xs">
-                                <span className="underline">Supplement</span>
+                                <span className="">Supplement</span>
+                                <Paperclip className="w-[12px] h-[12px]"/>
                               </div>
                             </div>
                           </div>
                           <div className="mt-4 border-t border-gray-200 pt-4">
                             <div className="flex justify-between items-center mb-2">
-                              <h3 className="text-md font-bold">Last Communication Summary</h3>
-                              <div className="flex items-center text-xs text-gray-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                              <h3 className="text-[12px] font-bold">Last Communication Summary</h3>
+                              <div className="flex items-center text-[12px] text-gray-500">
                                 Last updated 2 min ago
                                 <button className="ml-2 p-1 rounded-full hover:bg-gray-100">
                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -554,22 +533,22 @@ export default function CreatedByMe() {
                             </div>
                             
                             <div className="space-y-2">
-                              <div>
-                                <div className="text-xs text-gray-500">ISSUE REPORTED</div>
-                                <div className="text-sm">Client reported a dent on the rear bumper.</div>
+                              <div className="flex">
+                                <div className="text-[12px]">Issure reported</div>
+                                <div className="text-[12px]">Client reported a dent on the rear bumper.</div>
                               </div>
                               
-                              <div>
-                                <div className="text-xs text-gray-500">REPAIR ESTIMATE</div>
-                                <div className="text-sm">Estimated repair time is 3 days, with a preliminary cost of $2,395.49</div>
+                              <div className="flex">
+                                <div className="text-[12px]">Repair estimate</div>
+                                <div className="text-[12px]">Estimated repair time is 3 days, with a preliminary cost of $2,395.49</div>
                               </div>
                               
-                              <div>
-                                <div className="text-xs text-gray-500">NEXT STEPS</div>
-                                <div className="text-sm">Assessment: Complete client interview to gather more details.</div>
-                                <div className="text-sm">Approval: Obtain client approval for the final estimate after evaluation.</div>
-                                <div className="text-sm">Additional Services: Offered paint touch-up, which the client accepted.</div>
-                                <div className="text-sm">Follow-Up: Email the detailed estimate by 5/23/2025, 2:00 PM. Confirm drop-off for 5/24/2025, 9:00 AM. Finalize rental car arrangements.</div>
+                              <div className="flex flex-col">
+                                <div className="text-[12px]">Next steps</div>
+                                <div className="text-[12px]">Assessment: Complete client interview to gather more details.</div>
+                                <div className="text-[12px]">Approval: Obtain client approval for the final estimate after evaluation.</div>
+                                <div className="text-[12px]">Additional Services: Offered paint touch-up, which the client accepted.</div>
+                                <div className="text-[12px]">Follow-Up: Email the detailed estimate by 5/23/2025, 2:00 PM. Confirm drop-off for 5/24/2025, 9:00 AM. Finalize rental car arrangements.</div>
                               </div>
                             </div>
                           </div>
