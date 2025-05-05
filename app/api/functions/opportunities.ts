@@ -1,68 +1,9 @@
 import apiService from '@/app/utils/apiService'
-import { GetOpportunityByIdApiResponse } from '@/app/types/opportunity'
-
-export interface VehiclePhoto {
-  id: string
-  url: string
-  type: string
-  vehicleId: string
-}
-
-export interface OpportunityResponse {
-  opportunityId: string
-  opportunityStatus: string
-  opportunityCreatedAt: string
-  opportunityUpdatedAt: string
-
-  // Insurance information
-  insuranceName: string
-  insuranceProvider: string
-  insuranceClaimNumber: string
-  insurancePolicyNumber: string
-  insuranceTypeOfLoss: string
-  insuranceDeductible: string
-  insuranceContactName: string
-  insuranceContactPhone: string
-  insuranceCreatedAt: string
-  insuranceUpdatedAt: string
-  insuranceAdjuster: string
-  insuranceAdjusterEmail: string
-  insuranceAdjusterPhone: string
-  insuranceApproved: boolean
-
-  // Vehicle information
-  vehicleId: string
-  vehicleMake: string
-  vehicleModel: string
-  vehicleYear: number
-  vehicleVin: string
-  vehicleLicensePlate: string
-  vehicleInteriorColor: string
-  vehicleExteriorColor: string
-  vehicleIsCommercial: boolean
-  vehicleCreatedAt: string
-  vehicleUpdatedAt: string
-  vehicleDamageDescription: string
-  vehicleMileageIn: number
-  vehiclePhotos: VehiclePhoto[]
-
-  // Owner information
-  ownerFirstName: string
-  ownerLastName: string
-  ownerAddress: string
-  ownerEmail: string
-  ownerPhone: string
-  ownerId: string
-  ownerCreatedAt: string
-  ownerUpdatedAt: string
-
-  // Additional information
-  totalParts: number
-  totalPartsCost: number
-  _1stCall: string
-  _2ndCall: string
-  lastCommunicationSummary: string
-}
+import { 
+  OpportunityResponse,
+  VehiclePhoto,
+  GetOpportunityByIdApiResponse
+} from '@/app/types/opportunities'
 
 export const getOpportunitiesList = async ({
   tenantId,

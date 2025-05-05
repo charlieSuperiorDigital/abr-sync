@@ -1,34 +1,79 @@
+/**
+ * Types for opportunities
+ */
 import { Task } from './task'
 
-// Tracks the high-level state of the opportunity or repair order
-export enum OpportunityStatus {
-  New = "New", // Initial contact with owner to schedule drop date
-  SecondCall = "2nd Call", // When CSR couldn't make contact with vehicle owner
-  Estimate = "Estimate", // When estimate is created and approved
-  TotalLoss = "Total Loss", // If vehicle is declared total loss
-  Upcoming = "Upcoming", // Vehicle dropped off, workfile created
-  Archived = "Archived" // Opportunity is archived
+/**
+ * Interface for vehicle photo
+ */
+export interface VehiclePhoto {
+  id: string;
+  url: string;
+  type: string;
+  vehicleId: string;
 }
-
-// Tracks the detailed progress of the repair process
-export enum RepairStage {
-  EstimateCreated = "Estimate Created", // The initial estimate has been created
-  EstimateApproved = "Estimate Approved", // The estimate has been approved by insurance
-  PartsOrdered = "Parts Ordered", // Parts required for repair have been ordered
-  RepairInProgress = "Repair In Progress", // The repair work has started
-  QCInspection = "QC Inspection", // Vehicle undergoing quality control inspection
-  ReadyForPickup = "Ready for Pickup", // Repair complete, vehicle ready for pickup
-  VehiclePickedUp = "Vehicle Picked Up", // Vehicle has been picked up by owner
-  RepairOrder = "Repair Order", // Legacy stage for repair orders
-  Opportunity = "Opportunity", // Legacy stage for opportunities
-  NotStarted = "Not Started", // Repair has not yet started
-  Upcoming = "Upcoming" // Vehicle is scheduled for drop-off
-}
-
-export type PartsWarningStatus = "ORDERED" | "UPDATED" | undefined;
 
 /**
- * Represents the API response format for the getOpportunityById endpoint
+ * Interface for opportunity response from API
+ */
+export interface OpportunityResponse {
+  opportunityId: string;
+  opportunityStatus: string;
+  opportunityCreatedAt: string;
+  opportunityUpdatedAt: string;
+
+  // Insurance information
+  insuranceName: string;
+  insuranceProvider: string;
+  insuranceClaimNumber: string;
+  insurancePolicyNumber: string;
+  insuranceTypeOfLoss: string;
+  insuranceDeductible: string;
+  insuranceContactName: string;
+  insuranceContactPhone: string;
+  insuranceCreatedAt: string;
+  insuranceUpdatedAt: string;
+  insuranceAdjuster: string;
+  insuranceAdjusterEmail: string;
+  insuranceAdjusterPhone: string;
+  insuranceApproved: boolean;
+
+  // Vehicle information
+  vehicleId: string;
+  vehicleMake: string;
+  vehicleModel: string;
+  vehicleYear: number;
+  vehicleVin: string;
+  vehicleLicensePlate: string;
+  vehicleInteriorColor: string;
+  vehicleExteriorColor: string;
+  vehicleIsCommercial: boolean;
+  vehicleCreatedAt: string;
+  vehicleUpdatedAt: string;
+  vehicleDamageDescription: string;
+  vehicleMileageIn: number;
+  vehiclePhotos: VehiclePhoto[];
+
+  // Owner information
+  ownerFirstName: string;
+  ownerLastName: string;
+  ownerAddress: string;
+  ownerEmail: string;
+  ownerPhone: string;
+  ownerId: string;
+  ownerCreatedAt: string;
+  ownerUpdatedAt: string;
+
+  // Additional information
+  totalParts: number;
+  totalPartsCost: number;
+  _1stCall: string;
+  _2ndCall: string;
+  lastCommunicationSummary: string;
+}
+
+/**
+ * Interface for the response from getOpportunityById API
  */
 export interface GetOpportunityByIdApiResponse {
   id: string;
@@ -50,7 +95,7 @@ export interface GetOpportunityByIdApiResponse {
     approved: boolean;
     createdAt: string;
     updatedAt: string;
-  } | null;
+  };
   vehicleId: string;
   vehicle: {
     id: string;
@@ -62,7 +107,6 @@ export interface GetOpportunityByIdApiResponse {
       phone: string;
       email: string;
       address: string;
-      company?: string;
       createdAt: string;
       updatedAt: string;
     };
@@ -78,14 +122,14 @@ export interface GetOpportunityByIdApiResponse {
     isCommercial: boolean;
     createdAt: string;
     updatedAt: string;
-  } | null;
-  locationId: null;
-  location: null;
-  documentId: null;
-  document: null;
+  };
+  locationId: string | null;
+  location: any | null;
+  documentId: string | null;
+  document: any | null;
   status: string;
   roNumber: string;
-  labourHours: null;
+  labourHours: number | null;
   createdAt: string;
   updatedAt: string;
   _1stCall: string;
@@ -97,13 +141,36 @@ export interface GetOpportunityByIdApiResponse {
   estimatedCompletionDate: string;
   partsOrders: any[];
   estimatorId: string;
-  estimator: {
-    id: string;
-    name: string;
-    profilePicture?: string;
-  };
+  estimator: any | null;
 }
 
+export enum OpportunityStatus {
+  New = "New", // Initial contact with owner to schedule drop date
+  SecondCall = "2nd Call", // When CSR couldn't make contact with vehicle owner
+  Estimate = "Estimate", // When estimate is created and approved
+  TotalLoss = "Total Loss", // If vehicle is declared total loss
+  Upcoming = "Upcoming", // Vehicle dropped off, workfile created
+  Archived = "Archived" // Opportunity is archived
+}
+
+export enum RepairStage {
+  EstimateCreated = "Estimate Created", // The initial estimate has been created
+  EstimateApproved = "Estimate Approved", // The estimate has been approved by insurance
+  PartsOrdered = "Parts Ordered", // Parts required for repair have been ordered
+  RepairInProgress = "Repair In Progress", // The repair work has started
+  QCInspection = "QC Inspection", // Vehicle undergoing quality control inspection
+  ReadyForPickup = "Ready for Pickup", // Repair complete, vehicle ready for pickup
+  VehiclePickedUp = "Vehicle Picked Up", // Vehicle has been picked up by owner
+  RepairOrder = "Repair Order", // Legacy stage for repair orders
+  Opportunity = "Opportunity", // Legacy stage for opportunities
+  NotStarted = "Not Started", // Repair has not yet started
+  Upcoming = "Upcoming" // Vehicle is scheduled for drop-off
+}
+
+export type PartsWarningStatus = "ORDERED" | "UPDATED" | undefined;
+
+
+// WARNING: AVOID USING THIS TYPE, it was only created for compatibility with old code
 export type Opportunity = {
   opportunityId: string; // Unique identifier for the opportunity
   roNumber?: string; // RO number
