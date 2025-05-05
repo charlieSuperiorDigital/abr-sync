@@ -5,6 +5,7 @@ import DraggableNav, {
 } from '@/components/custom-components/draggable-nav/draggable-nav'
 import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
 import { Plus } from 'lucide-react'
+import { useMemo } from 'react'
 import { useSession } from 'next-auth/react'
 import { useGetUserTabOrder } from '@/app/api/hooks/useGetUserTabOrder'
 import { useUpdateUserTabOrder } from '@/app/api/hooks/useUpdateUserTabOrder'
@@ -69,8 +70,7 @@ export default function TasksLayout({
   ]
 
   // Get user's preferred tab order
-  // Get user's preferred tab order
-  const { tabOrder } = useGetUserTabOrder({
+  const { tabOrder, isLoading: isLoadingTabOrder } = useGetUserTabOrder({
     userId,
     pageName: 'tasks',
     enabled: !!userId
@@ -82,14 +82,18 @@ export default function TasksLayout({
     pageName: 'tasks',
   })
 
+  // Wait for both tasks and tab order to load before showing content
+  const isLoading = isLoadingAssigned || isLoadingCreated || isLoadingTabOrder
+
   // Order the nav items according to user's preference or use default order
-  const taskNavItems = tabOrder
-    ? [...baseNavItems].sort((a, b) => {
-        const aIndex = tabOrder.indexOf(a.id)
-        const bIndex = tabOrder.indexOf(b.id)
-        return aIndex - bIndex
-      })
-    : baseNavItems
+  const taskNavItems = useMemo(() => {
+    if (!tabOrder) return baseNavItems
+    return [...baseNavItems].sort((a, b) => {
+      const aIndex = tabOrder.indexOf(a.id)
+      const bIndex = tabOrder.indexOf(b.id)
+      return aIndex - bIndex
+    })
+  }, [baseNavItems, tabOrder])
 
   // Context value to share with child pages
   const contextValue: TasksContextType = {
@@ -99,6 +103,14 @@ export default function TasksLayout({
     isLoadingCreated,
     errorAssigned,
     errorCreated
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p>Loading tasks...</p>
+      </div>
+    )
   }
 
   return (
