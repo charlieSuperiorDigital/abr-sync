@@ -17,7 +17,7 @@ export interface TaskCreateVM {
   type: number
   endDate: string | Date
   roles: string
-recurringType: number
+  recurringType: number
   weekDays: number
   monthDays: number
   customDays: string[]
@@ -54,177 +54,102 @@ export interface Task {
 }
 
 /**
+ * Interface for GetTaskById API response
+ */
+export interface GetTaskByIdApiResponse {
+  task: Task
+  taskDays: any[]
+}
+
+/**
  * Creates a new task by sending a POST request to the API
  * @param taskData - The task data to be created
- * @returns Promise with the API response
+ * @returns Promise with the created task
  */
-export async function createTask(taskData: TaskCreateVM): Promise<any> {
+export async function createTask(taskData: TaskCreateVM): Promise<Task> {
   try {
-    const response = await apiService.post<any>('/Task', taskData)
-    
-    if (response.status >= 200 && response.status < 300) {
-      return {
-        success: true,
-        data: response.data,
-        status: response.status
-      }
-    } else {
-      return {
-        success: false,
-        error: response.data,
-        status: response.status
-      }
-    }
+    const response = await apiService.post<Task>('/Task', taskData)
+    return response.data
   } catch (error) {
     console.error('Error creating task:', error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred',
-      status: 500
-    }
+    throw error
   }
 }
 
 /**
  * Fetches all tasks for a specific tenant
  * @param tenantId - The tenant ID to fetch tasks for (optional, uses default if not provided)
- * @returns Promise with the API response containing an array of tasks
+ * @returns Promise with an array of tasks
  */
-export async function getTasksByTenant(tenantId?: string): Promise<any> {
+export async function getTasksByTenant(tenantId?: string): Promise<Task[]> {
   // Use the provided tenant ID or fall back to the default
   const targetTenantId = tenantId || "2A9B6E40-5ACB-40A0-8E2B-D559B4829FA0"
   
   try {
     const response = await apiService.get<Task[]>(`/Task/List/${targetTenantId}`)
-    
-    if (response.status >= 200 && response.status < 300) {
-      return {
-        success: true,
-        data: response.data,
-        status: response.status
-      }
-    } else {
-      return {
-        success: false,
-        error: response.data,
-        status: response.status
-      }
-    }
+    return response.data
   } catch (error: any) {
-    return {
-      success: false,
-      error: error.response?.data || error.message,
-      status: error.response?.status || 500
-    }
+    console.error('Error fetching tasks by tenant:', error)
+    throw error
   }
 }
 
 /**
  * Fetches all tasks assigned to a specific user
  * @param userId - The user ID to fetch tasks for
- * @returns Promise with the API response containing an array of tasks
+ * @returns Promise with an array of tasks
  */
-export async function getTasksByAssignedUser(userId: string): Promise<any> {
+export async function getTasksByAssignedUser(userId: string): Promise<Task[]> {
   try {
     console.log('Fetching tasks assigned to user:', userId)
     const response = await apiService.get<Task[]>(`/Task/ListByAssignedUser/${userId}`)
     console.log('Response:', response)
-    if (response.status >= 200 && response.status < 300) {
-      return {
-        success: true,
-        data: response.data,
-        status: response.status
-      }
-    } else {
-      return {
-        success: false,
-        error: response.data,
-        status: response.status
-      }
-    }
+    return response.data
   } catch (error: any) {
-    return {
-      success: false,
-      error: error.response?.data || error.message,
-      status: error.response?.status || 500
-    }
+    console.error('Error fetching tasks by assigned user:', error)
+    throw error
   }
 }
 
 /**
  * Fetches all tasks created by a specific user
  * @param userId - The user ID who created the tasks
- * @returns Promise with the API response containing an array of tasks
+ * @returns Promise with an array of tasks
  */
-export async function getTasksByCreator(userId: string): Promise<any> {
+export async function getTasksByCreator(userId: string): Promise<Task[]> {
   try {
     const response = await apiService.get<Task[]>(`/Task/ListByCreatedBy/${userId}`)
-    
-    if (response.status >= 200 && response.status < 300) {
-      return {
-        success: true,
-        data: response.data,
-        status: response.status
-      }
-    } else {
-      return {
-        success: false,
-        error: response.data,
-        status: response.status
-      }
-    }
+    return response.data
   } catch (error: any) {
-    return {
-      success: false,
-      error: error.response?.data || error.message,
-      status: error.response?.status || 500
-    }
+    console.error('Error fetching tasks by creator:', error)
+    throw error
   }
 }
 
 /**
  * Fetches a single task by its ID
  * @param taskId - The ID of the task to fetch
- * @returns Promise with the API response containing a single task
+ * @returns Promise with a task and its associated task days
  */
-export async function getTaskById(taskId: string): Promise<any> {
+export async function getTaskById(taskId: string): Promise<GetTaskByIdApiResponse> {
   try {
-    const response = await apiService.get<Task>(`/Task/${taskId}`)
-    
-    if (response.status >= 200 && response.status < 300) {
-      return {
-        success: true,
-        data: response.data,
-        status: response.status
-      }
-    } else {
-      return {
-        success: false,
-        error: response.data,
-        status: response.status
-      }
-    }
+    const response = await apiService.get<GetTaskByIdApiResponse>(`/Task/${taskId}`)
+    return response.data
   } catch (error: any) {
-    return {
-      success: false,
-      error: error.response?.data || error.message,
-      status: error.response?.status || 500
-    }
+    console.error('Error fetching task by ID:', error)
+    throw error
   }
 }
 
-export async function markTaskasDone(taskId: string): Promise<any> {
+export async function markTaskasDone(taskId: string): Promise<Task> {
   try {
     return await updateTask({
       id: taskId,
       status: 'done'
     });
   } catch (error: any) {
-    return {
-      success: false,
-      error: error.response?.data || error.message,
-      status: error.response?.status || 500
-    }
+    console.error('Error marking task as done:', error)
+    throw error
   }
 }
 
@@ -255,28 +180,12 @@ export interface UpdateTaskPayload {
   customDays?: string[];
 }
 
-export async function updateTask(taskData: UpdateTaskPayload): Promise<any> {
+export async function updateTask(taskData: UpdateTaskPayload): Promise<Task> {
   try {
-    const response = await apiService.put(`/Task`, taskData);
-    
-    if (response.status >= 200 && response.status < 300) {
-      return {
-        success: true,
-        data: response.data,
-        status: response.status
-      };
-    } else {
-      return {
-        success: false,
-        error: response.data,
-        status: response.status
-      };
-    }
+    const response = await apiService.put<Task>(`/Task`, taskData);
+    return response.data;
   } catch (error: any) {
-    return {
-      success: false,
-      error: error.response?.data || error.message,
-      status: error.response?.status || 500
-    }
+    console.error('Error updating task:', error)
+    throw error
   }
 }

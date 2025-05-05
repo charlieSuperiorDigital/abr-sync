@@ -1,78 +1,23 @@
 'use client'
-import { DataTable } from '@/components/custom-components/custom-table/data-table'
-import { useEffect, useState } from 'react'
-import { Badge } from '@/components/ui/badge'
-import { useSession } from 'next-auth/react'
 import { Task as ApiTask } from '@/app/api/functions/tasks'
 import { useTasksContext } from '@/app/context/tasks-context'
+import { DataTable } from '@/components/custom-components/custom-table/data-table'
+import { useState } from 'react'
 
+import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import {
-  ActionButtonCell,
-  ActionsCell,
-  AutoCell,
-  ContactMethodCell,
   CreatedByCell,
-  DateCell,
   DescriptionCell,
   FriendlyDateCell,
   PriorityBadgeCell,
-  RelatedToCell,
-  StatusBadgeCell,
-  SummaryCell,
   TitleCell,
-  UploadTimeCell,
-  VehicleCell,
-  WarningCell,
+  WarningCell
 } from '@/components/custom-components/custom-table/table-cells'
 import { ColumnDef } from '@tanstack/react-table'
-import { MessageSquareMore, PanelTop, ChevronDown, Trash2, Pencil } from 'lucide-react'
-import ContactInfo from '@/app/[locale]/custom-components/contact-info'
+import { ChevronDown, Pencil, Trash2 } from 'lucide-react'
 
-import { Task } from '@/app/types/task'
-import { EditTaskModal } from '@/components/custom-components/task-modal/edit-task-modal'
-import { ReopenTaskModal } from '@/components/custom-components/task-modal/reopen-task-modal'
 import { DuplicateTaskModal } from '@/components/custom-components/task-modal/duplicate-task-modal'
-import * as deleteTaskModal from '@/components/custom-components/task-modal/delete-task-modal'
-
-// Function to map API task format to app task format
-const mapApiTaskToAppTask = (apiTask: ApiTask): Task => {
-  // Convert priority string to object format if needed
-  const priorityObj = typeof apiTask.priority === 'string'
-    ? {
-      variant: getPriorityVariant(apiTask.priority),
-      text: apiTask.priority as 'Urgent' | 'High' | 'Normal' | 'Low'
-    }
-    : apiTask.priority;
-
-  return {
-    id: apiTask.id,
-    tenantId: apiTask.tenantId || '',
-    title: apiTask.title,
-    description: apiTask.description,
-    priority: priorityObj,
-    createdBy: apiTask.createdBy || '',
-    createdByUser: apiTask.createdByUser,
-    createdAt: apiTask.createdAt,
-    updatedAt: apiTask.updatedAt,
-    dueDate: apiTask.dueDate,
-    dueDateTime: apiTask.dueDate, // For backward compatibility
-    status: apiTask.status as 'open' | 'in_progress' | 'completed' | 'archived',
-    assignedTo: apiTask.assignedTo,
-    assignedUser: apiTask.assignedUser,
-    workfileId: apiTask.workfileId,
-    workfile: apiTask.workfile,
-    locationId: apiTask.locationId,
-    location: apiTask.location,
-    type: apiTask.type || 'One-time',
-    endDate: apiTask.endDate,
-    roles: apiTask.roles,
-    // Default values for backward compatibility
-    relatedTo: [],
-    email: '',
-    phone: '',
-    message: ''
-  };
-};
+import { ReopenTaskModal } from '@/components/custom-components/task-modal/reopen-task-modal'
 
 // Helper function to determine priority variant
 const getPriorityVariant = (priority: string): 'danger' | 'warning' | 'success' | 'slate' => {
@@ -117,36 +62,23 @@ export default function CompletedTasks() {
     });
   }
   
-  // Transform API tasks to app task format and filter for completed tasks only
+  // Filter for completed tasks only
   const assignedCompletedTasks = assignedTasks 
-    ? assignedTasks
-        .map(mapApiTaskToAppTask)
-        .filter(task => 
-          task.status?.toLowerCase() === 'done' || task.status?.toLowerCase() === 'completed'
-        )
-    : []
+    ? assignedTasks.filter(task => 
+        task.status?.toLowerCase() === 'done' || task.status?.toLowerCase() === 'completed'
+      )
+    : [];
     
   const createdCompletedTasks = createdTasks 
-    ? createdTasks
-        .map(mapApiTaskToAppTask)
-        .filter(task => 
-          task.status?.toLowerCase() === 'done' || task.status?.toLowerCase() === 'completed'
-        )
-    : []
-    
-  // Combine both arrays and remove duplicates based on task ID
-  const combinedTasks = [...assignedCompletedTasks]
+    ? createdTasks.filter(task => 
+        task.status?.toLowerCase() === 'done' || task.status?.toLowerCase() === 'completed'
+      )
+    : [];
   
-  // Add created tasks that aren't already in the assigned tasks list
-  createdCompletedTasks.forEach(createdTask => {
-    if (!combinedTasks.some(task => task.id === createdTask.id)) {
-      combinedTasks.push(createdTask)
-    }
-  })
-  
-  const tasks = combinedTasks
+  // Combine both lists
+  const tasks = [...assignedCompletedTasks, ...createdCompletedTasks];
 
-  const columns: ColumnDef<Task>[] = [
+  const columns: ColumnDef<ApiTask>[] = [
     {
       accessorKey: 'id',
       header: 'Task ID',
@@ -169,13 +101,8 @@ export default function CompletedTasks() {
       accessorKey: 'priority',
       header: 'Priority',
       cell: ({ row }) => {
-        const priority = row.original.priority;
-        const variant = typeof priority === 'string'
-          ? getPriorityVariant(priority)
-          : priority.variant;
-        const text = typeof priority === 'string'
-          ? priority
-          : priority.text;
+        const variant = getPriorityVariant(row.original.priority);
+        const text = row.original.priority;
         
         return (
           <PriorityBadgeCell 
@@ -223,22 +150,22 @@ export default function CompletedTasks() {
       />,
       
     },
-    {
-      accessorKey: 'relatedTo',
-      header: 'Related To',
-      cell: ({ row }) => {
-        const relatedObjects = row.original.relatedTo || [];
-        return <RelatedToCell relatedObjects={relatedObjects as any} />;
-      },
+    // {
+    //   accessorKey: 'relatedTo',
+    //   header: 'Related To',
+    //   cell: ({ row }) => {
+    //     const relatedObjects = row.original.relatedTo || [];
+    //     return <RelatedToCell relatedObjects={relatedObjects as any} />;
+    //   },
       
-    },
+    // },
     {
       id: 'contact',
       header: 'Contact',
       cell: ({ row }) => (
         <div className="flex justify-end items-center space-x-2">
           <WarningCell
-            message={row.original.warningMessage || ''}
+            message={'PLACEHOLDER'}
           />
           <div 
                     data-testid="contact-info" 
@@ -309,23 +236,21 @@ export default function CompletedTasks() {
                         <span className="font-medium">ID #{row.id}</span>
                         <span 
                           className={`font-medium px-2 py-1 rounded-full text-white ${
-                            typeof row.priority === 'string' 
-                              ? 'bg-slate-500' 
-                              : row.priority.variant === 'danger' 
-                                ? 'bg-red-600' 
-                                : row.priority.variant === 'success' 
-                                  ? 'bg-[#0F6C40]' 
-                                  : row.priority.variant === 'slate' 
-                                    ? 'bg-[#6E6E6E]' 
-                                    : 'bg-amber-500'
+                            getPriorityVariant(row.priority) === 'danger' 
+                              ? 'bg-red-600' 
+                              : getPriorityVariant(row.priority) === 'success' 
+                                ? 'bg-[#0F6C40]' 
+                                : getPriorityVariant(row.priority) === 'slate' 
+                                  ? 'bg-[#6E6E6E]' 
+                                  : 'bg-amber-500'
                           }`}
                         >
-                          {typeof row.priority === 'string' ? row.priority : row.priority.text}
+                          {row.priority}
                         </span>
                       </div>
                       {/* Actions */}
-                      <div className="flex items-center gap-4">
-                        <button className="bg-black text-white px-4 py-2 rounded-full">
+                      <div className="flex gap-4 items-center">
+                        <button className="px-4 py-2 text-white bg-black rounded-full">
                           {row.status === 'open' ? 'Mark as done' : 'Done'}
                         </button>
                         <button className="p-2 rounded-full hover:bg-gray-200">
@@ -339,11 +264,11 @@ export default function CompletedTasks() {
                   </div>
 
                   {/* Main information */}
-                  <div className='py-4 border-t border-slate-200 flex flex-row gap-10'>
+                  <div className='flex flex-row gap-10 py-4 border-t border-slate-200'>
                     {/* Name and contact info row */}
                     <div className='flex flex-col gap-3 mb-4'>
                       <div>
-                        <div className="flex items-center gap-6">
+                        <div className="flex gap-6 items-center">
                           <div>
                             <div className="text-sm text-black">NAME:</div>
                             <div className="font-semibold text-black underline">{row.title}</div>
@@ -353,14 +278,14 @@ export default function CompletedTasks() {
                           <div className="text-sm text-black">REPRESENTATIVE:</div>
                           <div>REPRESENTATIVE NAME</div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex gap-3 items-center">
                         <ContactInfo/>
                       </div>
                       </div>
                       </div>
                       {/* Description */}
                       <div className="mb-4">
-                        <div className="text-sm text-black mb-1">DESCRIPTION</div>
+                        <div className="mb-1 text-sm text-black">DESCRIPTION</div>
                         <div className="text-sm">{row.description || ""}</div>
                       </div>
                     </div>
@@ -392,7 +317,7 @@ export default function CompletedTasks() {
                       
                       <div>
                         <div className="text-sm text-gray-500">Priority:</div>
-                        <div>{typeof row.priority === 'string' ? row.priority : row.priority.text}</div>
+                        <div>{row.priority}</div>
                       </div>
                     </div>
                   </div>
