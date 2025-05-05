@@ -25,7 +25,7 @@ import {
   WarningCell,
 } from '@/components/custom-components/custom-table/table-cells'
 import { ColumnDef } from '@tanstack/react-table'
-import { MessageSquareMore, PanelTop, ChevronDown, Trash2, Pencil } from 'lucide-react'
+import { MessageSquareMore, PanelTop, ChevronDown, Trash2, Pencil, Printer, NotepadText, Mail } from 'lucide-react'
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 
 import { Task, TaskRelation } from '@/app/types/task'
@@ -109,6 +109,14 @@ export default function CreatedByMe() {
         task.status?.toLowerCase() !== 'done' && task.status?.toLowerCase() !== 'completed'
       )
     : []
+
+  tasks.map(task => {
+    task.relatedTo = [{
+      type: 'workfile',
+      id: task.workfileId || '',
+      title: task.workfile?.id || ''
+    }]
+  })  
 
   const toggleRow = (taskId: string) => {
     // Toggle expanded state
@@ -316,101 +324,414 @@ export default function CreatedByMe() {
                     toggleRow(row.id)
                   }}
                 >
-
-                  <div className='py-6'>
-                    {/* Title and ID */}
-                    <div className="flex flex-row justify-between flex-2">
-                      <div className="flex gap-8 items-center">
-                        <h2 className="text-xl font-bold">{row.title}</h2>
-                        <span className="font-medium">ID #{row.id}</span>
-                        <span 
-                          className={`font-medium px-2 py-1 rounded-full text-white ${
-                            typeof row.priority === 'string' 
-                              ? 'bg-slate-500' 
-                              : row.priority.variant === 'danger' 
-                                ? 'bg-red-600' 
-                                : row.priority.variant === 'success' 
-                                  ? 'bg-[#0F6C40]' 
-                                  : row.priority.variant === 'slate' 
-                                    ? 'bg-[#6E6E6E]' 
-                                    : 'bg-amber-500'
-                          }`}
-                        >
-                          {typeof row.priority === 'string' ? row.priority : row.priority.text}
-                        </span>
-                      </div>
-                      {/* Actions */}
-                      <div className="flex items-center gap-4">
-                        <button className="bg-black text-white px-4 py-2 rounded-full">
-                          {row.status === 'open' ? 'Mark as done' : 'Done'}
-                        </button>
-                        <button className="p-2 rounded-full hover:bg-gray-200">
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                        <button className="p-2 rounded-full hover:bg-gray-200">
-                          <Pencil className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-
-
-                  {/* Main information */}
-                  <div className='py-4 border-t border-slate-200 flex flex-row gap-10'>
-                    {/* Name and contact info row */}
-                    <div className='flex flex-col gap-3 mb-4'>
-                      <div>
-                        <div className="flex items-center gap-6">
-                          <div>
-                            <div className="text-sm text-black">NAME:</div>
-                            <div className="font-semibold text-black underline">{row.title}</div>
+                  {/* Check if task is related to opportunity or workfile */}
+                  {row.relatedTo && row.relatedTo.some(rel => 
+                    rel.type === 'opportunity' || rel.type === 'workfile'
+                  ) ? (  
+                    // Special expanded row for opportunity or workfile related tasks
+                    <div className="py-0 -mx-4 bg-white">
+                      {/* Header with BMW info and status badges */}
+                      <div className="bg-white p-4 border-b border-slate-200">
+                        <div className="flex items-center justify-between max-w-[97%]">
+                          <div className="flex gap-2 items-center">
+                            <h2 className="text-[20px] font-bold">{row.title}</h2>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-[20px] font-medium">RO #{row.id || ''}</span>
+                            </div>
                           </div>
-                        
-                        <div>
-                          <div className="text-sm text-black">REPRESENTATIVE:</div>
-                          <div>REPRESENTATIVE NAME</div>
+                          <div className="flex items-center space-x-2 px-2">
+                            <span className="bg-red-600 text-white text-xs px-2 py-1 rounded-full">HIGH PRIORITY</span>
+                            <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full">IN RENTAL</span>
+                            <span className="bg-gray-800 text-white text-xs px-2 py-1 rounded-full">PROGRESSIVE</span>
+                          </div>
+                          <div className="flex items-center">
+                            <NotepadText className='color-black'/>
+                            <Printer className='color-black'/>
+                            <Mail className='color-black'/>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                        <ContactInfo/>
                       </div>
-                      </div>
-                      </div>
-                      {/* Description */}
-                      <div className="mb-4">
-                        <div className="text-sm text-black mb-1">DESCRIPTION</div>
-                        <div className="text-sm">{row.description || ""}</div>
-                      </div>
-                    </div>
-                    
 
-                    
-                    {/* Task details in grid layout */}
-                    <div className="grid grid-cols-2 gap-10">
-                      <div className="flex flex-col gap-4">
-                        <div>
-                          <div className="text-sm text-black">CREATED BY:</div>
-                          <div>{row.createdByUser?.firstName + ' ' + row.createdByUser?.lastName}</div>
+                      {/* Main content section with car details and owner info */}
+                      <div className="flex col-4">
+                        {/* Left side - Car image and details */}
+                        <div className="flex-1.5 pr-4 max-w-[780px]">
+                          <div className="flex border-b border-slate-200">
+                            {/* Car image */}
+                            <div className="w-1/3 pr-4">
+                              <img 
+                                src="https://via.placeholder.com/300x200/e0e0e0/808080?text=BMW+Image" 
+                                alt="Blue BMW 2016" 
+                                className="w-full h-auto rounded-md border border-gray-200"
+                              />
+                            </div>
+                            
+                            {/* Car details */}
+                            <div className="w-2/3 py-2">
+                              <div className="mb-3 flex items-center">
+                                <div className="text-xs text-gray-500">Estimate $:</div>
+                                <div className="text-lg font-bold">$2,395.49</div>
+                              </div>
+                              
+                              <div className="flex mb-3">
+                                <div className="w-1/2 flex items-center">
+                                  <div className="text-xs text-gray-500">Tech:</div>
+                                  <div className="flex items-center">
+                                    <div className="w-5 h-5 rounded-full bg-gray-300 mr-2 flex items-center justify-center text-xs">AM</div>
+                                    <span className="text-sm">Aiden Moore</span>
+                                  </div>
+                                </div>
+                                <div className="w-1/2 flex items-center">
+                                  <div className="text-xs text-gray-500">Est:</div>
+                                  <div className="flex items-center">
+                                    <div className="w-5 h-5 rounded-full bg-gray-300 mr-2 flex items-center justify-center text-xs">EM</div>
+                                    <span className="text-sm">Elliot Matt</span>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <div className="text-xs text-gray-500">The vehicle was involved in a minor collision in a parking lot. The vehicle sustained damage to the rear bumper when it was struck by another car while reversing out of a parking space.</div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-center mb-2 p-3">
+                            <h3 className="text-md font-bold">Logs</h3>
+                            <div className="text-xs underline cursor-pointer">View all</div>
+                          </div>
+                          <div className="rounded-md overflow-hidden">
+                            {/* Table header */}
+                            <div className="grid grid-cols-3 text-gray-500 border-b">
+                              <div className="py-3 px-4 text-xs font-medium">TYPE</div>
+                              <div className="py-3 px-4 text-xs font-medium">DATE</div>
+                              <div className="py-3 px-4 text-xs font-medium">USER</div>
+                            </div>
+                            
+                            {/* Table rows */}
+                            <div className="divide-y">
+                              {/* Row 1 */}
+                              <div className="grid grid-cols-3 hover:bg-gray-50">
+                                <div className="py-3 px-4 text-sm">Received Parts</div>
+                                <div className="py-3 px-4 text-sm">Aug 15 12:30PM</div>
+                                <div className="py-3 px-4 flex items-center">
+                                  <div className="w-6 h-6 rounded-full bg-gray-300 mr-2 flex items-center justify-center text-xs">AM</div>
+                                  <span className="text-sm">Aiden Moore</span>
+                                </div>
+                              </div>
+                              
+                              {/* Row 2 */}
+                              <div className="grid grid-cols-3 hover:bg-gray-50">
+                                <div className="py-3 px-4 text-sm">Estimate Update</div>
+                                <div className="py-3 px-4 text-sm">Aug 14 12:30PM</div>
+                                <div className="py-3 px-4 flex items-center">
+                                  <div className="w-6 h-6 rounded-full bg-gray-300 mr-2 flex items-center justify-center text-xs">AM</div>
+                                  <span className="text-sm">Aiden Moore</span>
+                                </div>
+                              </div>
+                              
+                              {/* Row 3 */}
+                              <div className="grid grid-cols-3 hover:bg-gray-50">
+                                <div className="py-3 px-4 text-sm">Parts Ordered</div>
+                                <div className="py-3 px-4 text-sm">Aug 12 12:30PM</div>
+                                <div className="py-3 px-4 text-sm">System Update</div>
+                              </div>
+                              
+                              {/* Row 4 */}
+                              <div className="grid grid-cols-3 hover:bg-gray-50">
+                                <div className="py-3 px-4 text-sm">Scheduling Delivery</div>
+                                <div className="py-3 px-4 text-sm">Aug 4 12:30PM</div>
+                                <div className="py-3 px-4 text-sm">System Update</div>
+                              </div>
+                              
+                              {/* Row 5 */}
+                              <div className="grid grid-cols-3 hover:bg-gray-50">
+                                <div className="py-3 px-4 text-sm flex items-center">
+                                  <span>1st Call - CSR Call</span>
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                  </svg>
+                                </div>
+                                <div className="py-3 px-4 text-sm">Aug 5 12:30PM</div>
+                                <div className="py-3 px-4 flex items-center">
+                                  <div className="w-6 h-6 rounded-full bg-gray-300 mr-2 flex items-center justify-center text-xs">EM</div>
+                                  <span className="text-sm">Elliot Matt</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                         
-                        <div>
-                          <div className="text-sm text-black">CREATED DATE:</div>
-                          <div>{new Date(row.createdAt).toLocaleDateString()}</div>
+                        {/* Right side */}
+                        <div className="flex-1 pr-4">
+                          <div className="mt-4">
+                            <div className="flex items-center mb-2">
+                              <h3 className="text-md font-bold">Jane Doe, Vehicle Owner</h3>
+                              <div className="flex ml-auto space-x-2">
+                                <button className="p-1 bg-white rounded border border-gray-200 hover:bg-gray-100">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                  </svg>
+                                </button>
+                                <button className="p-1 bg-white rounded border border-gray-200 hover:bg-gray-100">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                  </svg>
+                                </button>
+                                <button className="p-1 bg-white rounded border border-gray-200 hover:bg-gray-100">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                            <div className="flex">
+                              <div className="w-1/2">
+                                <div className="text-xs text-gray-500">(555) 123-4567</div>
+                                <div className="text-xs">janedoe@gmail.com</div>
+                                <div className="text-xs mt-2">123 Elm Street, Springfield, IL 62704</div>
+                              </div>
+                              <div className="w-1/2">
+                                <div className="flex items-center">
+                                  <div className="text-xs text-gray-500">Adjuster:</div>
+                                  <div className="text-xs ml-1">William Green, Progressive</div>
+                                  <div className="flex ml-2 space-x-2">
+                                    <button className="p-1 bg-white rounded border border-gray-200 hover:bg-gray-100">
+                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                      </svg>
+                                    </button>
+                                    <button className="p-1 bg-white rounded border border-gray-200 hover:bg-gray-100">
+                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                      </svg>
+                                    </button>
+                                    <button className="p-1 bg-white rounded border border-gray-200 hover:bg-gray-100">
+                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Attachments */}
+                          <div className="mt-4">
+                            <h3 className="text-md font-bold mb-2">Attachments</h3>
+                            <div className="flex space-x-2">
+                              <div className="flex items-center space-x-1 text-xs">
+                                <span className="underline">Estimate</span>
+                                <span className="text-gray-400">|</span>
+                              </div>
+                              <div className="flex items-center space-x-1 text-xs">
+                                <span className="underline">Drop-Off</span>
+                                <span className="text-gray-400">|</span>
+                              </div>
+                              <div className="flex items-center space-x-1 text-xs">
+                                <span className="underline">Damage On Estimate</span>
+                                <span className="text-gray-400">|</span>
+                              </div>
+                              <div className="flex items-center space-x-1 text-xs">
+                                <span className="underline">Supplement</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="mt-4 border-t border-gray-200 pt-4">
+                            <div className="flex justify-between items-center mb-2">
+                              <h3 className="text-md font-bold">Last Communication Summary</h3>
+                              <div className="flex items-center text-xs text-gray-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Last updated 2 min ago
+                                <button className="ml-2 p-1 rounded-full hover:bg-gray-100">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <div>
+                                <div className="text-xs text-gray-500">ISSUE REPORTED</div>
+                                <div className="text-sm">Client reported a dent on the rear bumper.</div>
+                              </div>
+                              
+                              <div>
+                                <div className="text-xs text-gray-500">REPAIR ESTIMATE</div>
+                                <div className="text-sm">Estimated repair time is 3 days, with a preliminary cost of $2,395.49</div>
+                              </div>
+                              
+                              <div>
+                                <div className="text-xs text-gray-500">NEXT STEPS</div>
+                                <div className="text-sm">Assessment: Complete client interview to gather more details.</div>
+                                <div className="text-sm">Approval: Obtain client approval for the final estimate after evaluation.</div>
+                                <div className="text-sm">Additional Services: Offered paint touch-up, which the client accepted.</div>
+                                <div className="text-sm">Follow-Up: Email the detailed estimate by 5/23/2025, 2:00 PM. Confirm drop-off for 5/24/2025, 9:00 AM. Finalize rental car arrangements.</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Right final side - QC Checklist */}
+                        <div className="flex-1 pr-4 max-w-[239px]">
+                          <div className="border border-gray-200 rounded-md p-3">
+                            <h3 className="text-md font-bold mb-2">QC Checklist</h3>
+                            <div className="space-y-2">
+                              <div className="flex items-center">
+                                <div className="w-4 h-4 bg-green-500 rounded-sm mr-2 flex items-center justify-center">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </div>
+                                <span className="text-xs">SIGNATURE</span>
+                              </div>
+                              <div className="flex items-center">
+                                <div className="w-4 h-4 bg-green-500 rounded-sm mr-2 flex items-center justify-center">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </div>
+                                <span className="text-xs">PRE-SCAN</span>
+                              </div>
+                              <div className="flex items-center">
+                                <div className="w-4 h-4 bg-gray-200 rounded-sm mr-2"></div>
+                                <span className="text-xs">POST-SCAN</span>
+                              </div>
+                              <div className="flex items-center">
+                                <div className="w-4 h-4 bg-gray-200 rounded-sm mr-2"></div>
+                                <span className="text-xs">TABLET</span>
+                              </div>
+                            </div>
+                            
+                            <h3 className="text-md font-bold mt-4 mb-2">Parts</h3>
+                            <div>
+                              <div className="flex justify-between text-xs">
+                                <span>ON EST.</span>
+                                <span>38</span>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span>CORE$</span>
+                                <span>1</span>
+                                <span className="text-red-500">$159.29</span>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span>TOTAL RETURNING</span>
+                                <span>3</span>
+                                <span className="text-red-500">$1,398.39</span>
+                              </div>
+                            </div>
+                            
+                            <h3 className="text-md font-bold mt-4 mb-2">Repair Plan</h3>
+                            <div className="text-xs">
+                              <div>VEHICLE IN</div>
+                              <div className="font-bold">AUG 20, 2023</div>
+                              <div className="mt-1">REPAIR STARTED</div>
+                              <div className="font-bold">AUG 22, 2023</div>
+                              <div className="mt-1">PROMISED DATE</div>
+                              <div className="font-bold">AUG 25, 2023</div>
+                            </div>
+                          </div>
+                          
+                          </div>
                         </div>
                       </div>
-                      <div className="flex flex-col gap-4">
-                        <div>
-                          <div className="text-sm text-black">ASSIGNEE:</div>
-                          <div>{row.assignedUser?.firstName + ' ' + row.assignedUser?.lastName}</div>
+                  ) : (
+                    // Original expanded row for other tasks
+                    <>
+                      <div className='py-6'>
+                        {/* Title and ID */}
+                        <div className="flex flex-row justify-between flex-2">
+                          <div className="flex gap-8 items-center">
+                            <h2 className="text-xl font-bold">{row.title}</h2>
+                            <span className="font-medium">ID #{row.id}</span>
+                            <span 
+                              className={`font-medium px-2 py-1 rounded-full text-white ${
+                                typeof row.priority === 'string' 
+                                  ? 'bg-slate-500' 
+                                  : row.priority.variant === 'danger' 
+                                    ? 'bg-red-600' 
+                                    : row.priority.variant === 'success' 
+                                      ? 'bg-[#0F6C40]' 
+                                      : row.priority.variant === 'slate' 
+                                        ? 'bg-[#6E6E6E]' 
+                                        : 'bg-amber-500'
+                              }`}
+                            >
+                              {typeof row.priority === 'string' ? row.priority : row.priority.text}
+                            </span>
+                          </div>
+                          {/* Actions */}
+                          <div className="flex items-center gap-4">
+                            <button className="bg-black text-white px-4 py-2 rounded-full">
+                              {row.status === 'open' ? 'Mark as done' : 'Done'}
+                            </button>
+                            <button className="p-2 rounded-full hover:bg-gray-200">
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                            <button className="p-2 rounded-full hover:bg-gray-200">
+                              <Pencil className="w-5 h-5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Main information */}
+                      <div className='py-4 border-t border-slate-200 flex flex-row gap-10'>
+                        {/* Name and contact info row */}
+                        <div className='flex flex-col gap-3 mb-4'>
+                          <div>
+                            <div className="flex items-center gap-6">
+                              <div>
+                                <div className="text-sm text-black">NAME:</div>
+                                <div className="font-semibold text-black underline">{row.title}</div>
+                              </div>
+                            
+                            <div>
+                              <div className="text-sm text-black">REPRESENTATIVE:</div>
+                              <div>REPRESENTATIVE NAME</div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                            <ContactInfo/>
+                          </div>
+                          </div>
+                          </div>
+                          {/* Description */}
+                          <div className="mb-4">
+                            <div className="text-sm text-black mb-1">DESCRIPTION</div>
+                            <div className="text-sm">{row.description || ""}</div>
+                          </div>
                         </div>
                         
-                        <div>
-                          <div className="text-sm text-black">DUE DATE:</div>
-                          <div>{new Date(row.dueDate).toLocaleDateString()}</div>
+                        {/* Task details in grid layout */}
+                        <div className="grid grid-cols-2 gap-10">
+                          <div className="flex flex-col gap-4">
+                            <div>
+                              <div className="text-sm text-black">CREATED BY:</div>
+                              <div>{row.createdByUser?.firstName + ' ' + row.createdByUser?.lastName}</div>
+                            </div>
+                            
+                            <div>
+                              <div className="text-sm text-black">CREATED DATE:</div>
+                              <div>{new Date(row.createdAt).toLocaleDateString()}</div>
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-4">
+                            <div>
+                              <div className="text-sm text-black">ASSIGNEE:</div>
+                              <div>{row.assignedUser?.firstName + ' ' + row.assignedUser?.lastName}</div>
+                            </div>
+                            
+                            <div>
+                              <div className="text-sm text-black">DUE DATE:</div>
+                              <div>{new Date(row.dueDate).toLocaleDateString()}</div>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
+                    </>
+                  )}
                 </div>
               )
             }
