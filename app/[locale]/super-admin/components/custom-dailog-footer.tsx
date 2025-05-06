@@ -17,16 +17,16 @@ export function CustomDialogFooter({
   className = '',
 }: CustomDialogFooterProps) {
   return (
-    <div className={`flex gap-4 ${className}`}>
+    <div className={`flex justify-between ${className}`}>
       <Button
         variant="outline"
-        className="flex-1 py-6 text-lg rounded-full border-2 border-[#e3e3e3] bg-white hover:bg-gray-50"
+        className="flex-1 py-6 text-lg rounded-full border-2 border-black bg-white hover:bg-gray-50 max-w-[250px]"
         onClick={onCancel}
       >
         {cancelText}
       </Button>
       <Button
-        className="flex-1 py-6 text-lg rounded-full bg-[#212326] hover:bg-black text-white"
+        className="flex-1 py-6 text-lg rounded-full bg-[#212326] hover:bg-black text-white max-w-[250px]"
         onClick={onSave}
       >
         {saveText}
