@@ -56,7 +56,7 @@ export default function PartsManagementLayout({
                     <PartsSummaryBar
 
                     />
-                    <main className="w-full">{children}</main>
+                    <main className="w-full px-[20px]">{children}</main>
                 </>
             )}
         </div>
