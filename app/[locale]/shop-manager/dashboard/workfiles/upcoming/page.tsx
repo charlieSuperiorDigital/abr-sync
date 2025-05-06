@@ -68,23 +68,44 @@ export default function Upcoming() {
     {
       accessorKey: 'vehicle',
       header: 'Vehicle',
-      cell: ({ row }) => (
-        <VehicleCell
-          make={row.original.vehicle.make}
-          model={row.original.vehicle.model}
-          year={row.original.vehicle.year.toString()}
-          imageUrl={row.original.vehicle.vehiclePicturesUrls[0] || `https://picsum.photos/seed/${row.original.workfileId}/200/100`}
-        />
-      ),
+      cell: ({ row }) => {
+        // Check if vehicle exists
+        if (!row.original.vehicle) {
+          return (
+            <VehicleCell
+              make="---"
+              model="---"
+              year="---"
+              imageUrl={`https://picsum.photos/seed/${row.original.workfileId || 'default'}/200/100`}
+            />
+          )
+        }
+        
+        return (
+          <VehicleCell
+            make={row.original.vehicle.make || '---'}
+            model={row.original.vehicle.model || '---'}
+            year={row.original.vehicle.year?.toString() || '---'}
+            imageUrl={row.original.vehicle.vehiclePicturesUrls?.[0] || `https://picsum.photos/seed/${row.original.workfileId || 'default'}/200/100`}
+          />
+        )
+      },
     },
     {
       accessorKey: 'owner.name',
       header: 'Owner',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">
-          {row.original.owner.name}
-        </span>
-      ),
+      cell: ({ row }) => {
+        // Check if owner exists
+        if (!row.original.owner) {
+          return <span className="whitespace-nowrap">---</span>
+        }
+        
+        return (
+          <span className="whitespace-nowrap">
+            {row.original.owner.name || '---'}
+          </span>
+        )
+      },
     },
     {
       accessorKey: 'isVoilComplete',

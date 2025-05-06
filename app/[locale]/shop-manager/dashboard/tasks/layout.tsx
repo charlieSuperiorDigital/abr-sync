@@ -126,7 +126,7 @@ export default function TasksLayout({
             }
           />
         </div>
-        <div className="px-5">
+        
           <DraggableNav 
             navItems={taskNavItems} 
             defaultTab={tabOrder?.[0] || 'my-tasks'}
@@ -137,7 +137,7 @@ export default function TasksLayout({
               updateTabOrder(newOrder)
             }}
           />
-        </div>
+        
         <main className="w-full px-[20px]">{children}</main>
       </div>
     </TasksContext.Provider>
