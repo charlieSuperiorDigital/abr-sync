@@ -33,46 +33,6 @@ import { EditTaskModal } from '@/components/custom-components/task-modal/edit-ta
 import { ConfirmTaskDoneModal } from '@/components/custom-components/task-modal/confirm-task-done-modal'
 import * as deleteTaskModal from '@/components/custom-components/task-modal/delete-task-modal'
 
-// Function to map API task format to app task format
-const mapApiTaskToAppTask = (apiTask: ApiTask): Task => {
-  // Convert priority string to object format if needed
-  const priorityObj = typeof apiTask.priority === 'string'
-    ? {
-      variant: getPriorityVariant(apiTask.priority),
-      text: apiTask.priority as 'Urgent' | 'High' | 'Normal' | 'Low'
-    }
-    : apiTask.priority;
-
-  return {
-    id: apiTask.id,
-    tenantId: apiTask.tenantId || '',
-    title: apiTask.title,
-    description: apiTask.description,
-    priority: priorityObj,
-    createdBy: apiTask.createdBy || '',
-    createdByUser: apiTask.createdByUser,
-    createdAt: apiTask.createdAt,
-    updatedAt: apiTask.updatedAt,
-    dueDate: apiTask.dueDate,
-    dueDateTime: apiTask.dueDate, // For backward compatibility
-    status: apiTask.status as 'open' | 'in_progress' | 'completed' | 'archived',
-    assignedTo: apiTask.assignedTo,
-    assignedUser: apiTask.assignedUser,
-    workfileId: apiTask.workfileId,
-    workfile: apiTask.workfile,
-    locationId: apiTask.locationId,
-    location: apiTask.location,
-    type: apiTask.type || 'One-time',
-    endDate: apiTask.endDate,
-    roles: apiTask.roles,
-    // Default values for backward compatibility
-    relatedTo: [] as TaskRelation[],
-    email: '',
-    phone: '',
-    message: ''
-  };
-};
-
 // Helper function to determine priority variant
 const getPriorityVariant = (priority: string): 'danger' | 'warning' | 'success' | 'slate' => {
   switch (priority?.toLowerCase()) {
@@ -104,7 +64,6 @@ export default function CreatedByMe() {
   // Transform API tasks to app task format and filter for non-completed tasks only
   const tasks = createdTasks
     ? createdTasks
-      .map(mapApiTaskToAppTask)
       .filter(task =>
         task.status?.toLowerCase() !== 'done' && task.status?.toLowerCase() !== 'completed'
       )

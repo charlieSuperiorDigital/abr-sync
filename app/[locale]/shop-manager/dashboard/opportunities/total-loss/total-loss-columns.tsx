@@ -2,7 +2,7 @@
 
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
-import { Opportunity } from '@/app/types/opportunity'
+import { OpportunityResponse } from '@/app/types/opportunities'
 import {
   SummaryCell,
   VehicleCell,
@@ -13,14 +13,14 @@ import { Car, Plus } from 'lucide-react'
 import React from 'react' // Necesario para JSX
 
 // Define el tipo para las props que recibirá la función de columnas
-type GetTotalLossColumnsProps = {
-  handlePickupClick: (opportunity: Opportunity) => void
+export interface GetTotalLossColumnsProps {
+  handlePickupClick: (opportunity: OpportunityResponse) => void
   // formatDate is not used in these specific columns, so no need to pass it
 }
 
-export const getTotalLossColumns = ({
+export function getTotalLossColumns({
   handlePickupClick,
-}: GetTotalLossColumnsProps): ColumnDef<Opportunity, any>[] => {
+}: GetTotalLossColumnsProps): ColumnDef<OpportunityResponse>[] {
   return [
     {
       accessorKey: 'insurance.claimNumber',
@@ -31,48 +31,48 @@ export const getTotalLossColumns = ({
       header: 'Vehicle',
       cell: ({ row }) => (
         <VehicleCell
-          make={row.original.vehicle.make}
-          model={row.original.vehicle.model}
-          year={String(row.original.vehicle.year)}
+          make={row.original.vehicleMake}
+          model={row.original.vehicleModel}
+          year={String(row.original.vehicleYear)}
           imageUrl={`https://picsum.photos/seed/${row.original.opportunityId}/200/100`}
         />
       ),
     },
     {
-      accessorKey: 'owner.name',
+      accessorKey: 'ownerName',
       header: 'Owner',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.owner.name}</span>
+        <span className="whitespace-nowrap">{row.original.ownerFirstName} {row.original.ownerLastName}</span>
       ),
     },
     {
-      accessorKey: 'insurance.company',
+      accessorKey: 'insuranceName',
       header: 'Insurance',
       cell: ({ row }) => (
         <span
-          className={`whitespace-nowrap font-bold ${row.original.insurance.company === 'PROGRESSIVE' ? 'text-blue-700' : ''}`}
+          className={`whitespace-nowrap font-bold ${row.original.insuranceName === 'PROGRESSIVE' ? 'text-blue-700' : ''}`}
         >
-          {row.original.insurance.company.toUpperCase()}
+          {row.original.insuranceName.toUpperCase()}
         </span>
       ),
     },
-    {
-      accessorKey: 'numberOfCommunications',
-      header: '# OF COMMUNICATIONS',
-      cell: ({ row }) => {
-        const communicationLogs =
-          row.original.logs?.filter(
-            (log) =>
-              log.type.toLowerCase().includes('call') ||
-              log.type.toLowerCase().includes('email') ||
-              log.type.toLowerCase().includes('message')
-          ) || []
+    // {
+    //   accessorKey: 'numberOfCommunications',
+    //   header: '# OF COMMUNICATIONS',
+    //   cell: ({ row }) => {
+    //     const communicationLogs =
+    //       row.original.logs?.filter(
+    //         (log) =>
+    //           log.type.toLowerCase().includes('call') ||
+    //           log.type.toLowerCase().includes('email') ||
+    //           log.type.toLowerCase().includes('message')
+    //       ) || []
 
-        return (
-          <span className="whitespace-nowrap">{communicationLogs.length}</span>
-        )
-      },
-    },
+    //     return (
+    //       <span className="whitespace-nowrap">{communicationLogs.length}</span>
+    //     )
+    //   },
+    // },
     {
       accessorKey: 'timeTracking',
       header: 'Time Tracking',
@@ -80,23 +80,23 @@ export const getTotalLossColumns = ({
       // you might need to pass a formatting function here too.
       // For now, assuming it's a simple display field.
     },
-    {
-      accessorKey: 'finalBill',
-      header: 'Final Bill',
-      cell: ({ row }) => {
-        const amount = row.original.finalBill?.amount
-        return (
-          <span className="whitespace-nowrap">
-            {amount
-              ? new Intl.NumberFormat('en-US', {
-                  style: 'currency',
-                  currency: 'USD',
-                }).format(amount)
-              : '---'}
-          </span>
-        )
-      },
-    },
+    // {
+    //   accessorKey: 'finalBill',
+    //   header: 'Final Bill',
+    //   cell: ({ row }) => {
+    //     const amount = row.original.finalBill?.amount
+    //     return (
+    //       <span className="whitespace-nowrap">
+    //         {amount
+    //           ? new Intl.NumberFormat('en-US', {
+    //               style: 'currency',
+    //               currency: 'USD',
+    //             }).format(amount)
+    //           : '---'}
+    //       </span>
+    //     )
+    //   },
+    // },
     {
       header: 'Summary',
       cell: ({ row }) => (

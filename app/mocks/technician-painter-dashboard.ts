@@ -1,4 +1,4 @@
-import { Opportunity, OpportunityStatus, RepairStage } from '@/app/types/opportunity';
+import { Opportunity, OpportunityStatus, RepairStage } from '@/app/types/opportunities';
 
 export const technicianPainterMockData: Opportunity[] = [
   {

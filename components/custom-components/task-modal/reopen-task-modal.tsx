@@ -41,14 +41,14 @@ export function ReopenTaskModal({
       
       console.log('Reopen task result:', result)
       
-      if (result.success) {
+      if (result && result.status === 'open') {
         console.log('Task reopened successfully')
         setIsOpen(false)
         if (onComplete) {
           onComplete()
         }
       } else {
-        console.error('Failed to reopen task:', result.error)
+        console.error('Failed to reopen task')
       }
     } catch (error) {
       console.error('Error reopening task:', error)

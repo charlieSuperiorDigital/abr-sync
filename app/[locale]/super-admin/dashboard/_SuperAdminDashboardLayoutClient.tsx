@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, SVGProps } from 'react'
 import Image from 'next/image'
 import {
   FolderOpen,
@@ -11,6 +11,7 @@ import {
 import EditProfileModal from '@/app/components/custom-components/edit-profile-modal/edit-profile-modal'
 import SideBarIconGroup from '../../custom-components/sidebar-icon-group'
 import RoleGuard from '@/app/components/RoleGuard'
+import svgIcon from '../../custom-components/SVGIcon'
 
 export default function SuperAdminDashboardLayoutClient({
   children,
@@ -50,9 +51,19 @@ export default function SuperAdminDashboardLayoutClient({
                 <SideBarIconGroup
                   link={'/super-admin/dashboard/tenants'}
                   icons={[
-                    { newNotificationsQuantity: 0, Icon: SquareUserRound },
+                    {
+                      newNotificationsQuantity: 0,
+                      Icon: function SquareUserIcon(
+                        props: SVGProps<SVGSVGElement>
+                      ) {
+                        return svgIcon({
+                          src: '/rectangle.stack.person.crop.fill.svg',
+                          className: props.className,
+                        })
+                      },
+                    },
                   ]}
-                  label="Tenants"
+                  label="Tenats"
                   expanded={isNavExpanded}
                 />
                 <SideBarIconGroup
@@ -61,12 +72,40 @@ export default function SuperAdminDashboardLayoutClient({
                   label="Store"
                   expanded={isNavExpanded}
                 />
-                {/* <SideBarIconGroup
-                link={'/super-admin/dashboard/workfiles'}
-                icons={[{ newNotificationsQuantity: 0, Icon: FolderOpen }]}
-                label="Workfiles"
-                expanded={isNavExpanded}
-              /> */}
+                <SideBarIconGroup
+                  link={'/super-admin/dashboard/users'}
+                  icons={[
+                    {
+                      newNotificationsQuantity: 0,
+                      Icon: function UserIcon(props: SVGProps<SVGSVGElement>) {
+                        return svgIcon({
+                          src: '/person.2.fill.svg',
+                          className: props.className,
+                        })
+                      },
+                    },
+                  ]}
+                  label="Users"
+                  expanded={isNavExpanded}
+                />
+                <SideBarIconGroup
+                  link={'/super-admin/dashboard/promotions'}
+                  icons={[
+                    {
+                      newNotificationsQuantity: 0,
+                      Icon: function FolderOpenIcon(
+                        props: SVGProps<SVGSVGElement>
+                      ) {
+                        return svgIcon({
+                          src: '/square.text.square.fill.svg',
+                          className: props.className,
+                        })
+                      },
+                    },
+                  ]}
+                  label="Tiers & Promotions"
+                  expanded={isNavExpanded}
+                />
               </div>
               <div className="flex flex-col space-y-4">
                 <div

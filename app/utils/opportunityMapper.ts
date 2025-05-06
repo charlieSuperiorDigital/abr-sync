@@ -1,5 +1,5 @@
-import { Opportunity, OpportunityStatus } from '@/app/types/opportunity'
-import { OpportunityResponse } from '@/app/api/functions/opportunities'
+import { Opportunity, OpportunityStatus } from '@/app/types/opportunities'
+import { OpportunityResponse } from '@/app/types/opportunities'
 
 /**
  * Maps an API response to the Opportunity type expected by the store

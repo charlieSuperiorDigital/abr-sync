@@ -1,7 +1,7 @@
 'use client'
 import React, { createContext, useContext, useEffect, useMemo } from 'react'
 import { useSession } from 'next-auth/react'
-import { OpportunityResponse } from '../api/functions/opportunities'
+import { OpportunityResponse } from '@/app/types/opportunities'
 import { useGetOpportunities } from '../api/hooks/useOpportunities'
 
 interface OpportunitiesContextType {

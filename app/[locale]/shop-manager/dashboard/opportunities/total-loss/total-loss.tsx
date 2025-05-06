@@ -2,30 +2,29 @@
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 
 import { Car } from 'lucide-react'
-import { Opportunity } from '@/app/types/opportunity'
+import { OpportunityResponse } from '@/app/types/opportunities'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import { useState, useCallback, useMemo } from 'react'
 import ConfirmationModal from '@/components/custom-components/confirmation-modal/confirmation-modal'
 import { showPickupToast } from '@/app/utils/toast-utils'
 import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
-import { OpportunityResponse } from '@/app/api/functions/opportunities'
 import { getTotalLossColumns } from './total-loss-columns'
 
 type Props = {
-  totalLoss: OpportunityResponse[]
+  totalLossOpportunities: OpportunityResponse[]
 }
 
-export default function TotalLossOpportunities({ totalLoss }: Props) {
+export default function TotalLossOpportunities({ totalLossOpportunities }: Props) {
   const [pickupConfirmation, setPickupConfirmation] = useState<{
     isOpen: boolean
-    opportunity: Opportunity | null
+    opportunity: OpportunityResponse | null
   }>({
     isOpen: false,
     opportunity: null,
   })
   const [selectedOpportunity, setSelectedOpportunity] =
-    useState<Opportunity | null>(null)
+    useState<OpportunityResponse | null>(null)
   const [modalState, setModalState] = useState<{
     isOpen: boolean
     opportunityId: string | null
@@ -34,7 +33,7 @@ export default function TotalLossOpportunities({ totalLoss }: Props) {
     opportunityId: null,
   })
 
-  const handleRowClick = useCallback((opportunity: Opportunity) => {
+  const handleRowClick = useCallback((opportunity: OpportunityResponse) => {
     setSelectedOpportunity(opportunity)
     setModalState({
       isOpen: true,
@@ -57,7 +56,7 @@ export default function TotalLossOpportunities({ totalLoss }: Props) {
     }
   }, [pickupConfirmation.opportunity])
 
-  const handlePickupClick = useCallback((opportunity: Opportunity) => {
+  const handlePickupClick = useCallback((opportunity: OpportunityResponse) => {
     setPickupConfirmation({
       isOpen: true,
       opportunity,
@@ -74,14 +73,14 @@ export default function TotalLossOpportunities({ totalLoss }: Props) {
       getTotalLossColumns({
         handlePickupClick,
       }),
-    [handlePickupClick, totalLoss]
+    [handlePickupClick, totalLossOpportunities]
   )
 
   return (
     <div className="w-full">
-      <DataTable<Opportunity, any>
+      <DataTable<OpportunityResponse, any>
         columns={columns}
-        data={totalLoss.map(mapApiResponseToOpportunity)}
+        data={totalLossOpportunities}
         onRowClick={handleRowClick}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
@@ -91,7 +90,7 @@ export default function TotalLossOpportunities({ totalLoss }: Props) {
         onOpenChange={handleModalOpenChange}
         title={
           selectedOpportunity
-            ? `${selectedOpportunity.vehicle?.year || ''} ${selectedOpportunity.vehicle?.make || ''} ${selectedOpportunity.vehicle?.model || ''}`
+            ? `${selectedOpportunity.vehicleYear || ''} ${selectedOpportunity.vehicleMake || ''} ${selectedOpportunity.vehicleModel || ''}`
             : ''
         }
       >

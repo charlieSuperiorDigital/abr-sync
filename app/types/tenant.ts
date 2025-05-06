@@ -11,9 +11,14 @@ export interface Tenant {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  onboardedById: string | null;
+  trialPeriod: boolean;
+  discount: number;
+  promoCode: string | null;
   users: any[]; // Consider creating a User interface if needed
   payments: any[]; // Consider creating a Payment interface if needed
-  locations: Location[]; // Array of locations associated with this tenant
+  onboardedBy: any | null;
+  // locations is not needed here since it's part of TenantWithLocations
 }
 
 export interface TenantListItem {

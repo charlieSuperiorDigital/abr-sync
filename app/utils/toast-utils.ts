@@ -1,9 +1,10 @@
+
 import { toast } from 'react-toastify';
-import { Opportunity } from '../types/opportunity';
+import { OpportunityResponse } from '../types/opportunities';
 
 // Toast for archiving an opportunity
-export const showArchiveToast = (opportunity: Opportunity) => {
-  const vehicleInfo = `${opportunity.vehicle.year} ${opportunity.vehicle.make} ${opportunity.vehicle.model}`;
+export const showArchiveToast = (opportunity: OpportunityResponse) => {
+  const vehicleInfo = `${opportunity.vehicleYear} ${opportunity.vehicleMake} ${opportunity.vehicleModel}`;
   
   toast.success(`Archived: ${vehicleInfo}`, {
     position: "top-right",
@@ -16,9 +17,9 @@ export const showArchiveToast = (opportunity: Opportunity) => {
 };
 
 // Toast for unarchiving an opportunity
-export const showUnarchiveToast = (opportunity: Opportunity) => {
-  const vehicleInfo = `${opportunity.vehicle.year} ${opportunity.vehicle.make} ${opportunity.vehicle.model}`;
-  const statusInfo = opportunity.status ? ` (${opportunity.status})` : '';
+export const showUnarchiveToast = (opportunity: OpportunityResponse) => {
+  const vehicleInfo = `${opportunity.vehicleYear} ${opportunity.vehicleMake} ${opportunity.vehicleModel}`;
+  const statusInfo = opportunity.opportunityStatus ? ` (${opportunity.opportunityStatus})` : '';
   
   toast.info(`Unarchived: ${vehicleInfo}${statusInfo}`, {
     position: "top-right",
@@ -31,8 +32,8 @@ export const showUnarchiveToast = (opportunity: Opportunity) => {
 };
 
 // Toast for marking a vehicle as picked up
-export const showPickupToast = (opportunity: Opportunity) => {
-  const vehicleInfo = `${opportunity.vehicle.year} ${opportunity.vehicle.make} ${opportunity.vehicle.model}`;
+export const showPickupToast = (opportunity: OpportunityResponse) => {
+  const vehicleInfo = `${opportunity.vehicleYear} ${opportunity.vehicleMake} ${opportunity.vehicleModel}`;
   
   toast.success(`Vehicle Picked Up: ${vehicleInfo}`, {
     position: "top-right",

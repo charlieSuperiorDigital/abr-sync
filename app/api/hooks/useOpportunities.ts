@@ -3,14 +3,20 @@ import {
   createOpportunityLog,
   getOpportunityLogs,
   getLastOpportunityLog,
-  OpportunityLogCreateVM,
 } from '../functions/communication'
+import {
+  OpportunityLogCreateVM,
+  CreateOpportunityLogApiResponse,
+  OpportunityLog
+} from '@/app/types/communication-logs'
 import {
   getOpportunitiesList,
   getOpportunityById,
-  OpportunityResponse,
 } from '@/app/api/functions/opportunities'
-import { GetOpportunityByIdApiResponse } from '@/app/types/opportunity'
+import { 
+  OpportunityResponse,
+  GetOpportunityByIdApiResponse 
+} from '@/app/types/opportunities'
 import { isValidDate } from '@/app/utils/is-valid-date'
 import { categorizeOpportunities } from '@/app/[locale]/shop-manager/dashboard/opportunities/utils/categorizeOpportunities'
 
@@ -95,7 +101,7 @@ export function useGetOpportunityLogs(
   opportunityId: string,
   options: { enabled?: boolean } = {}
 ) {
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery<OpportunityLog[]>({
     queryKey: ['opportunityLogs', opportunityId],
     queryFn: () => getOpportunityLogs(opportunityId),
     enabled: options.enabled !== false && !!opportunityId,
@@ -103,7 +109,7 @@ export function useGetOpportunityLogs(
   })
 
   return {
-    logs: data?.data || [],
+    logs: data || [],
     isLoading,
     error,
   }
@@ -119,7 +125,7 @@ export function useGetLastOpportunityLog(
   opportunityId: string,
   options: { enabled?: boolean } = {}
 ) {
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery<OpportunityLog | null>({
     queryKey: ['lastOpportunityLog', opportunityId],
     queryFn: () => getLastOpportunityLog(opportunityId),
     enabled: options.enabled !== false && !!opportunityId,
@@ -127,7 +133,7 @@ export function useGetLastOpportunityLog(
   })
 
   return {
-    log: data?.data || null,
+    log: data || null,
     isLoading,
     error,
   }
@@ -140,7 +146,11 @@ export function useGetLastOpportunityLog(
 export function useCreateOpportunityLog() {
   const queryClient = useQueryClient()
 
-  const mutation = useMutation({
+  const mutation = useMutation<
+    CreateOpportunityLogApiResponse,
+    Error,
+    OpportunityLogCreateVM
+  >({
     mutationFn: (logData: OpportunityLogCreateVM) =>
       createOpportunityLog(logData),
     onSuccess: (data, variables) => {

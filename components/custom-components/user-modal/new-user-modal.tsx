@@ -1,36 +1,33 @@
 'use client'
 
-import * as React from 'react'
-import { useState, useRef } from 'react'
-import { Controller, useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useTranslations } from 'next-intl'
-import { UserFormData, userFormSchema, UserRoleOptions, LanguageOptions, NotificationTypeOptions } from './schema'
-import { CustomInput } from '../inputs/custom-input'
 import type { RegisterResponse } from '@/app/api/functions/authentication'
+import { useFileUpload } from '@/app/api/hooks/useFileUpload'
 import { useRegister } from '@/app/api/hooks/useRegister'
 import { useUpdateUser } from '@/app/api/hooks/useUpdateUser'
-import { useFileUpload } from '@/app/api/hooks/useFileUpload'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useTranslations } from 'next-intl'
+import * as React from 'react'
+import { useRef, useState } from 'react'
+import { Controller, useForm } from 'react-hook-form'
+import { CustomInput } from '../inputs/custom-input'
+import { LanguageOptions, UserFormData, userFormSchema, UserRoleOptions } from './schema'
 
-import { CustomSelect } from '../selects/custom-select'
-import { CustomButtonSelect, CustomButtonSelectField } from '../selects/custom-button-select'
+import { useTenant } from '@/app/context/TenantProvider'
+import { CommunicationAccess, Language, ModuleAccess, NotificationType, User, UserCommunication, UserModules } from '@/app/types/user'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
-import { useUserStore } from '@/app/stores/user-store'
-import { User, ModuleAccess, CommunicationAccess, NotificationCategory, Language, NotificationType, Location, UserModules, UserCommunication } from '@/app/types/user'
+import { Plus, Upload, X } from 'lucide-react'
+import Image from 'next/image'
+import { CustomMaskedInput } from '../inputs/custom-masked-input'
+import { CustomButtonSelectField } from '../selects/custom-button-select'
+import { CustomSelect } from '../selects/custom-select'
 
 enum UserNotification{
   None = 0, // 0000 0000
   All = ~0, // 1111 1111
   WorkfileECD = 1 // 0000 0001
 }
-import { Plus, Upload, X } from 'lucide-react'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { UserCircle2 } from 'lucide-react'
-import { CustomMaskedInput } from '../inputs/custom-masked-input'
-import { useTenant } from '@/app/context/TenantProvider'
-import Image from 'next/image'
 
 interface NewUserModalProps {
   children: React.ReactNode
@@ -45,7 +42,6 @@ export function NewUserModal({
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const t = useTranslations('User')
-  const addUser = useUserStore((state) => state.addUser)
 
   // File input reference
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -335,7 +331,7 @@ export function NewUserModal({
       <div className="flex items-center h-full">
         <button
           onClick={() => setIsOpen(true)}
-          className="flex items-center justify-center h-8 w-8 rounded-full transition-colors duration-200 hover:bg-black hover:text-white"
+          className="flex justify-center items-center w-8 h-8 rounded-full transition-colors duration-200 hover:bg-black hover:text-white"
         >
           {children}
         </button>
@@ -343,11 +339,11 @@ export function NewUserModal({
 
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          className="flex fixed inset-0 z-50 justify-center items-center p-4 bg-black bg-opacity-50"
           onClick={handleOverlayClick}
         >
           <div className="bg-white rounded-3xl w-full max-w-3xl max-h-[90vh] flex flex-col">
-            <div className="flex justify-between items-center p-6 ">
+            <div className="flex justify-between items-center p-6">
               <h2 className="text-xl font-bold">{title}</h2>
               <button
                 type="button"
@@ -379,7 +375,7 @@ export function NewUserModal({
 
                     {/* Profile picture preview or placeholder */}
                     <div className="relative" style={{ cursor: 'pointer' }}>
-                      <div onClick={handleLogoUpload} className="flex items-center justify-center w-20 h-20 rounded-full overflow-hidden bg-gray-100 border border-gray-200">
+                      <div onClick={handleLogoUpload} className="flex overflow-hidden justify-center items-center w-20 h-20 bg-gray-100 rounded-full border border-gray-200">
                         {logoPreview ? (
                           <>
                             <Image
@@ -395,7 +391,7 @@ export function NewUserModal({
                                 e.stopPropagation();
                                 handleRemoveLogo();
                               }}
-                              className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 transform translate-x-1/3 -translate-y-1/3"
+                              className="absolute top-0 right-0 p-1 text-white bg-red-500 rounded-full transform translate-x-1/3 -translate-y-1/3"
                             >
                               <X size={12} />
                             </button>
@@ -405,7 +401,7 @@ export function NewUserModal({
                         )}
                       </div>
                     </div>
-                    {uploadError !== null && <p className="text-xs text-red-500 mt-1">Upload failed. Please try again.</p>}
+                    {uploadError !== null && <p className="mt-1 text-xs text-red-500">Upload failed. Please try again.</p>}
                   </div>
 
                   <CustomInput
@@ -610,18 +606,18 @@ export function NewUserModal({
                     />
                   </div>
 
-                  <div className="flex justify-end gap-4 mt-8">
+                  <div className="flex gap-4 justify-end mt-8">
                     <Button
                       variant="ghost"
                       type="button"
                       onClick={() => setIsOpen(false)}
-                      className="p-2 rounded-full transition-colors duration-200 hover:bg-black hover:text-white w-32"
+                      className="p-2 w-32 rounded-full transition-colors duration-200 hover:bg-black hover:text-white"
                     >
                       {t('cancel')}
                     </Button>
                     <Button
                       type="submit"
-                      className="p-2 rounded-full transition-colors duration-200 bg-black text-white hover:bg-gray-800 w-32"
+                      className="p-2 w-32 text-white bg-black rounded-full transition-colors duration-200 hover:bg-gray-800"
                     >
                       {isLoading ? t('saving') : t('save')}
                     </Button>

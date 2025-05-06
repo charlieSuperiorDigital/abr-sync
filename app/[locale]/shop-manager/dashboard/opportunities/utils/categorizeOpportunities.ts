@@ -1,4 +1,4 @@
-import { OpportunityResponse } from '@/app/api/functions/opportunities'
+import { OpportunityResponse } from '@/app/types/opportunities'
 import { isValidDate } from '@/app/utils/is-valid-date'
 
 interface CategorizedOpportunities {

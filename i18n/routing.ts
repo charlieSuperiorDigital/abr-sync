@@ -101,6 +101,14 @@ export const routing = defineRouting({
       en: '/super-admin/dashboard/fees',
       es: '/super-administrador/dashboard/fees',
     },
+    '/super-admin/dashboard/users': {
+      en: '/super-admin/dashboard/users',
+      es: '/super-administrador/dashboard/users',
+    },
+    '/super-admin/dashboard/promotions': {
+      en: '/super-admin/dashboard/promotions',
+      es: '/super-administrador/dashboard/promotions',
+    },
   },
 })
 

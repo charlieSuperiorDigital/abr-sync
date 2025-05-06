@@ -4,7 +4,7 @@ import { useOpportunityStore } from '@/app/stores/opportunity-store'
 import { Car, MessageSquare } from 'lucide-react'
 import { format } from 'date-fns'
 import { StatusBadge } from '../status-badge/status-badge'
-import { OpportunityStatus } from '@/app/types/opportunity'
+import { OpportunityResponse, OpportunityStatus } from '@/app/types/opportunities'
 
 interface OpportunityInfoCardProps {
   opportunityId: string
