@@ -47,19 +47,17 @@ export default function InsurancesAndVehicleOwnersLayout({
     return (
         <div className="flex flex-col w-full min-h-screen">
             <h1 className="px-5 my-7 text-3xl font-semibold tracking-tight">Insurances & Vehicle Owners</h1>
-            <div className="px-5">
-                <DraggableNav 
-                    navItems={orderedNavItems}
-                    defaultTab={tabOrder?.[0] || 'insurances'}
-                    onReorder={(reorderedItems) => {
-                        // Extract the IDs in the new order
-                        const newOrder = reorderedItems.map(item => item.id)
-                        // Update the tab order in the database
-                        updateTabOrder(newOrder)
-                    }}
-                />
-            </div>
-            <main className="w-full">{children}</main>
+            <DraggableNav
+                navItems={orderedNavItems}
+                defaultTab={tabOrder?.[0] || 'insurances'}
+                onReorder={(reorderedItems) => {
+                    // Extract the IDs in the new order
+                    const newOrder = reorderedItems.map(item => item.id)
+                    // Update the tab order in the database
+                    updateTabOrder(newOrder)
+                }}
+            />
+            <main className="w-full px-[20px]">{children}</main>
         </div>
     )
 }
