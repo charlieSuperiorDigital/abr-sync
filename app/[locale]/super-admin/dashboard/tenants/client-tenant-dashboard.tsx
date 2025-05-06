@@ -12,7 +12,15 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ColumnDef } from '@tanstack/react-table'
 import { Plus } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { C } from 'vitest/dist/chunks/reporters.d.CqBhtcTq.js'
+import { CustomDialog } from '../../components/custom-dialog'
+import { set } from 'date-fns'
+import { CustomDialogTitle } from '../../components/custom-dialo-title'
+import { CustomCheckbox } from '@/components/custom-components/checkbox/custom-checkbox'
+import { CustomSelect } from '@/components/custom-components/selects/custom-select'
+import { CustomInput } from '@/components/custom-components/inputs/custom-input'
+import { CustomDialogFooter } from '../../components/custom-dailog-footer'
 
 // Default revenue value for tenants (since it's not in the API response)
 const DEFAULT_REVENUE = 0
@@ -21,27 +29,31 @@ const DEFAULT_REVENUE = 0
 
 type Props = {
   tenants: TenantListItem[]
-  isLoading: boolean
-  isError: boolean
 }
 
-export default function TenantDashboard({
-  tenants,
-  isLoading,
-  isError,
-}: Props) {
+export default function TenantDashboard({ tenants }: Props) {
   const [tenantsList, setTenantsList] = useState<TenantListItem[]>(tenants)
   const [selectedTenant, setSelectedTenant] = useState<TenantListItem | null>(
     null
   )
+  const [openDialog, setOpenDialog] = useState(false)
+  const [discount, setDiscount] = useState<string>('')
 
   const params = useParams()
   const locale = params?.locale || 'en'
   const router = useRouter()
 
   const handleRowClick = (tenant: TenantListItem) => {
-    console.log('Row clicked:', tenant)
+    setOpenDialog(true)
+    setSelectedTenant(tenant)
   }
+  useEffect(() => {
+    if (selectedTenant) {
+      setDiscount(selectedTenant.discount?.toString() || '')
+    } else {
+      setDiscount('')
+    }
+  }, [selectedTenant])
 
   const columns: ColumnDef<TenantListItem>[] = [
     {
@@ -166,6 +178,16 @@ export default function TenantDashboard({
     },
   ]
 
+  const handleDiscountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = event.target.value
+    const numericRegex = /^\d*$/
+    if (newValue === '' || numericRegex.test(newValue)) {
+      setDiscount(newValue)
+    }
+  }
+  const handleCancel = () => {}
+  const handleSave = () => {}
+
   return (
     <div className="w-full">
       <div className="flex justify-between items-center p-5">
@@ -179,32 +201,68 @@ export default function TenantDashboard({
           <Plus size={18} className="group-hover:text-white" />
         </button>
       </div>
-      {isLoading ? (
-        <div className="p-10 text-center text-muted-foreground">
-          Loading tenants...
-        </div>
-      ) : (
-        <>
-          {isError && (
-            <div className="p-4 mb-4 text-amber-800 bg-amber-50 rounded-md border border-amber-200">
-              <p className="font-medium">
-                Unable to fetch tenant data from the API
-              </p>
-              <p className="text-sm">
-                Showing fallback data for demonstration purposes.
-              </p>
-            </div>
-          )}
 
-          <DataTable<TenantListItem, any>
-            columns={columns}
-            data={tenantsList}
-            pageSize={10}
-            pageSizeOptions={[5, 10, 20, 50]}
-            onRowClick={handleRowClick}
+      <DataTable<TenantListItem, any>
+        columns={columns}
+        data={tenantsList}
+        pageSize={10}
+        pageSizeOptions={[5, 10, 20, 50]}
+        onRowClick={handleRowClick}
+      />
+      <CustomDialog isOpen={openDialog} onOpenChange={setOpenDialog}>
+        <CustomDialogTitle
+          icon={selectedTenant?.logoUrl}
+          subtitle={
+            <div className="flex  gap-8 mt-2 text-black">
+              <span className="text-[18px]">{selectedTenant?.email}</span>
+              <span className="text-[18px]">{selectedTenant?.phone}</span>
+            </div>
+          }
+        >
+          {selectedTenant?.name}
+        </CustomDialogTitle>
+        <div className=" flex gap-8 mb-4">
+          <p className="text-[15px]">
+            FEES:<span className="text-[18px] font-semibold">$x</span>
+          </p>
+          <p className="text-[15px]">
+            LAST PAYMENT:
+            <span className="text-[18px] font-semibold">Aug 28,2024</span>{' '}
+          </p>
+          <p className="text-[15px]">
+            REVENUE:
+            <span className="text-[18px] font-semibold">
+              {selectedTenant?.revenue}
+            </span>
+          </p>
+        </div>
+        <div className="mb-4">
+          <CustomCheckbox variant="default" checked={true} label="Trial User" />
+        </div>
+        <div className="mb-4">
+          <CustomSelect
+            options={[
+              { value: 'option1', label: 'Option 1' },
+              { value: 'option2', label: 'Option 2' },
+              { value: 'option3', label: 'Option 3' },
+            ]}
+            placeholder="Select Promocode"
           />
-        </>
-      )}
+        </div>
+        <div className="mb-10">
+          <CustomInput
+            label="Discount"
+            value={discount}
+            onChange={handleDiscountChange}
+          />
+        </div>
+        <CustomDialogFooter
+          onCancel={handleCancel}
+          onSave={handleSave}
+          cancelText="Cancel"
+          saveText="Save"
+        />
+      </CustomDialog>
     </div>
   )
 }
