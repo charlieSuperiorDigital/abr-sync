@@ -165,7 +165,7 @@ export default function TaskSidebar() {
         lastUpdatedDate: currentDate
       })
       
-      if (result?.success) {
+      if (result && result.status === 'completed') {
         // Update completed tasks state
         setCompletedTasks(prev => ({
           ...prev,
@@ -182,7 +182,7 @@ export default function TaskSidebar() {
           draggable: true,
         })
       } else {
-        throw new Error(result?.error || 'Failed to update task')
+        throw new Error('Failed to update task')
       }
     } catch (error) {
       console.error('Error marking task as done:', error)

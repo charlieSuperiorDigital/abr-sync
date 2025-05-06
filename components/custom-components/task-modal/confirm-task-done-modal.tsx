@@ -41,14 +41,14 @@ export function ConfirmTaskDoneModal({
       
       console.log('Mark as done result:', result)
       
-      if (result.success) {
+      if (result && result.status === 'done') {
         console.log('Task marked as done successfully')
         setIsOpen(false)
         if (onComplete) {
           onComplete()
         }
       } else {
-        console.error('Failed to mark task as done:', result.error)
+        console.error('Failed to mark task as done')
       }
     } catch (error) {
       console.error('Error marking task as done:', error)

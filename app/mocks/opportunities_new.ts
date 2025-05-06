@@ -1,4 +1,4 @@
-import { Opportunity, OpportunityStatus, RepairStage, PartsWarningStatus } from "@/app/types/opportunity"
+import { Opportunity, OpportunityStatus, RepairStage, PartsWarningStatus } from "@/app/types/opportunities"
 
 export const opportunities: Opportunity[] = [
     // New Opportunities - Initial contact with owner to schedule drop date

@@ -30,14 +30,17 @@ export interface RegisterCredentials {
 }
 
 export interface RegisterResponse {
+  // TODO: Update interface to match actual API response
   userId: string
-  token: string
-  email: string
-  firstName: string
-  lastName: string
-  roles: string[]
-  errorMessage: string
-  tokenExpiration: string
+  success: boolean
+  message: string
+  // Fields below are not returned from the backend currently
+  // token: string
+  // email: string
+  // firstName: string
+  // lastName: string
+  // roles: string[]
+  // tokenExpiration: string
 }
 
 export const login = async (credentials: LoginCredentials): Promise<(User & {
@@ -104,8 +107,8 @@ export const register = async (credentials: RegisterCredentials): Promise<Regist
     })
 
     if (response.data) {
-      if (response.data.errorMessage) {
-        console.error('Registration error:', response.data.errorMessage)
+      if (response.data.message) {
+        console.error('Registration error:', response.data.message)
         return null
       }
       console.log('Registration response:', response.data)

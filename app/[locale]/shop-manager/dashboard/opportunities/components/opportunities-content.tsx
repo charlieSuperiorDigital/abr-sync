@@ -1,6 +1,5 @@
 'use client'
 
-import { OpportunityResponse } from '@/app/api/functions/opportunities'
 import { useSearchParams } from 'next/navigation'
 import NewOpportunities from '../new-opportunities/new-opportunities'
 import EstimateOpportunities from '../estimate/estimates'
@@ -36,7 +35,7 @@ export default function OpportunitiesContent({ tenantId }: Props) {
         <SecondCallOpportunities secondCalls={secondCallOpportunities} />
       )}
       {activeTab === 'total-loss' && (
-        <TotalLossOpportunities totalLoss={totalLossOpportunities} />
+        <TotalLossOpportunities totalLossOpportunities={totalLossOpportunities} />
       )}
       {activeTab === 'archive' && (
         <ArchivedOpportunities archived={archivedOpportunities} />

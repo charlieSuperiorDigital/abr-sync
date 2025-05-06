@@ -73,10 +73,10 @@ export default function Archive() {
       header: 'Vehicle',
       cell: ({ row }) => (
         <VehicleCell
-          make={row.original.opportunity.vehicle.make}
-          model={row.original.opportunity.vehicle.model}
-          year={row.original.opportunity.vehicle.year.toString()}
-          imageUrl={row.original.opportunity.vehicle.vehiclePicturesUrls[0] || `https://picsum.photos/seed/${row.original.id}/200/100`}
+          make={row.original.opportunity.vehicle?.make || '---'}
+          model={row.original.opportunity.vehicle?.model || '---'}
+          year={row.original.opportunity.vehicle?.year.toString() || '---'}
+          imageUrl={row.original.opportunity.vehicle?.vehiclePicturesUrls[0] || `https://picsum.photos/seed/${row.original.id}/200/100`}
         />
       ),
     },
@@ -85,7 +85,7 @@ export default function Archive() {
       header: 'Owner',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
-          {row.original.opportunity.vehicle.owner ? 
+          {row.original.opportunity?.vehicle?.owner ? 
             `${row.original.opportunity.vehicle.owner.firstName} ${row.original.opportunity.vehicle.owner.lastName}` : 
             'Owner Name'}
         </span>
@@ -180,7 +180,7 @@ export default function Archive() {
       <BottomSheetModal
         isOpen={modalState.isOpen}
         onOpenChange={handleModalOpenChange}
-        title={selectedWorkfile ? `${selectedWorkfile.opportunity.vehicle.year} ${selectedWorkfile.opportunity.vehicle.make} ${selectedWorkfile.opportunity.vehicle.model}` : ''}
+        title={selectedWorkfile ? `${selectedWorkfile.opportunity.vehicle?.year} ${selectedWorkfile.opportunity.vehicle?.make} ${selectedWorkfile.opportunity.vehicle?.model}` : ''}
       >
         {modalState.opportunityId && <OpportunityModal opportunityId={modalState.opportunityId} workfileId={selectedWorkfile?.id} />}
       </BottomSheetModal>

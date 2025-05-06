@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { Opportunity, OpportunityStatus, RepairStage } from '../types/opportunity'
+import { Opportunity, OpportunityStatus, RepairStage } from '../types/opportunities'
 import { opportunities } from '../mocks/opportunities_new'
 import { useWorkfileStore } from './workfile-store'
 import { WorkfileStatus } from '../types/workfile'

@@ -86,36 +86,42 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
-  passwordHash: string;
   isVerified: boolean;
-  verificationCode: string | null;
   isActive: boolean;
   preferredLanguage: string | null;
-  tenantId: string;
+  phoneNumber: string | null;
+  locationIds: string[];
+  hourlyRate: number | null;
+  modules: number;
+  modulesString: string;
+  communication: number;
+  communicationString: string;
+  notificationType: number;
+  notificationTypeString: string;
+  notification: number;
+  notificationString: string;
+  profilePicture: string | null;
   createdAt: string;
   updatedAt: string;
-  passwordResetValidity: string;
-  tempPasswordResetCode: string;
-  googleSSOId: string | null;
-  facebookSSOId: string | null;
-  appleSSOId: string | null;
-  roles: string; // JSON string of roles array
-  invitations: any[]; // Could be replaced with Invitation type if needed
-  tenantRoles: any[]; // Could be replaced with TenantRole type if needed
-
-  fullName: string
-  phoneNumber: string
-  password: string
-  role: UserRole
-  hourlyRate: number
-  modules: number
-  communication: number
-  notificationType: number
-  notification: number
-  locations: Location[]
-  avatar: string
-  lastLoginAt: string;
-  profilePicture: string | null;
+  
+  // Fields that might be needed for internal app functionality but not in API response
+  tenantId?: string;
+  passwordHash?: string;
+  verificationCode?: string | null;
+  passwordResetValidity?: string;
+  tempPasswordResetCode?: string;
+  googleSSOId?: string | null;
+  facebookSSOId?: string | null;
+  appleSSOId?: string | null;
+  roles?: string; 
+  invitations?: any[];
+  tenantRoles?: any[];
+  fullName?: string;
+  password?: string;
+  role?: UserRole;
+  locations?: Location[];
+  avatar?: string;
+  lastLoginAt?: string;
 }
 
 

@@ -38,7 +38,24 @@ export function useGetQualityCheck({ workfileId, enabled = true }: UseGetQuality
 
   return {
     qualityCheck: data?.qualityCheck,
-    checks: data?.checks || [],
+    checks: data?.checks?.map(check => {
+      // Handle the case where images is a JSON string that needs to be parsed
+      let parsedImages: string[] | null = null;
+      if (typeof check.images === 'string') {
+        try {
+          parsedImages = JSON.parse(check.images);
+        } catch (e) {
+          console.error('Error parsing images JSON:', e);
+        }
+      } else {
+        parsedImages = check.images;
+      }
+      
+      return {
+        ...check,
+        images: parsedImages
+      };
+    }) || [],
     isLoading,
     error
   }

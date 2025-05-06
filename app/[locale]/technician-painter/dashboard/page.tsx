@@ -211,7 +211,7 @@ export default function TechnicianPainterDashboard() {
                       onClick={() => toggleRow(workfile.workfile.id)}
                     >
                       <TableCell className=""><span className="">No Updates</span></TableCell>
-                      <TableCell className="">{workfile.workfile.opportunity.vehicle.make} {workfile.workfile.opportunity.vehicle.model} {workfile.workfile.opportunity.vehicle.year}</TableCell>
+                      <TableCell className="">{workfile.workfile.opportunity.vehicle?.make} {workfile.workfile.opportunity.vehicle?.model} {workfile.workfile.opportunity.vehicle?.year}</TableCell>
                       <TableCell className="">{workfile.workfile.id}</TableCell>
                       <TableCell className="">{workfile.workfile.estimatedCompletionDate ? new Date(workfile.workfile.estimatedCompletionDate).toLocaleDateString() : '---'}</TableCell>
                       <TableCell className="flex justify-center items-center px-2 py-6">

@@ -1,6 +1,7 @@
 // src/app/[locale]/components/archived-opportunities/archivedColumns.tsx
 
-import { Opportunity } from '@/app/types/opportunity'
+
+import { OpportunityResponse } from '@/app/types/opportunities'
 import {
   SummaryCell,
   VehicleCell,
@@ -9,26 +10,26 @@ import { ColumnDef } from '@tanstack/react-table'
 
 type GetArchivedColumnsProps = {
   formatDate: (date: string | undefined) => string
-  handleUnarchive: (opportunity: Opportunity) => void
+  handleUnarchive: (opportunity: OpportunityResponse) => void
 }
 
 export const getArchivedColumns = ({
   formatDate,
   handleUnarchive,
-}: GetArchivedColumnsProps): ColumnDef<Opportunity, any>[] => {
+}: GetArchivedColumnsProps): ColumnDef<OpportunityResponse, any>[] => {
   return [
     {
       accessorKey: 'insurance.claimNumber',
       header: 'Claim',
     },
     {
-      accessorKey: 'vehicle',
+      accessorKey: 'vehicleId',
       header: 'Vehicle',
       cell: ({ row }) => (
         <VehicleCell
-          make={row.original.vehicle.make}
-          model={row.original.vehicle.model}
-          year={row.original.vehicle.year.toString()}
+          make={row.original.vehicleMake}
+          model={row.original.vehicleModel}
+          year={row.original.vehicleYear.toString()}
           imageUrl={`https://picsum.photos/seed/${row.original.opportunityId}/200/100`}
         />
       ),
@@ -37,7 +38,7 @@ export const getArchivedColumns = ({
       accessorKey: 'status',
       header: 'Previous Status',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.status}</span>
+        <span className="whitespace-nowrap">{row.original.opportunityStatus}</span>
       ),
     },
     {
@@ -45,15 +46,16 @@ export const getArchivedColumns = ({
       header: 'RO',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
-          {row.original.roNumber || '---'}
+          {/* {row.original.roNumber || '---'} */}
+          {"PLACEHOLDER"}
         </span>
       ),
     },
     {
-      accessorKey: 'owner.name',
+      accessorKey: 'ownerName',
       header: 'Owner',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.owner.name}</span>
+        <span className="whitespace-nowrap">{row.original.ownerFirstName + " " + row.original.ownerLastName}</span>
       ),
     },
     {
@@ -61,7 +63,7 @@ export const getArchivedColumns = ({
       header: '1ST CALL',
       cell: ({ row }) => (
         <span className="text-gray-600 whitespace-nowrap">
-          {formatDate(row.original.firstCallDate)}
+          {formatDate(row.original._1stCall)}
         </span>
       ),
     },
@@ -70,7 +72,7 @@ export const getArchivedColumns = ({
       header: '2ND CALL',
       cell: ({ row }) => (
         <span className="text-gray-600 whitespace-nowrap">
-          {formatDate(row.original.secondCallDate)}
+          {formatDate(row.original._2ndCall)}
         </span>
       ),
     },
@@ -79,15 +81,16 @@ export const getArchivedColumns = ({
       header: 'LAST UPDATED BY',
       cell: ({ row }) => (
         <div className="flex gap-2 items-center">
-          {row.original.lastUpdatedBy?.avatar && (
+          {/* {row.original.lastUpdatedBy?.avatar && (
             <img
               src={row.original.lastUpdatedBy.avatar}
               alt=""
               className="w-6 h-6 rounded-full"
             />
-          )}
+          )} */}
           <span className="whitespace-nowrap">
-            {row.original.lastUpdatedBy?.name || '---'}
+            {/* {row.original.lastUpdatedBy?.name || '---'} */}
+            {"PLACEHOLDER"}
           </span>
         </div>
       ),
@@ -97,7 +100,8 @@ export const getArchivedColumns = ({
       header: 'LAST UPDATED',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
-          {formatDate(row.original.lastUpdatedDate)}
+          {/* {formatDate(row.original.lastUpdatedDate)} */}
+          {"11/11/2025 11:11 AM"}
         </span>
       ),
     },

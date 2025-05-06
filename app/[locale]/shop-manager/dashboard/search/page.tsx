@@ -10,7 +10,7 @@ import {
   VehicleCell,
 } from '@/components/custom-components/custom-table/table-cells'
 import { ColumnDef } from '@tanstack/react-table'
-import { OpportunityResponse } from '@/app/api/functions/opportunities'
+import { OpportunityResponse } from '@/app/types/opportunities'
 import {
   WorkfileApiResponse,
   WorkfilesByTenantIdResponse,

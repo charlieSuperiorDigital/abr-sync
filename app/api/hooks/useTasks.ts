@@ -8,7 +8,8 @@ import {
   updateTask,
   Task,
   TaskCreateVM,
-  UpdateTaskPayload
+  UpdateTaskPayload,
+  GetTaskByIdApiResponse
 } from '../functions/tasks'
 
 // Response interfaces
@@ -43,19 +44,19 @@ export interface UseGetTasksByCreatorOptions {
 /**
  * Hook to fetch a single task by its ID
  * @param options - Query options including taskId and enabled flag
- * @returns Query result with task data
+ * @returns Query result with task data and task days
  */
 export function useGetTaskById(options: UseGetTaskByIdOptions) {
   const { taskId, enabled = true } = options
 
-  const { data, isLoading, error } = useQuery<Task>({
+  const { data, isLoading, error } = useQuery<GetTaskByIdApiResponse>({
     queryKey: ['task', taskId],
     queryFn: async () => {
-      const response = await getTaskById(taskId)
-      if (response.success && response.data) {
-        return response.data as Task
+      try {
+        return await getTaskById(taskId)
+      } catch (error) {
+        throw new Error(error instanceof Error ? error.message : 'Failed to fetch task')
       }
-      throw new Error(response.error?.toString() || 'Failed to fetch task')
     },
     enabled: enabled && !!taskId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -64,7 +65,8 @@ export function useGetTaskById(options: UseGetTaskByIdOptions) {
   })
 
   return {
-    task: data,
+    task: data?.task,
+    taskDays: data?.taskDays || [],
     isLoading,
     error,
   }
@@ -79,13 +81,13 @@ export function useGetTasks(options: UseGetTasksOptions = {}) {
   const { tenantId, enabled = true } = options
 
   const { data, isLoading, error } = useQuery<Task[]>({
-    queryKey: ['tasks', tenantId],
+    queryKey: ['tasks', 'tenant', tenantId],
     queryFn: async () => {
-      const response = await getTasksByTenant(tenantId)
-      if (response.success && response.data) {
-        return response.data as Task[]
+      try {
+        return await getTasksByTenant(tenantId)
+      } catch (error) {
+        throw new Error(error instanceof Error ? error.message : 'Failed to fetch tenant tasks')
       }
-      throw new Error(response.error?.toString() || 'Failed to fetch tasks')
     },
     enabled,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -111,11 +113,11 @@ export function useGetTasksByAssignedUser(options: UseGetTasksByAssignedUserOpti
   const { data, isLoading, error } = useQuery<Task[]>({
     queryKey: ['tasks', 'assigned', userId],
     queryFn: async () => {
-      const response = await getTasksByAssignedUser(userId)
-      if (response.success && response.data) {
-        return response.data as Task[]
+      try {
+        return await getTasksByAssignedUser(userId)
+      } catch (error) {
+        throw new Error(error instanceof Error ? error.message : 'Failed to fetch assigned tasks')
       }
-      throw new Error(response.error?.toString() || 'Failed to fetch assigned tasks')
     },
     enabled: enabled && !!userId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -144,11 +146,11 @@ export function useGetTasksByCreator(options: UseGetTasksByCreatorOptions) {
   const { data, isLoading, error } = useQuery<Task[]>({
     queryKey: ['tasks', 'created', userId],
     queryFn: async () => {
-      const response = await getTasksByCreator(userId)
-      if (response.success && response.data) {
-        return response.data as Task[]
+      try {
+        return await getTasksByCreator(userId)
+      } catch (error) {
+        throw new Error(error instanceof Error ? error.message : 'Failed to fetch created tasks')
       }
-      throw new Error(response.error?.toString() || 'Failed to fetch created tasks')
     },
     enabled: enabled && !!userId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -170,15 +172,13 @@ export function useGetTasksByCreator(options: UseGetTasksByCreatorOptions) {
 export const useCreateTask = () => {
   const queryClient = useQueryClient()
   
-  const mutation = useMutation<CreateTaskResponse, unknown, TaskCreateVM>({
+  const mutation = useMutation<Task, Error, TaskCreateVM>({
     mutationFn: async (taskData) => {
-      const response = await createTask(taskData)
-      if (!response.success) {
-        throw new Error(typeof response.error === 'string' 
-          ? response.error 
-          : 'Failed to create task')
+      try {
+        return await createTask(taskData)
+      } catch (error) {
+        throw new Error(error instanceof Error ? error.message : 'Failed to create task')
       }
-      return response
     },
     onSuccess: () => {
       // Invalidate and refetch tasks queries when a new task is created
@@ -207,9 +207,15 @@ export const useCreateTask = () => {
 export function useUpdateTask() {
   const queryClient = useQueryClient();
   
-  const mutation = useMutation({
-    mutationFn: (taskData: UpdateTaskPayload) => updateTask(taskData),
-    onSuccess: (data: any, variables: UpdateTaskPayload) => {
+  const mutation = useMutation<Task, Error, UpdateTaskPayload>({
+    mutationFn: async (taskData) => {
+      try {
+        return await updateTask(taskData)
+      } catch (error) {
+        throw new Error(error instanceof Error ? error.message : 'Failed to update task')
+      }
+    },
+    onSuccess: (data, variables) => {
       // Invalidate the specific task query
       queryClient.invalidateQueries({ queryKey: ['task', variables.id] });
       

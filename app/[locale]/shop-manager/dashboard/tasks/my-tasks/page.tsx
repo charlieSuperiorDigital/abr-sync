@@ -33,46 +33,6 @@ import { EditTaskModal } from '@/components/custom-components/task-modal/edit-ta
 import { ConfirmTaskDoneModal } from '@/components/custom-components/task-modal/confirm-task-done-modal'
 import * as deleteTaskModal from '@/components/custom-components/task-modal/delete-task-modal'
 
-// Function to map API task format to app task format
-const mapApiTaskToAppTask = (apiTask: ApiTask): Task => {
-  // Convert priority string to object format if needed
-  const priorityObj = typeof apiTask.priority === 'string'
-    ? {
-      variant: getPriorityVariant(apiTask.priority),
-      text: apiTask.priority as 'Urgent' | 'High' | 'Normal' | 'Low'
-    }
-    : apiTask.priority;
-
-  return {
-    id: apiTask.id,
-    tenantId: apiTask.tenantId || '',
-    title: apiTask.title,
-    description: apiTask.description,
-    priority: priorityObj,
-    createdBy: apiTask.createdBy || '',
-    createdByUser: apiTask.createdByUser,
-    createdAt: apiTask.createdAt,
-    updatedAt: apiTask.updatedAt,
-    dueDate: apiTask.dueDate,
-    dueDateTime: apiTask.dueDate, // For backward compatibility
-    status: apiTask.status as 'open' | 'in_progress' | 'completed' | 'archived',
-    assignedTo: apiTask.assignedTo,
-    assignedUser: apiTask.assignedUser,
-    workfileId: apiTask.workfileId,
-    workfile: apiTask.workfile,
-    locationId: apiTask.locationId,
-    location: apiTask.location,
-    type: apiTask.type || 'One-time',
-    endDate: apiTask.endDate,
-    roles: apiTask.roles,
-    // Default values for backward compatibility
-    relatedTo: [],
-    email: '',
-    phone: '',
-    message: ''
-  };
-};
-
 // Helper function to determine priority variant
 const getPriorityVariant = (priority: string): 'danger' | 'warning' | 'success' | 'slate' => {
   switch (priority?.toLowerCase()) {
@@ -116,13 +76,12 @@ export default function MyTasks() {
   // Transform API tasks to app task format and filter for non-completed tasks only
   const tasks = assignedTasks 
     ? assignedTasks
-        .map(mapApiTaskToAppTask)
         .filter(task => 
           task.status?.toLowerCase() !== 'done' && task.status?.toLowerCase() !== 'completed'
         )
     : []
 
-  const columns: ColumnDef<Task>[] = [
+  const columns: ColumnDef<ApiTask>[] = [
     {
       accessorKey: 'id',
       header: 'Task ID',
@@ -145,13 +104,8 @@ export default function MyTasks() {
       accessorKey: 'priority',
       header: 'Priority',
       cell: ({ row }) => {
-        const priority = row.original.priority;
-        const variant = typeof priority === 'string'
-          ? getPriorityVariant(priority)
-          : priority.variant;
-        const text = typeof priority === 'string'
-          ? priority
-          : priority.text;
+        const variant = getPriorityVariant(row.original.priority);
+        const text = row.original.priority;
         
         return (
           <PriorityBadgeCell 
@@ -190,11 +144,11 @@ export default function MyTasks() {
       
     },
     {
-      accessorKey: 'dueDateTime',
+      accessorKey: 'dueDate',
       header: 'DUE',
       cell: ({ row }) => 
       <FriendlyDateCell   
-        date={row.original.dueDateTime} 
+        date={row.original.dueDate} 
         variant='due' 
       />,
       
@@ -211,15 +165,11 @@ export default function MyTasks() {
       cell: ({ row }) => (
         <div className="flex justify-end items-center space-x-2">
           <WarningCell
-            message={row.original.warningMessage || ''}
+            message={'PLACEHOLDER'}
           />
           <div 
                     data-testid="contact-info" 
-                    className="cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      // handleContactClick(row.original)
-                    }}
+                    className="flex items-center gap-2"
                   >
                     <ContactInfo />
                   </div>
@@ -311,18 +261,16 @@ export default function MyTasks() {
                         <span className="font-medium">ID #{row.id}</span>
                         <span 
                           className={`font-medium px-2 py-1 rounded-full text-white ${
-                            typeof row.priority === 'string' 
-                              ? 'bg-slate-500' 
-                              : row.priority.variant === 'danger' 
-                                ? 'bg-red-600' 
-                                : row.priority.variant === 'success' 
-                                  ? 'bg-[#0F6C40]' 
-                                  : row.priority.variant === 'slate' 
-                                    ? 'bg-[#6E6E6E]' 
-                                    : 'bg-amber-500'
+                            getPriorityVariant(row.priority) === 'danger' 
+                              ? 'bg-red-600' 
+                              : getPriorityVariant(row.priority) === 'success' 
+                                ? 'bg-[#0F6C40]' 
+                                : getPriorityVariant(row.priority) === 'slate' 
+                                  ? 'bg-[#6E6E6E]' 
+                                  : 'bg-amber-500'
                           }`}
                         >
-                          {typeof row.priority === 'string' ? row.priority : row.priority.text}
+                          {row.priority}
                         </span>
                       </div>
                       {/* Actions */}
@@ -399,7 +347,7 @@ export default function MyTasks() {
                       
                       <div>
                         <div className="text-sm text-gray-500">Priority:</div>
-                        <div>{typeof row.priority === 'string' ? row.priority : row.priority.text}</div>
+                        <div>{row.priority}</div>
                       </div>
                     </div>
                   </div>

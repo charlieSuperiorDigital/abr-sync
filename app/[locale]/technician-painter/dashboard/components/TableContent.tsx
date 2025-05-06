@@ -1,6 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
-import { Opportunity } from '@/app/types/opportunity';
+import { OpportunityResponse } from '@/app/types/opportunities';
 import { formatCurrency } from '@/lib/utils';
 import PartsButton from './PartsButton';
 import { CalendarDays } from 'lucide-react';

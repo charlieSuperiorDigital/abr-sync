@@ -1,7 +1,10 @@
 // opportunityColumns.tsx
 import { ColumnDef } from '@tanstack/react-table'
-import { Opportunity } from '@/app/types/opportunity'
-import { Archive, Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { OpportunityResponse } from '@/app/types/opportunities'
+import {
+  Archive, Plus
+} from 'lucide-react'
 import {
   SummaryCell,
   UploadTimeCell,
@@ -13,38 +16,35 @@ import DateTimePicker from '@/app/[locale]/custom-components/date-time-picker'
 import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
 import { StatusBadge } from '@/components/custom-components/status-badge/status-badge'
 
-interface OpportunityColumnDependencies {
-  handleContactClick: (opportunity: Opportunity) => void
-  handleArchiveClick: (opportunity: Opportunity) => void
+export interface OpportunityColumnDependencies {
+  handleContactClick: (opportunity: OpportunityResponse) => void
+  handleArchiveClick: (opportunity: OpportunityResponse) => void
+  handleTaskClick: (opportunity: OpportunityResponse) => void
   formatDate: (date: string | undefined) => string
   archiveConfirmationOpportunityId: string | undefined
 }
 
 // Function that returns the column definitions
-export const getOpportunityColumns = (
-  deps: OpportunityColumnDependencies
-): ColumnDef<Opportunity>[] => {
-  const {
-    handleContactClick,
-    handleArchiveClick,
-    formatDate,
-
-    archiveConfirmationOpportunityId,
-  } = deps
-
+export function getOpportunityColumns({
+  handleContactClick,
+  handleArchiveClick,
+  handleTaskClick,
+  formatDate,
+  archiveConfirmationOpportunityId,
+}: OpportunityColumnDependencies): ColumnDef<OpportunityResponse>[] {
   return [
     {
       accessorKey: 'vehicle',
       header: 'Vehicle',
       cell: ({ row }) => (
         <VehicleCell
-          make={row.original.vehicle.make}
-          model={row.original.vehicle.model}
-          year={row.original.vehicle.year.toString()}
+          make={row.original.vehicleMake}
+          model={row.original.vehicleModel}
+          year={row.original.vehicleYear.toString()}
           imageUrl={
-            row.original.vehicle.photos &&
-            row.original.vehicle.photos.length > 0
-              ? row.original.vehicle.photos[0].url
+            row.original.vehiclePhotos &&
+            row.original.vehiclePhotos.length > 0
+              ? row.original.vehiclePhotos[0].url
               : `https://picsum.photos/seed/${row.original.opportunityId}/200/100`
           }
         />
@@ -55,13 +55,13 @@ export const getOpportunityColumns = (
       header: 'Claim',
     },
     {
-      accessorKey: 'insurance.company',
+      accessorKey: 'insuranceName',
       header: 'Insurance',
       cell: ({ row }) => (
         <span
-          className={`whitespace-nowrap font-bold ${row.original.insurance.company === 'PROGRESSIVE' ? 'text-blue-700' : ''}`}
+          className={`whitespace-nowrap font-bold ${row.original.insuranceName === 'PROGRESSIVE' ? 'text-blue-700' : ''}`}
         >
-          {row.original.insurance.company.toUpperCase()}
+          {row.original.insuranceName.toUpperCase()}
         </span>
       ),
     },
@@ -69,86 +69,86 @@ export const getOpportunityColumns = (
       accessorKey: 'owner.name',
       header: 'Owner',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.owner.name}</span>
+        <span className="whitespace-nowrap">{row.original.ownerFirstName} {row.original.ownerLastName}</span>
       ),
     },
-    {
-      accessorKey: 'isInRental',
-      header: 'In Rental',
-      cell: ({ row }) =>
-        row.original.isInRental ? (
-          <StatusBadge variant="success" size="sm">
-            YES
-          </StatusBadge>
-        ) : (
-          <StatusBadge variant="neutral" size="sm">
-            NO
-          </StatusBadge>
-        ),
-    },
-    {
-      accessorKey: 'dropDate',
-      header: 'Drop Date',
-      cell: ({ row }) => (
-        <DateTimePicker
-          value={row.original.dropDate}
-          editable={false}
-          onOk={(date: Date) => console.log(date)}
-        />
-      ),
-    },
-    {
-      accessorKey: 'parts.warning',
-      header: 'Parts',
-      cell: ({ row }) => {
-        const warning = row.original.parts?.warning
-        if (!warning) return null
+    // {
+    //   accessorKey: 'isInRental',
+    //   header: 'In Rental',
+    //   cell: ({ row }) =>
+    //     row.original.isInRental ? (
+    //       <StatusBadge variant="success" size="sm">
+    //         YES
+    //       </StatusBadge>
+    //     ) : (
+    //       <StatusBadge variant="neutral" size="sm">
+    //         NO
+    //       </StatusBadge>
+    //     ),
+    // },
+    // {
+    //   accessorKey: 'dropDate',
+    //   header: 'Drop Date',
+    //   cell: ({ row }) => (
+    //     <DateTimePicker
+    //       value={row.original.dropDate}
+    //       editable={false}
+    //       onOk={(date: Date) => console.log(date)}
+    //     />
+    //   ),
+    // },
+    // {
+    //   accessorKey: 'parts.warning',
+    //   header: 'Parts',
+    //   cell: ({ row }) => {
+    //     const warning = row.original.parts?.warning
+    //     if (!warning) return null
 
-        let variant: 'warning' | 'danger' = 'warning'
-        let text: string = ''
+    //     let variant: 'warning' | 'danger' = 'warning'
+    //     let text: string = ''
 
-        if (warning === 'ORDERED') {
-          variant = 'warning'
-          text = 'ORDERED'
-        } else if (warning === 'UPDATED') {
-          variant = 'danger'
-          text = 'UPDATED'
-        } else {
-          return null
-        }
+    //     if (warning === 'ORDERED') {
+    //       variant = 'warning'
+    //       text = 'ORDERED'
+    //     } else if (warning === 'UPDATED') {
+    //       variant = 'danger'
+    //       text = 'UPDATED'
+    //     } else {
+    //       return null
+    //     }
 
-        return (
-          <div>
-            <StatusBadge
-              variant={variant}
-              size="sm"
-              className="whitespace-nowrap"
-            >
-              {text}
-            </StatusBadge>
-          </div>
-        )
-      },
-    },
-    {
-      id: 'uploadDeadline',
-      header: 'Upload Deadline',
-      cell: ({ row }) =>
-        row.original.uploadDeadline ? (
-          <UploadTimeCell deadline={row.original.uploadDeadline} />
-        ) : (
-          <span className="text-gray-400">---</span>
-        ),
-    },
-    {
-      id: 'lastCommDate',
-      header: 'Last Communication',
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap">
-          {formatDate(row.original.lastUpdatedDate)}
-        </span>
-      ),
-    },
+    //     return (
+    //       <div>
+    //         <StatusBadge
+    //           variant={variant}
+    //           size="sm"
+    //           className="whitespace-nowrap"
+    //         >
+    //           {text}
+    //         </StatusBadge>
+    //       </div>
+    //     )
+    //   },
+    // },
+    // {
+    //   id: 'uploadDeadline',
+    //   header: 'Upload Deadline',
+    //   cell: ({ row }) =>
+    //     row.original.uploadDeadline ? (
+    //       <UploadTimeCell deadline={row.original.uploadDeadline} />
+    //     ) : (
+    //       <span className="text-gray-400">---</span>
+    //     ),
+    // },
+    // {
+    //   id: 'lastCommDate',
+    //   header: 'Last Communication',
+    //   cell: ({ row }) => (
+    //     <span className="whitespace-nowrap">
+    //       {formatDate(row.original.lastUpdatedDate)}
+    //     </span>
+    //   ),
+    // },
     {
       header: 'Summary',
       cell: ({ row }) => (

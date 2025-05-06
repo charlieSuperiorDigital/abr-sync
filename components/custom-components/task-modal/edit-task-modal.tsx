@@ -539,11 +539,11 @@ export function EditTaskModal({
       const result = await updateTaskAsync(changedFields)
       console.log('Update task result:', result)
       
-      if (result.success) {
+      if (result && result.status) {
         console.log('Task updated successfully!')
         setShouldShowModal(false)
       } else {
-        console.error('Error updating task:', result.error)
+        console.error('Error updating task')
         // Keep modal open to allow user to try again
       }
 
