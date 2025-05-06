@@ -1,22 +1,21 @@
 'use client'
 
+import ContactInfo from '@/app/[locale]/custom-components/contact-info'
+import RoundButtonWithTooltip from '@/app/[locale]/custom-components/round-button-with-tooltip'
+import { useGetWorkfilesByTenantId } from '@/app/api/hooks/useWorkfiles'
+import { WorkfilesByTenantIdResponse } from '@/app/types/workfile'
+import { calculateDaysUntil, formatDate } from '@/app/utils/date-utils'
+import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import {
-  VehicleCell,
   StatusBadgeCell,
+  VehicleCell,
 } from '@/components/custom-components/custom-table/table-cells'
-import ContactInfo from '@/app/[locale]/custom-components/contact-info'
-import { ColumnDef } from '@tanstack/react-table'
-import { ClipboardPlus, Calendar, Check, MessageSquareMore } from 'lucide-react'
-import { WorkfilesByTenantIdResponse } from '@/app/types/workfile'
-import { useState, useCallback } from 'react'
-import RoundButtonWithTooltip from '@/app/[locale]/custom-components/round-button-with-tooltip'
-import { formatDate, calculateDaysUntil } from '@/app/utils/date-utils'
-import { formatCurrency } from '@/app/utils/currency-utils'
-import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
-import { useGetWorkfilesByTenantId } from '@/app/api/hooks/useWorkfiles'
+import { ColumnDef } from '@tanstack/react-table'
+import { ClipboardPlus, MessageSquareMore } from 'lucide-react'
 import { useSession } from 'next-auth/react'
+import { useCallback, useState } from 'react'
 
 export default function InProgress() {
   const { data: session } = useSession()
@@ -62,10 +61,10 @@ export default function InProgress() {
       header: 'Vehicle',
       cell: ({ row }) => (
         <VehicleCell
-          make={row.original.opportunity.vehicle.make}
-          model={row.original.opportunity.vehicle.model}
-          year={row.original.opportunity.vehicle.year.toString()}
-          imageUrl={row.original.opportunity.vehicle.vehiclePicturesUrls[0] || `https://picsum.photos/seed/${row.original.id}/200/100`}
+          make={row.original.opportunity.vehicle?.make || '---'}
+          model={row.original.opportunity.vehicle?.model || '---'}
+          year={row.original.opportunity.vehicle?.year.toString() || '---'}
+          imageUrl={row.original.opportunity.vehicle?.vehiclePicturesUrls[0] || `https://picsum.photos/seed/${row.original.id}/200/100`}
         />
       ),
     },
@@ -74,7 +73,7 @@ export default function InProgress() {
       header: 'Owner',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
-          {row.original.opportunity.vehicle.owner ? 
+          {row.original.opportunity.vehicle?.owner ? 
             `${row.original.opportunity.vehicle.owner.firstName} ${row.original.opportunity.vehicle.owner.lastName}` : 
             'Owner Name'}
         </span>
@@ -201,7 +200,7 @@ export default function InProgress() {
       <BottomSheetModal
         isOpen={modalState.isOpen}
         onOpenChange={handleModalOpenChange}
-        title={selectedWorkfile ? `${selectedWorkfile.opportunity.vehicle.year} ${selectedWorkfile.opportunity.vehicle.make} ${selectedWorkfile.opportunity.vehicle.model}` : ''}
+        title={selectedWorkfile ? `${selectedWorkfile.opportunity.vehicle?.year} ${selectedWorkfile.opportunity.vehicle?.make} ${selectedWorkfile.opportunity.vehicle?.model}` : ''}
       >
         {modalState.opportunityId && <OpportunityModal opportunityId={modalState.opportunityId} workfileId={selectedWorkfile?.id} />}
       </BottomSheetModal>

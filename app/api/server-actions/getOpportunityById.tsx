@@ -1,6 +1,7 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/auth-options'
-import { OpportunityResponse } from '../functions/opportunities'
+import { OpportunityResponse } from '@/app/types/opportunities'
+
 
 // Define the type for your opportunity response
 

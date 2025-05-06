@@ -13,10 +13,10 @@ export interface CreateTenantRequest {
 }
 
 export interface GetUsersByTenantResponse {
+  users: User[];
   currentPage: number;
   perPage: number;
   totalCount: number;
-  users: User[];
 }
 
 export interface TenantWithLocations {

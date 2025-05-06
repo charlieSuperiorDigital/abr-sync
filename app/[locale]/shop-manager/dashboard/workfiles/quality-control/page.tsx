@@ -1,25 +1,18 @@
 'use client'
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
-import DarkButton from '@/app/[locale]/custom-components/dark-button'
-import RoundButtonWithTooltip from '@/app/[locale]/custom-components/round-button-with-tooltip'
-import { useGetWorkfilesByTenantId } from '@/app/api/hooks/useWorkfiles'
 import { useGetOpportunities } from '@/app/api/hooks/useOpportunities'
-import { Opportunity } from '@/app/types/opportunity'
+import { useGetWorkfilesByTenantId } from '@/app/api/hooks/useWorkfiles'
+import { OpportunityResponse } from '@/app/types/opportunities'
 import { WorkfilesByTenantIdResponse } from '@/app/types/workfile'
-import { formatDate, calculateDaysUntil } from '@/app/utils/date-utils'
-import { formatCurrency } from '@/app/utils/currency-utils'
-import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
 import {
-  VehicleCell,
-  StatusBadgeCell,
+  VehicleCell
 } from '@/components/custom-components/custom-table/table-cells'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
 import QCChecklistBottomSheet from '@/components/custom-components/qc-checklist-modal'
-import { StatusBadge } from '@/components/custom-components/status-badge/status-badge'
 import { ColumnDef } from '@tanstack/react-table'
-import { ClipboardCheck, ClipboardPlus, MessageSquareMore } from 'lucide-react'
+import { ClipboardPlus } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useCallback, useState } from 'react'
 
@@ -28,7 +21,7 @@ export default function QualityControl() {
   const tenantId = session?.user?.tenantId;
 
   const { opportunities: allOpportunities, isLoading: isOpportunitiesLoading } = useGetOpportunities({ tenantId: tenantId || '' });
-  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
+  const [selectedOpportunity, setSelectedOpportunity] = useState<OpportunityResponse | null>(null);
   const [modalState, setModalState] = useState<{ isOpen: boolean; opportunityId: string | null }>({
     isOpen: false,
     opportunityId: null
@@ -81,10 +74,10 @@ export default function QualityControl() {
       header: 'Vehicle',
       cell: ({ row }) => (
         <VehicleCell
-          make={row.original.opportunity.vehicle.make}
-          model={row.original.opportunity.vehicle.model}
-          year={row.original.opportunity.vehicle.year.toString()}
-          imageUrl={row.original.opportunity.vehicle.vehiclePicturesUrls[0] || `https://picsum.photos/seed/${row.original.id}/200/100`}
+          make={row.original.opportunity.vehicle?.make || '---'}
+          model={row.original.opportunity.vehicle?.model || '---'}
+          year={row.original.opportunity.vehicle?.year.toString() || '---'}
+          imageUrl={row.original.opportunity.vehicle?.vehiclePicturesUrls[0] || `https://picsum.photos/seed/${row.original.id}/200/100`}
         />
       ),
     },
@@ -93,7 +86,7 @@ export default function QualityControl() {
       header: 'Owner',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
-          {row.original.opportunity.vehicle.owner ? 
+          {row.original.opportunity.vehicle?.owner ? 
             `${row.original.opportunity.vehicle.owner.firstName} ${row.original.opportunity.vehicle.owner.lastName}` : 
             'Owner Name'}
         </span>
@@ -222,7 +215,7 @@ export default function QualityControl() {
       <BottomSheetModal
         isOpen={modalState.isOpen}
         onOpenChange={handleModalOpenChange}
-        title={selectedWorkfile ? `${selectedWorkfile.opportunity.vehicle.year} ${selectedWorkfile.opportunity.vehicle.make} ${selectedWorkfile.opportunity.vehicle.model}` : ''}
+        title={selectedWorkfile ? `${selectedWorkfile.opportunity.vehicle?.year} ${selectedWorkfile.opportunity.vehicle?.make} ${selectedWorkfile.opportunity.vehicle?.model}` : ''}
       >
         {modalState.opportunityId && <OpportunityModal opportunityId={modalState.opportunityId} workfileId={selectedWorkfile?.id} />}
       </BottomSheetModal>

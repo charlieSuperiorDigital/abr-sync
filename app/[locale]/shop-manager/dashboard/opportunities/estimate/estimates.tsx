@@ -1,21 +1,9 @@
 'use client'
-import ContactInfo from '@/app/[locale]/custom-components/contact-info'
-import { OpportunityResponse } from '@/app/api/functions/opportunities'
-import { ContactData, ContactMethod } from '@/app/types/contact-info.types'
-import { Opportunity } from '@/app/types/opportunity'
+import { OpportunityResponse } from '@/app/types/opportunities'
 import { mapApiResponseToOpportunity } from '@/app/utils/opportunityMapper'
 import BottomSheetModal from '@/components/custom-components/bottom-sheet-modal/bottom-sheet-modal'
 import { DataTable } from '@/components/custom-components/custom-table/data-table'
-import {
-  AutoCell,
-  SummaryCell,
-  VehicleCell,
-} from '@/components/custom-components/custom-table/table-cells'
 import OpportunityModal from '@/components/custom-components/opportunity-modal/opportunity-modal'
-import { StatusBadge } from '@/components/custom-components/status-badge/status-badge'
-import { NewTaskModal } from '@/components/custom-components/task-modal/new-task-modal'
-import { ColumnDef } from '@tanstack/react-table'
-import { Plus } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { useCallback, useMemo, useState } from 'react'
 import { getEstimateColumns } from './estimate-columns'
@@ -33,7 +21,7 @@ type Props = {
 
 export default function EstimateOpportunities({ estimates }: Props) {
   const [selectedOpportunity, setSelectedOpportunity] =
-    useState<Opportunity | null>(null)
+    useState<OpportunityResponse | null>(null)
   const [modalState, setModalState] = useState<{
     isOpen: boolean
     opportunityId: string | null
@@ -42,7 +30,7 @@ export default function EstimateOpportunities({ estimates }: Props) {
     opportunityId: null,
   })
 
-  const handleRowClick = useCallback((opportunity: Opportunity) => {
+  const handleRowClick = useCallback((opportunity: OpportunityResponse) => {
     setSelectedOpportunity(opportunity)
     setModalState({
       isOpen: true,
@@ -54,12 +42,12 @@ export default function EstimateOpportunities({ estimates }: Props) {
     setModalState((prev) => ({ ...prev, isOpen: open }))
   }, [])
 
-  const handleContactClick = useCallback((opportunity: Opportunity) => {
+  const handleContactClick = useCallback((opportunity: OpportunityResponse) => {
     // Handle contact info click based on opportunity state
     console.log('Contact clicked for opportunity:', opportunity.opportunityId)
   }, [])
 
-  const handleTaskClick = useCallback((opportunity: Opportunity) => {
+  const handleTaskClick = useCallback((opportunity: OpportunityResponse) => {
     // Handle task button click based on opportunity state
     console.log('Task clicked for opportunity:', opportunity.opportunityId)
   }, [])
@@ -80,9 +68,9 @@ export default function EstimateOpportunities({ estimates }: Props) {
 
   return (
     <div className="w-full">
-      <DataTable<Opportunity, any>
+      <DataTable<OpportunityResponse, any>
         columns={columns}
-        data={estimates.map(mapApiResponseToOpportunity)}
+        data={estimates}
         onRowClick={handleRowClick}
         pageSize={10}
         pageSizeOptions={[5, 10, 20, 30, 40, 50]}
@@ -93,7 +81,7 @@ export default function EstimateOpportunities({ estimates }: Props) {
         onOpenChange={handleModalOpenChange}
         title={
           selectedOpportunity
-            ? `${selectedOpportunity.vehicle?.year || ''} ${selectedOpportunity.vehicle?.make || ''} ${selectedOpportunity.vehicle?.model || ''}`
+            ? `${selectedOpportunity.vehicleYear || ''} ${selectedOpportunity.vehicleMake || ''} ${selectedOpportunity.vehicleModel || ''}`
             : ''
         }
       >

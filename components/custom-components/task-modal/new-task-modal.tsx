@@ -305,11 +305,11 @@ export function NewTaskModal({
       // Call the API to create the task
       createTask(taskCreateData, {
         onSuccess: (response) => {
-          if (response.success) {
+          if (response && response.id) {
             toast.success("Task created successfully");
             setShouldShowModal(false);
           } else {
-            toast.error("Failed to create task: " + (response.error || "Unknown error"));
+            toast.error("Failed to create task");
           }
         },
         onError: (error) => {

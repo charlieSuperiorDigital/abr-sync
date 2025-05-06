@@ -1,4 +1,3 @@
-
 export interface TaskComment {
   id: string
   text: string
@@ -60,6 +59,7 @@ export interface Task {
   opportunityId?: string
   opportunity?: any
   warningMessage?: string
+  estimatedHours?: number
 }
 
 export interface TaskDay {

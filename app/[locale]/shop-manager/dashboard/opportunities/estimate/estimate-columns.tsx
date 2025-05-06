@@ -2,7 +2,7 @@
 
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
 import { ContactData, ContactMethod } from '@/app/types/contact-info.types'
-import { Opportunity } from '@/app/types/opportunity'
+import { OpportunityResponse } from '@/app/types/opportunities'
 import {
   AutoCell,
   SummaryCell,
@@ -14,21 +14,22 @@ import { ColumnDef } from '@tanstack/react-table'
 import { Plus } from 'lucide-react'
 
 type GetEstimateColumnsProps = {
-  handleContactClick: (opportunity: Opportunity) => void
+  handleContactClick: (opportunity: OpportunityResponse) => void
   PdfPreviewComponent: React.ComponentType
 }
 
 export const getEstimateColumns = ({
   handleContactClick,
   PdfPreviewComponent,
-}: GetEstimateColumnsProps): ColumnDef<Opportunity, any>[] => {
+}: GetEstimateColumnsProps): ColumnDef<OpportunityResponse, any>[] => {
   return [
     {
       accessorKey: 'roNumber',
       header: 'RO Number',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
-          {row.original.roNumber || '---'}
+          {/* {row.original.roNumber || '---'} */}
+          {row.original.opportunityId || '---'}
         </span>
       ),
     },
@@ -37,9 +38,9 @@ export const getEstimateColumns = ({
       header: 'Vehicle',
       cell: ({ row }) => (
         <VehicleCell
-          make={row.original.vehicle.make}
-          model={row.original.vehicle.model}
-          year={String(row.original.vehicle.year)}
+          make={row.original.vehicleMake}
+          model={row.original.vehicleModel}
+          year={String(row.original.vehicleYear)}
           imageUrl={`https://picsum.photos/seed/${row.original.opportunityId}/200/100`}
         />
       ),
@@ -56,28 +57,41 @@ export const getEstimateColumns = ({
       accessorKey: 'parts',
       header: 'PARTS',
       cell: ({ row }) => {
-        const parts = row.original.parts
-        if (!parts) return '---'
+        // const parts = row.original.parts
+        // if (!parts) return '---'
 
         return (
           <div className="flex gap-2 items-center">
-            <span>{parts.count}</span>
-            {parts.warning && (
+            {/* <span>{parts.count}</span> */}
+            <span>{"16"}</span>
+           
               <StatusBadge
-                variant={parts.warning === 'ORDERED' ? 'success' : 'danger'}
+                variant="success"
                 size="sm"
               >
-                {parts.warning}
+                {"ORDERED"}
               </StatusBadge>
-            )}
+            
           </div>
+          // <div className="flex gap-2 items-center">
+          //   <span>{parts.count}</span>
+          //   {parts.warning && (
+          //     <StatusBadge
+          //       variant={parts.warning === 'ORDERED' ? 'success' : 'danger'}
+          //       size="sm"
+          //     >
+          //       {parts.warning}
+          //     </StatusBadge>
+          //   )}
+          // </div>
         )
       },
     },
     {
       accessorKey: 'isInRental',
       header: 'In Rental',
-      cell: ({ row }) => (row.original.isInRental ? <AutoCell /> : null),
+      cell: ({ row }) => ( <AutoCell /> ),
+      // cell: ({ row }) => (row.original.inRental ? <AutoCell /> : null),
     },
     {
       accessorKey: 'priority',
@@ -94,31 +108,42 @@ export const getEstimateColumns = ({
       accessorKey: 'warning',
       header: 'Warning',
       cell: ({ row }) => {
-        const warning = row.original.warning
-        if (!warning || !warning.message) return null
+        // // const warning = row.original.warning
+        // // if (!warning || !warning.message) return null
 
-        let variant: 'warning' | 'danger' | 'pending'
-        let text: string
+        // // let variant: 'warning' | 'danger' | 'pending'
+        // // let text: string
 
-        if (warning.type === 'MISSING_VOR') {
-          variant = 'danger'
-          text = 'OVERDUE'
-        } else if (warning.type === 'UPDATED_IN_CCC') {
-          variant = 'warning'
-          text = 'URGENT'
-        } else {
-          variant = 'pending'
-          text = 'PENDING'
-        }
+        // // if (warning.type === 'MISSING_VOR') {
+        // //   variant = 'danger'
+        // //   text = 'OVERDUE'
+        // // } else if (warning.type === 'UPDATED_IN_CCC') {
+        // //   variant = 'warning'
+        // //   text = 'URGENT'
+        // // } else {
+        // //   variant = 'pending'
+        // //   text = 'PENDING'
+        // // }
 
+        // return (
+        //   <div title={warning.message}>
+        //     <StatusBadge
+        //       variant={variant}
+        //       size="sm"
+        //       className="whitespace-nowrap"
+        //     >
+        //       {text}
+        //     </StatusBadge>
+        //   </div>
+        // )
         return (
-          <div title={warning.message}>
+          <div title={'warning.message'}>
             <StatusBadge
-              variant={variant}
+              variant={'danger'}
               size="sm"
               className="whitespace-nowrap"
             >
-              {text}
+              {'OVERDUE'}
             </StatusBadge>
           </div>
         )
@@ -128,8 +153,8 @@ export const getEstimateColumns = ({
       accessorKey: 'insuranceApproval',
       header: 'INSURANCE APPROVAL',
       cell: ({ row }) => {
-        const insurance = row.original.insurance
-        if (insurance.approved === undefined) {
+        
+        if (row.original.opportunityStatus === undefined) {
           return (
             <StatusBadge variant="pending" size="sm">
               PENDING APPROVAL
@@ -138,10 +163,10 @@ export const getEstimateColumns = ({
         }
         return (
           <StatusBadge
-            variant={insurance.approved ? 'success' : 'danger'}
+            variant={row.original.opportunityStatus === 'APPROVED' ? 'success' : 'danger'}
             size="sm"
           >
-            {insurance.approved ? 'APPROVED' : 'REJECTED'}
+            {row.original.opportunityStatus === 'APPROVED' ? 'APPROVED' : 'REJECTED'}
           </StatusBadge>
         )
       },
@@ -150,49 +175,53 @@ export const getEstimateColumns = ({
       id: 'contact',
       header: 'Contact',
       cell: ({ row }) => {
-        const opportunity = row.original
-        const owner = opportunity.owner
-        const insurance = opportunity.insurance
+      
 
         // Determine preferred contact method based on opportunity data
         let preferredContactMethod
-        if (owner.email) preferredContactMethod = ContactMethod.email
-        else if (owner.phone) preferredContactMethod = ContactMethod.phone
+        if (row.original.ownerEmail) preferredContactMethod = ContactMethod.email
+        else if (row.original.ownerPhone) preferredContactMethod = ContactMethod.phone
         else preferredContactMethod = ContactMethod.message
 
         const contactData: ContactData = {
           person: {
-            name: owner.name,
-            role: owner.company
-              ? `${owner.company} Representative`
-              : 'Vehicle Owner',
-            address: `${owner.address}, ${owner.city}, ${owner.state} ${owner.zip}`,
-            company: owner.company || 'N/A',
+            name: row.original.ownerFirstName + " " + row.original.ownerLastName,
+            role: "Test Company Representative",
+            address: "123 Test St, Test City, Test State 12345",
+            company: "Test Company",
             preferredContactType: preferredContactMethod,
+            // name: row.original.ownerFirstName + " " + row.original.ownerLastName,
+            // role: row.original.owner.company 
+            //   ? `${row.original.owner.company} Representative`
+            //   : 'Vehicle Owner',
+            // address: `${row.original.ownerAddress}, ${row.original.owner}, ${row.original.ownerState} ${row.original.ownerZip}`,
+            // company: row.original.owner.company || 'N/A',
+            // preferredContactType: preferredContactMethod,
           },
           insurance: {
-            company: insurance.company,
-            representative: insurance.representative || 'Not Assigned',
+            company: row.original.insuranceName,
+            representative: row.original.insuranceProvider || 'Not Assigned',
             pendingEstimates: 1,
             pendingReimbursements: 0,
             updates:
-              insurance.approved === undefined
+              row.original.opportunityStatus === undefined
                 ? 'Pending Approval'
-                : insurance.approved
+                : row.original.opportunityStatus === 'APPROVED'
                   ? 'Estimate Approved'
                   : 'Estimate Rejected',
           },
-          communicationLogs: (opportunity.logs || []).map((log) => ({
-            ...log,
-            isAutomatic: log.type === 'email',
-          })),
+          communicationLogs: [],
+          // communicationLogs: (row.original.logs || []).map((log) => ({
+          //   ...log,
+          //   isAutomatic: log.type === 'email',
+          // })),
           emailContacts: [
             {
-              email: owner.email || 'No email provided',
+              email: row.original.ownerEmail || 'No email provided',
               isPrimary: true,
             },
             {
-              email: insurance.adjusterEmail || 'No adjuster email',
+              email: row.original.insuranceAdjusterEmail || 'No adjuster email',
               isPrimary: false,
             },
           ].filter(
@@ -207,7 +236,7 @@ export const getEstimateColumns = ({
               category: 'Estimate',
               size: '1.2 MB',
               checked: false,
-              email: owner.email || 'No email provided',
+              email: row.original.ownerEmail || 'No email provided',
               isPrimary: true,
             },
             {
@@ -216,7 +245,7 @@ export const getEstimateColumns = ({
               category: 'Photos',
               size: '3.5 MB',
               checked: false,
-              email: owner.email || 'No email provided',
+              email: row.original.ownerEmail || 'No email provided',
               isPrimary: true,
             },
           ],
@@ -228,7 +257,7 @@ export const getEstimateColumns = ({
             className="cursor-pointer"
             onClick={(e) => {
               e.stopPropagation() // Prevent row click
-              handleContactClick(opportunity)
+              handleContactClick(row.original)
             }}
           >
             <ContactInfo

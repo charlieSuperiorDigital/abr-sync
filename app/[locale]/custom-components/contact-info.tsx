@@ -103,7 +103,7 @@ export default function ContactInfo({
         onOpenChange={setShouldShowModal}
         title={
           selectedOpportunity
-            ? `${selectedOpportunity.vehicle.year} ${selectedOpportunity.vehicle.make} ${selectedOpportunity.vehicle.model}`
+            ? `${selectedOpportunity.vehicleYear} ${selectedOpportunity.vehicleMake} ${selectedOpportunity.vehicleModel}`
             : ''
         }
       >
