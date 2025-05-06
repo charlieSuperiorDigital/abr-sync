@@ -20,20 +20,9 @@ export function CustomDialog({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
-        className={`sm:max-w-[600px] p-0 border-none bg-[#f9f9f9] rounded-3xl overflow-visible ${className}`}
+        className={`w-full  max-w-[750px] p-0 border-none bg-[#f9f9f9] rounded-3xl overflow-visible ${className}`}
       >
-        <div className="relative p-8">
-          {/* Close button */}
-          <button
-            onClick={() => onOpenChange(false)}
-            className="absolute right-8 top-8 text-black hover:text-gray-700"
-          >
-            <X size={24} />
-            <span className="sr-only">Close</span>
-          </button>
-
-          {children}
-        </div>
+        <div className="relative p-8">{children}</div>
       </DialogContent>
     </Dialog>
   )
