@@ -1,6 +1,5 @@
 'use client'
 
-
 import DraggableNav, {
   NavItem,
 } from '@/components/custom-components/draggable-nav/draggable-nav'
@@ -11,7 +10,7 @@ import { useGetUserTabOrder } from '@/app/api/hooks/useGetUserTabOrder'
 import { useUpdateUserTabOrder } from '@/app/api/hooks/useUpdateUserTabOrder'
 
 
-export default async function OpportunitiesLayout({
+export default function OpportunitiesLayout({
   children,
 }: {
   children: React.ReactNode
@@ -50,7 +49,6 @@ export default async function OpportunitiesLayout({
   })
 
   console.log('[DEBUG] Tab Order:', { userId, tabOrder, isLoadingTabOrder })
-
   // Setup tab order update mutation
   const { updateTabOrder } = useUpdateUserTabOrder({
     userId,
@@ -75,14 +73,8 @@ export default async function OpportunitiesLayout({
       })
     : navItems
 
-  console.log('[DEBUG] Nav Items:', {
-    original: navItems.map(item => item.id),
-    ordered: orderedNavItems.map(item => item.id)
-  })
-
   return (
     <div className="flex flex-col w-full min-h-screen">
-      <button onClick={() => console.log(opportunitiesQuantity)} className="fixed right-4 bottom-4 px-4 py-2 text-white bg-blue-500 rounded">DEBUG</button>
       <h1 className="px-5 my-7 text-3xl font-semibold tracking-tight">Opportunities</h1>
       {isLoading ? (
         <div className="flex justify-center p-8">Loading opportunities...</div>
@@ -94,7 +86,6 @@ export default async function OpportunitiesLayout({
             onReorder={(reorderedItems) => {
               // Extract the IDs in the new order
               const newOrder = reorderedItems.map(item => item.id)
-              console.log('[DEBUG] Reordering:', { newOrder })
               // Update the tab order in the database
               updateTabOrder(newOrder)
             }}

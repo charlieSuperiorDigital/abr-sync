@@ -122,7 +122,7 @@ export default function DraggableNav({
   }
 
   return (
-    <nav className="w-full border-b border-gray-200">
+    <nav className="px-5 w-full border-b border-gray-200">
       <div className="flex overflow-x-auto items-center space-x-1">
         {items.map((item, index) => (
           <div

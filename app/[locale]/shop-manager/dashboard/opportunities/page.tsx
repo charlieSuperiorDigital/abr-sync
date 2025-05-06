@@ -1,9 +1,10 @@
-import { authOptions } from '@/app/api/auth/[...nextauth]/auth-options'
-import { getServerSession } from 'next-auth'
-import OpportunitiesContent from './components/opportunities-content'
+'use client'
 
-export default async function OpportunitiesPage() {
-  const session = await getServerSession(authOptions)
+import OpportunitiesContent from './components/opportunities-content'
+import { useSession } from 'next-auth/react'
+
+export default function OpportunitiesPage() {
+  const { data: session } = useSession()
   const tenantId = session?.user?.tenantId
 
   if (!tenantId) {
