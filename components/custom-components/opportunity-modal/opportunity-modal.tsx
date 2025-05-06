@@ -1,14 +1,12 @@
-import { Opportunity, GetOpportunityByIdApiResponse } from '@/app/types/opportunity'
 import { Button } from '@/components/ui/button'
-import { Printer, Mail, Download } from 'lucide-react'
-import { formatCurrency } from '@/lib/utils'
+import { Download, Mail, Printer } from 'lucide-react'
 
+import CallDurationBadge from '@/app/[locale]/custom-components/calls/call-maker'
 import ContactInfo from '@/app/[locale]/custom-components/contact-info'
-import { ContactData, ContactPerson, Insurance, EmailContact, AttachmentOption, ContactMethod, CommunicationLog } from '@/app/types/contact-info.types'
 import { useGetOpportunityById, useGetOpportunityLogs } from '@/app/api/hooks/useOpportunities'
 import { useGetQualityCheck } from '@/app/api/hooks/useQualityCheck'
 import { useCall } from '@/app/context/call-context'
-import CallDurationBadge from '@/app/[locale]/custom-components/calls/call-maker'
+import { AttachmentOption, ContactMethod } from '@/app/types/contact-info.types'
 
 interface OpportunityModalProps {
   opportunityId: string
@@ -19,7 +17,7 @@ interface OpportunityModalProps {
 interface LogUser {
   id: string
   name: string
-  profilePicture?: string
+  profilePicture?: string | null
 }
 
 interface LogEntry {
@@ -288,7 +286,7 @@ const OpportunityModal = ({ opportunityId, workfileId }: OpportunityModalProps) 
                           role: 'Vehicle Owner',
                           address: '',
                           company: getOwnerProp(
-                            opportunity.vehicle?.owner.company,
+                            // opportunity.vehicle?.owner.company,
                             'company',
                             ''
                           ),

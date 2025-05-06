@@ -76,7 +76,7 @@ export const UsersProvider = ({ children }: UsersProviderProps) => {
   // Helper function to check if user has role
   const hasRole = (user: User, role: UserRole) => {
     try {
-      const roles = JSON.parse(user.roles)
+      const roles = JSON.parse(user.roles || '[]')
       return roles.includes(role) && user.isActive
     } catch {
       console.warn(`Failed to parse roles for user ${user.firstName} ${user.lastName}:`, user.roles)

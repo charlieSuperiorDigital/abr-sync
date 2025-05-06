@@ -1,4 +1,4 @@
-import { Opportunity } from './opportunity'
+import { OpportunityResponse } from './opportunities'
 
 export interface ContactPerson {
   name: string;
@@ -63,5 +63,5 @@ export enum ContactMethod {
 export interface ContactInfoProps {
   preferredContactMethod?: ContactMethod
   contactData?: ContactData
-  selectedOpportunity?: Opportunity | null
+  selectedOpportunity?: OpportunityResponse | null
 }

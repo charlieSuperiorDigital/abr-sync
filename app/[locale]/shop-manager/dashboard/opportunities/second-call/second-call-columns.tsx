@@ -1,5 +1,5 @@
 import DarkButton from '@/app/[locale]/custom-components/dark-button'
-import { Opportunity } from '@/app/types/opportunity'
+import {  OpportunityResponse } from '@/app/types/opportunities'
 import {
   SummaryCell,
   VehicleCell,
@@ -11,13 +11,13 @@ import { Archive, Plus } from 'lucide-react'
 
 type GetSecondCallColumnsProps = {
   formatDate: (date: string | undefined) => string
-  handleArchiveClick: (opportunity: Opportunity) => void
+  handleArchiveClick: (opportunity: OpportunityResponse) => void
 }
 
 export const getSecondCallColumns = ({
   formatDate,
   handleArchiveClick,
-}: GetSecondCallColumnsProps): ColumnDef<Opportunity, any>[] => {
+}: GetSecondCallColumnsProps): ColumnDef<OpportunityResponse, any>[] => {
   return [
     {
       accessorKey: 'insurance.claimNumber',
@@ -28,9 +28,9 @@ export const getSecondCallColumns = ({
       header: 'VEHICLE',
       cell: ({ row }) => (
         <VehicleCell
-          make={row.original.vehicle.make}
-          model={row.original.vehicle.model}
-          year={String(row.original.vehicle.year)}
+          make={row.original.vehicleMake}
+          model={row.original.vehicleModel}
+          year={String(row.original.vehicleYear)}
           imageUrl={`https://picsum.photos/seed/${row.original.opportunityId}/200/100`}
         />
       ),
@@ -40,7 +40,8 @@ export const getSecondCallColumns = ({
       header: 'RO',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
-          {row.original.roNumber || '---'}
+          {/* {row.original.roNumber || '---'} */}
+          {"PLACEHOLDER"}
         </span>
       ),
     },
@@ -48,7 +49,7 @@ export const getSecondCallColumns = ({
       accessorKey: 'owner.name',
       header: 'Owner',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{row.original.owner.name}</span>
+        <span className="whitespace-nowrap">{row.original.ownerFirstName + " " + row.original.ownerLastName}</span>
       ),
     },
     {
@@ -56,7 +57,7 @@ export const getSecondCallColumns = ({
       header: '1ST CALL',
       cell: ({ row }) => (
         <span className="text-gray-600 whitespace-nowrap">
-          {formatDate(row.original.firstCallDate)}
+          {formatDate(row.original._1stCall)}
         </span>
       ),
     },
@@ -65,7 +66,7 @@ export const getSecondCallColumns = ({
       header: '2ND CALL',
       cell: ({ row }) => (
         <span className="text-gray-600 whitespace-nowrap">
-          {formatDate(row.original.secondCallDate)}
+          {formatDate(row.original._2ndCall)}
         </span>
       ),
     },
@@ -74,17 +75,23 @@ export const getSecondCallColumns = ({
       header: 'LAST UPDATED BY',
       cell: ({ row }) => (
         <div className="flex gap-2 items-center">
-          {row.original.lastUpdatedBy?.avatar && (
-            <img
-              src={row.original.lastUpdatedBy.avatar}
-              alt=""
-              className="w-6 h-6 rounded-full"
-            />
-          )}
+      
           <span className="whitespace-nowrap">
-            {row.original.lastUpdatedBy?.name || '---'}
+            {"John Doe"}
           </span>
         </div>
+        // <div className="flex gap-2 items-center">
+        //   {row.original.lastUpdatedBy?.avatar && (
+        //     <img
+        //       src={row.original.lastUpdatedBy.avatar}
+        //       alt=""
+        //       className="w-6 h-6 rounded-full"
+        //     />
+        //   )}
+        //   <span className="whitespace-nowrap">
+        //     {row.original.lastUpdatedBy?.name || '---'}
+        //   </span>
+        // </div>
       ),
     },
     {
@@ -92,7 +99,8 @@ export const getSecondCallColumns = ({
       header: 'LAST UPDATED',
       cell: ({ row }) => (
         <span className="whitespace-nowrap">
-          {formatDate(row.original.lastUpdatedDate)}
+          {/* {formatDate(row.original.lastUpdatedDate)} */}
+          {"11/11/2023 12:00 PM"}
         </span>
       ),
     },
@@ -110,31 +118,38 @@ export const getSecondCallColumns = ({
       accessorKey: 'warning',
       header: 'Warning',
       cell: ({ row }) => {
-        const warning = row.original.warning
-        if (!warning || !warning.message) return null
+        // const warning = row.original.warning
+        // if (!warning || !warning.message) return null
 
-        let variant: 'warning' | 'danger' | 'pending'
-        let text: string
+        // let variant: 'warning' | 'danger' | 'pending'
+        // let text: string
 
-        if (warning.type === 'MISSING_VOR') {
-          variant = 'danger'
-          text = 'OVERDUE'
-        } else if (warning.type === 'UPDATED_IN_CCC') {
-          variant = 'warning'
-          text = 'URGENT'
-        } else {
-          variant = 'pending'
-          text = 'PENDING'
-        }
+        // if (warning.type === 'MISSING_VOR') {
+        //   variant = 'danger'
+        //   text = 'OVERDUE'
+        // } else if (warning.type === 'UPDATED_IN_CCC') {
+        //   variant = 'warning'
+        //   text = 'URGENT'
+        // } else {
+        //   variant = 'pending'
+        //   text = 'PENDING'
+        // }
 
         return (
-          <div title={warning.message}>
-            <StatusBadge
+          <div title={'warning.message'}>
+            {/* <StatusBadge
               variant={variant}
               size="sm"
               className="whitespace-nowrap"
             >
               {text}
+            </StatusBadge> */}
+            <StatusBadge
+              variant="danger"
+              size="sm"
+              className="whitespace-nowrap"
+            >
+              {"MISSING VOR"}
             </StatusBadge>
           </div>
         )

@@ -1,7 +1,3 @@
-import { TaskType } from "@/components/custom-components/task-modal/schema"
-import { User } from "./user"
-import { Location } from "./location"
-
 export interface TaskComment {
   id: string
   text: string
@@ -24,31 +20,19 @@ export interface TaskRelation {
   title?: string
 }
 
-export interface Workfile {
-  id: string
-  opportunityId: string
-  opportunity: any | null
-  status: string
-  dropDate: string
-  estimatedCompletionDate: string
-  createdAt: string
-  updatedAt: string
-}
 
 export interface Task {
   id: string
   tenantId: string
   title: string
   description: string
-  status: 'open' | 'in_progress' | 'completed' | 'archived' | 'New'
+  status: string
   assignedTo: string
-  assignedUser?: User
-  workfileId?: string
-  workfile?: Workfile
-  locationId?: string
-  location?: Location
-  opportunityId?: string
-  opportunity?: any
+  assignedUser: any
+  workfileId: string
+  workfile: any
+  locationId: string
+  location: any
   dueDate: string
   createdAt: string
   updatedAt: string
@@ -56,29 +40,36 @@ export interface Task {
     variant: 'danger' | 'warning' | 'success' | 'slate'
     text: 'Urgent' | 'High' | 'Normal' | 'Low'
   }
-  type: string | number
-  endDate?: string
-  roles?: string
+  type: string
+  endDate: string
+  roles: string
   createdBy: string
-  createdByUser?: User
-  
-  // Additional fields from previous interface that might still be needed
+  createdByUser?: any
+  recurringType: number
+  weekDays: number
+  monthDays: number
+  customDays: string[]
+
+  // Additional fields needed by components, need to be implemented on backend
   dueDateTime?: string
   relatedTo?: TaskRelation[]
   email?: string
   phone?: string
   message?: string
+  opportunityId?: string
+  opportunity?: any
   warningMessage?: string
-  assignedToRoles?: string[]
-  lastUpdatedDate?: string
-  completedDate?: string
-  attachments?: TaskAttachment[]
-  comments?: TaskComment[]
   estimatedHours?: number
-  template?: string
-  recurrence?: 'Every Day' | 'Every Week' | 'Every Month' | 'Every Year' | 'Custom'
-  recurringFrequency?: string
-  recurringDays?: string[]
-  recurringEndDateTime?: string
-  timezone?: string
+}
+
+export interface TaskDay {
+  id: string
+  taskId: string
+  status: number
+  taskDate: string
+}
+
+export interface GetTaskByIdApiResponse {
+  task: Task
+  taskDays: TaskDay[]
 }
